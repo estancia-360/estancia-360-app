@@ -1,0 +1,57 @@
+import { Injectable } from '@nestjs/common';
+import { RegisterDto } from '../dto/register.dto';
+import { UsersAuthService } from 'src/modules/user-management/users/services/users-auth.service';
+import { UserDto } from 'src/modules/user-management/users/dto/user.dto';
+import { LoginDto } from '../dto/inputs/login.dto';
+import { UsersService } from 'src/modules/user-management/users/services/users.service';
+import { UserAuthDto } from 'src/modules/user-management/users/dto/user-auth.dto';
+import { IncorrectCredentialsException } from '../exceptions/incorrect-credentials.exception';
+import { comparePassword } from 'src/shared/utils';
+import { PayloadDto } from '../dto/jwt/payload.dto';
+import { MyJwtConfig } from 'src/infrastructure/config/services';
+import { JwtService } from '@nestjs/jwt';
+import * as ms from 'ms';
+
+@Injectable()
+export class AuthService {
+	constructor(
+		private readonly usersAuthService: UsersAuthService,
+		private readonly usersService: UsersService,
+		private readonly jwtConfig: MyJwtConfig,
+        private readonly jwtService: JwtService,
+	){}
+
+	async register(data: RegisterDto) {
+		const user = await this.usersAuthService.create(data,UserDto);
+        return user;
+	}
+
+	async login(data: LoginDto){
+        const user = await this.usersService.findOneByEmail(data.email,{
+            throwException: false,
+            template: UserAuthDto
+        })
+        if (!user){
+            throw new IncorrectCredentialsException()
+        }
+        const passwordCorrect = await comparePassword(data.password,user.password)
+        if (!passwordCorrect){
+            throw new IncorrectCredentialsException()
+        }
+        
+        const payload: PayloadDto = {
+            id: user.id,
+            email: user.email,
+            idRole: user.role.id
+        }
+        const { secret, expiresIn } = this.jwtConfig.get();
+        const expires = expiresIn as ms.StringValue;
+        const token = this.jwtService.sign(payload, { secret, expiresIn: expires });
+        return {
+            message: 'Ingreso exitoso',
+            accessToken: token,
+            idUser: user.id,
+            idRole: user.role.id
+        };
+    }
+}
