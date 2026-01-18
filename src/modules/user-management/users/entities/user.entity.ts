@@ -10,10 +10,10 @@ export class User {
     @Column({ name: 'id_role', type: 'int' })
     idRole: number;
 
-    @Column({ name: 'ci', type: 'varchar', length: 20, unique: true })
+    @Column({ name: 'ci', type: 'varchar', length: 20 })
     ci: string;
 
-    @Column({ name: 'fullname', type: 'varchar', length: 150, unique: true })
+    @Column({ name: 'fullname', type: 'varchar', length: 150 })
     fullname: string;
 
     @Column({ name: 'paternal_surname', type: 'varchar', length: 100 })
