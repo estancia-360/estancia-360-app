@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, Post, Put, Res } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { ApiOperation, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiUnauthorizedResponse, ApiBadRequestResponse } from '@nestjs/swagger';
 import { RoleEnum } from 'src/shared/enums';
@@ -8,6 +8,8 @@ import { RegisterDto } from '../dto/register.dto';
 import express from 'express';
 import { LoginResponseDto } from '../dto/outputs/login-response.dto';
 import { LoginDto } from '../dto/inputs/login.dto';
+import { CommonResponseDto } from 'src/shared/dto';
+import { ChangePasswordDto } from '../dto/inputs/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -42,5 +44,22 @@ export class AuthController {
 	@ApiBadRequestResponse(SwaggerBadRequestCommon())
 	async login(@Body() data: LoginDto, @Res() res: express.Response) {
 		return OkRes(res, await this.authService.login(data))
+	}
+
+	@Put('change-password')
+	@ApiOperation({
+		summary: 'api par acmabiar de contrasena',
+	})
+	@ApiOkResponse({
+		description: 'Respuesta al cambiar la contrasena',
+		type: CommonResponseDto
+	})
+	@ApiBadRequestResponse(SwaggerBadRequestCommon())
+	@ApiNotFoundResponse(SwaggerNotFoundCommon())
+	async changePassword(@Body() data: ChangePasswordDto,@Res() res: express.Response){
+		const user = await this.authService.changePassword(data);
+		return OkRes(res,{
+			message: 'La contrasena se cambio exitosamente'
+		})
 	}
 }

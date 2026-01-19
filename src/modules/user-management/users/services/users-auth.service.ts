@@ -8,6 +8,7 @@ import { RolesService } from "src/modules/core/roles/services/roles.service";
 import { UsersService } from "./users.service";
 import { MyNotFoundException } from "src/shared/exceptions";
 import { plainToInstance } from "class-transformer";
+import { UpdateUserDto } from "../dto/update-user.dto";
 
 @Injectable()
 export class UsersAuthService {
@@ -50,5 +51,36 @@ export class UsersAuthService {
         if (emailValid) {
             throw new MyNotFoundException(`El usuarion con el email ${email} ya es encuentra registrado`);
         }
+    }
+
+    async updateByEmail(data: UpdateUserDto,user: User){        
+        if (!user){
+            throw new MyNotFoundException('No se encontro al usuario');
+        }
+        if (data.idRole){
+            user.idRole = data.idRole
+        }
+        if (data.ci){
+            user.ci = data.ci
+        }
+        if (data.fullname){
+            user.fullname = data.fullname
+        }
+        if (data.paternalSurname){
+            user.paternalSurname = data.paternalSurname;
+        }
+        if (data.maternalSurname){
+            user.maternalSurname = data.maternalSurname;
+        }
+        if (data.email){
+            user.email = data.email
+        }
+        if (data.password){
+            user.password = data.password
+        }
+        if (data.celphone){
+            user.celphone = data.celphone
+        }
+        return await this.userRepository.save(user);
     }
 }

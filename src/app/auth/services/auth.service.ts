@@ -6,11 +6,13 @@ import { LoginDto } from '../dto/inputs/login.dto';
 import { UsersService } from 'src/modules/user-management/users/services/users.service';
 import { UserAuthDto } from 'src/modules/user-management/users/dto/user-auth.dto';
 import { IncorrectCredentialsException } from '../exceptions/incorrect-credentials.exception';
-import { comparePassword } from 'src/shared/utils';
+import { comparePassword, generateCode } from 'src/shared/utils';
 import { PayloadDto } from '../dto/jwt/payload.dto';
 import { MyJwtConfig } from 'src/infrastructure/config/services';
 import { JwtService } from '@nestjs/jwt';
 import * as ms from 'ms';
+import { ChangePasswordDto } from '../dto/inputs/change-password.dto';
+import { User } from 'src/modules/user-management/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -53,5 +55,17 @@ export class AuthService {
             idUser: user.id,
             idRole: user.role.id
         };
+    }
+
+    async changePassword(data: ChangePasswordDto){
+        const user = await this.usersService.findOneByEmail(data.email,{
+            template: User,
+            throwException: true,
+            where: {
+                isDeleted: false,
+            }
+        })
+        const userUpdated = await this.usersAuthService.updateByEmail(data,user!);
+        return userUpdated;
     }
 }

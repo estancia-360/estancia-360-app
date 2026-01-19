@@ -36,7 +36,7 @@ export class UsersService {
 		return plainToInstance(templateClass, user, { excludeExtraneousValues: true });
 	}
 
-	async findOneByEmail<T>(email: string, optionsData?: OptionsFindDto<T>): Promise<T | null> {
+	async findOneByEmail<T>(email: string, optionsData?: OptionsFindDto<T,User>): Promise<T | null> {
 		const options = Object.assign(new OptionsFindDto(), optionsData)
 		const templateClass = options.template ? options.template : (UserDto as unknown as new () => T)
 		let template = findWithAutoMapper(templateClass);
