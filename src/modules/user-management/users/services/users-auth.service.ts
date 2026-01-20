@@ -22,6 +22,7 @@ export class UsersAuthService {
     async create<T>(data: CreateUserDto,cls: new () => T): Promise<T>{
         const role = await this.rolesService.findOne(data.idRole);
         await this.validateEmailUnique(data.email.trim());
+        await this.validateCiUnique(data.ci.trim());
         const user = new User();
         user.idRole = data.idRole;
         user.ci = data.ci;
@@ -46,10 +47,26 @@ export class UsersAuthService {
     async validateEmailUnique(email: string){
         const emailValid = await this.usersService.findOneByEmail<UserDto>(email.trim(),{
             throwException: false,
-            template: UserDto
+            template: UserDto,
+            where: {
+                isDeleted: false,
+            }
         })
         if (emailValid) {
             throw new MyNotFoundException(`El usuarion con el email ${email} ya es encuentra registrado`);
+        }
+    }
+
+    async validateCiUnique(ci: string){
+        const emailValid = await this.usersService.findOneByCi<UserDto>(ci.trim(),{
+            throwException: false,
+            template: UserDto,
+            where: {
+                isDeleted: false
+            }
+        })
+        if (emailValid) {
+            throw new MyNotFoundException(`El usuarion con el CI ${ci} ya es encuentra registrado`);
         }
     }
 

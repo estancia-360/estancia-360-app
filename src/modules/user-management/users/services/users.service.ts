@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { OptionsFindDto } from 'src/shared/dto/options-find.dto';
 import { plainToInstance } from 'class-transformer';
 import { findWithAutoMapper } from 'src/infrastructure/database/utils';
-import { UserNotFoundByEmailException, UserNotFoundByIdException } from '../exceptions/user-not-found.exception';
+import { UserNotFoundByCiException, UserNotFoundByEmailException, UserNotFoundByIdException } from '../exceptions/user-not-found.exception';
 import { UserDto } from '../dto/user.dto';
 
 @Injectable()
@@ -50,6 +50,25 @@ export class UsersService {
 		}) as T
 		if (!user && options.throwException) {
 			throw new UserNotFoundByEmailException(email);
+		}
+		if (!user) return null;
+		return plainToInstance(templateClass, user, { excludeExtraneousValues: true });
+	}
+
+	async findOneByCi<T>(ci: string, optionsData?: OptionsFindDto<T,User>): Promise<T | null> {
+		const options = Object.assign(new OptionsFindDto(), optionsData)
+		const templateClass = options.template ? options.template : (UserDto as unknown as new () => T)
+		let template = findWithAutoMapper(templateClass);
+		const user = await this.userRepository.findOne({
+			where: {
+				ci: ci,
+				...(options.where ? options.where : {}),
+			},
+			select: template.select,
+			relations: template.relations
+		}) as T
+		if (!user && options.throwException) {
+			throw new UserNotFoundByCiException(ci);
 		}
 		if (!user) return null;
 		return plainToInstance(templateClass, user, { excludeExtraneousValues: true });
