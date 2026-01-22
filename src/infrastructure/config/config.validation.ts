@@ -21,4 +21,7 @@ export const validationSchema = Joi.object({
     ACTIVE_JWT: Joi.boolean().default(true),
     JWT_SECRET: Joi.string().required(),
     JWT_TIME_EXPIRE: Joi.string().default('24h'),
+
+    USER_EMAIL: Joi.string().required(),
+    PASS_AUTH: Joi.string().required(),
 });

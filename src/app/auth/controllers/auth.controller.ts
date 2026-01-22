@@ -10,6 +10,8 @@ import { LoginResponseDto } from '../dto/outputs/login-response.dto';
 import { LoginDto } from '../dto/inputs/login.dto';
 import { CommonResponseDto } from 'src/shared/dto';
 import { ChangePasswordDto } from '../dto/inputs/change-password.dto';
+import { TwoFactorCodeDto } from '../dto/inputs/two-factor-code.dto';
+import { TwoFactorCodeResponseDto } from '../dto/outputs/two-factor-code-response.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -60,6 +62,24 @@ export class AuthController {
 		const user = await this.authService.changePassword(data);
 		return OkRes(res,{
 			message: 'La contrasena se cambio exitosamente'
+		})
+	}
+
+	@Post('2AF')
+	@ApiOperation({
+		summary: 'Api para obtenet codigo de autenticacion de dos factores para acc eso en la app'
+	})
+	@ApiOkResponse({
+		description: 'Respuesta en caso de recibir un codigo de dos factores',
+		type: TwoFactorCodeResponseDto
+	})
+	async twoFactorCode(
+		@Body() data: TwoFactorCodeDto,
+		@Res() res: express.Response,
+	){
+		const code = await this.authService.auth2af(data.email);
+		return OkRes(res,{
+			code: code
 		})
 	}
 }

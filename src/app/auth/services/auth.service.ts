@@ -13,6 +13,9 @@ import { JwtService } from '@nestjs/jwt';
 import * as ms from 'ms';
 import { ChangePasswordDto } from '../dto/inputs/change-password.dto';
 import { User } from 'src/modules/user-management/users/entities/user.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventsEnum } from 'src/shared/enums/events.enum';
+import { TwoFactorCodeTemplate } from '../templates';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +24,7 @@ export class AuthService {
 		private readonly usersService: UsersService,
 		private readonly jwtConfig: MyJwtConfig,
         private readonly jwtService: JwtService,
+        private readonly eventEmiter: EventEmitter2,
 	){}
 
 	async register(data: RegisterDto) {
@@ -67,5 +71,22 @@ export class AuthService {
         })
         const userUpdated = await this.usersAuthService.updateByEmail(data,user!);
         return userUpdated;
+    }
+
+    async auth2af(email: string): Promise<number> {
+        const user = await this.usersService.findOneByEmail(email,{
+            throwException: true,
+            template: UserDto,
+            where: {
+                isDeleted: false
+            }
+        })
+        const code = generateCode(6);
+        this.eventEmiter.emit(EventsEnum.SEND_MAIL, {
+            to: user!.email,
+            subject: 'Codigo para autenticacion de dos factores',
+            html: TwoFactorCodeTemplate(code)
+        })
+        return code;
     }
 }

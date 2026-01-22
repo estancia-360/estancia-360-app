@@ -3,6 +3,7 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { MyConfigService } from './config.service';
 import { validationSchema } from './config.validation';
 import { MyDataBaseConfig, MyJwtConfig, MyServerConfig } from './services';
+import { MyEmailConfig } from './services/email.config';
 
 
 @Global()
@@ -19,12 +20,14 @@ import { MyDataBaseConfig, MyJwtConfig, MyServerConfig } from './services';
         MyDataBaseConfig,
         MyJwtConfig,
         MyServerConfig,
+        MyEmailConfig,
     ],
     exports: [
         MyConfigService,
         MyDataBaseConfig,
         MyJwtConfig,
         MyServerConfig,
+        MyEmailConfig,
     ],
 })
 export class MyConfigModule { }
