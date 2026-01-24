@@ -1,34 +1,35 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res } from '@nestjs/common';
 import { CountriesService } from '../services/countries.service';
 import { CreateCountryDto } from '../dto/create-country.dto';
 import { UpdateCountryDto } from '../dto/update-country.dto';
+import * as express from 'express';
+import { CountryDto } from '../dto/country.dto';
+import { OkRes } from 'src/shared/utils';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FindAllCountriesResponseDto } from '../dto/find-all-countries-response.dto';
 
+@ApiTags('Paises')
 @Controller('countries')
 export class CountriesController {
-  constructor(private readonly countriesService: CountriesService) {}
+	constructor(private readonly countriesService: CountriesService) { }
 
-  @Post()
-  create(@Body() createCountryDto: CreateCountryDto) {
-    return this.countriesService.create(createCountryDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.countriesService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.countriesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCountryDto: UpdateCountryDto) {
-    return this.countriesService.update(+id, updateCountryDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.countriesService.remove(+id);
-  }
+	@Get()
+	@ApiOperation({
+		summary: 'Api para obtener todo los paises',
+	})
+	@ApiOkResponse({
+		description: 'respuesta en caso de obtener todo los paises disponibles',
+		type: FindAllCountriesResponseDto
+	})
+	async findAll(@Res() res: express.Response){
+		const countries = await this.countriesService.findAll({
+			where: {
+				isActive: true
+			},
+			template: CountryDto
+		})
+		return OkRes(res,{
+			countries: countries
+		})
+	}
 }

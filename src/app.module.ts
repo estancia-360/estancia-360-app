@@ -13,7 +13,7 @@ import { CitiesModule } from './modules/core/cities/cities.module';
 import { ProductionTypesModule } from './modules/core/production-types/production-types.module';
 import { RanchesModule } from './modules/ranch-management/ranches/ranches.module';
 import { RanchUsersModule } from './modules/ranch-management/ranch-users/ranch-users.module';
-import { RanchRolesModule } from './modules/ranch-management/ranch-roles/ranch-roles.module';
+import { RanchRolesModule } from './modules/core/ranch-roles/ranch-roles.module';
 
 @Module({
 	imports: [

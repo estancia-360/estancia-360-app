@@ -1,26 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRanchUserDto } from '../dto/create-ranch-user.dto';
 import { UpdateRanchUserDto } from '../dto/update-ranch-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { RanchUser } from '../entities/ranch-user.entity';
+import { Repository } from 'typeorm';
+import { UsersService } from 'src/modules/user-management/users/services/users.service';
+import { RanchRolesEnum } from 'src/shared/enums';
+import { OptionsFindDto } from 'src/shared/dto/options-find.dto';
+import { findWithAutoMapper } from 'src/infrastructure/database/utils';
 
 @Injectable()
 export class RanchUsersService {
-  create(createRanchUserDto: CreateRanchUserDto) {
-    return 'This action adds a new ranchUser';
-  }
+	constructor(
+		@InjectRepository(RanchUser)
+		private readonly ranchUserRepository: Repository<RanchUser>,
+	) { }
 
-  findAll() {
-    return `This action returns all ranchUsers`;
-  }
+	async create<T>(data: CreateRanchUserDto) {
+		const ranchUser = new RanchUser();
+		ranchUser.idRanch = data.idRanch;
+		ranchUser.idUser = data.idUser;
+		ranchUser.idRole = data.idRanchRole
+		return await this.ranchUserRepository.save(ranchUser);
+	}
 
-  findOne(id: number) {
-    return `This action returns a #${id} ranchUser`;
-  }
-
-  update(id: number, updateRanchUserDto: UpdateRanchUserDto) {
-    return `This action updates a #${id} ranchUser`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} ranchUser`;
-  }
+	
 }

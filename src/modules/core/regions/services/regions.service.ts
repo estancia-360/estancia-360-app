@@ -1,26 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRegionDto } from '../dto/create-region.dto';
 import { UpdateRegionDto } from '../dto/update-region.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Region } from '../entities/region.entity';
+import { Repository } from 'typeorm';
+import { RegionDto } from '../dto/region.dto';
+import { findWithAutoMapper } from 'src/infrastructure/database/utils';
+import { OptionsFindDto } from 'src/shared/dto/options-find.dto';
 
 @Injectable()
 export class RegionsService {
-  create(createRegionDto: CreateRegionDto) {
-    return 'This action adds a new region';
-  }
+	constructor(
+		@InjectRepository(Region)
+		private readonly regionRepository: Repository<Region>
+	) { }
 
-  findAll() {
-    return `This action returns all regions`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} region`;
-  }
-
-  update(id: number, updateRegionDto: UpdateRegionDto) {
-    return `This action updates a #${id} region`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} region`;
-  }
+	async findAll<T>(optionsData: OptionsFindDto<T, Region>) {
+		const options = Object.assign(new OptionsFindDto(), optionsData)
+		const templateClass = options.template ? options.template : (RegionDto as unknown as new () => T)
+		let template = findWithAutoMapper(templateClass);
+		const countries = await this.regionRepository.find({
+			select: template.select,
+			relations: template.relations,
+			where: options.where
+		})
+		return countries;
+	}
 }

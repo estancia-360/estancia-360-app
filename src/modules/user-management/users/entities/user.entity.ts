@@ -1,7 +1,8 @@
 import { Expose } from "class-transformer";
 import { Role } from "src/modules/core/roles/entities/role.entity";
+import { RanchUser } from "src/modules/ranch-management/ranch-users/entities/ranch-user.entity";
 import { hashPassword } from "src/shared/utils";
-import { PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Entity, BeforeInsert, BeforeUpdate, JoinColumn, ManyToOne } from "typeorm";
+import { PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Entity, BeforeInsert, BeforeUpdate, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 
 @Entity('users')
 export class User {
@@ -79,4 +80,7 @@ export class User {
             this.password = await hashPassword(this.password);
         }
     }
+
+    @OneToMany(() => RanchUser,(ranchUser) => ranchUser.user)
+    ranchUsers: RanchUser[]
 }
