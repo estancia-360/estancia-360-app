@@ -1,8 +1,9 @@
 import { Expose } from "class-transformer";
 import { Role } from "src/modules/core/roles/entities/role.entity";
 import { RanchUser } from "src/modules/ranch-management/ranch-users/entities/ranch-user.entity";
+import { Ranch } from "src/modules/ranch-management/ranches/entities/ranch.entity";
 import { hashPassword } from "src/shared/utils";
-import { PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Entity, BeforeInsert, BeforeUpdate, JoinColumn, ManyToOne, OneToMany } from "typeorm";
+import { PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Entity, BeforeInsert, BeforeUpdate, JoinColumn, ManyToOne, OneToMany, ManyToMany, JoinTable } from "typeorm";
 
 @Entity('users')
 export class User {
@@ -83,4 +84,12 @@ export class User {
 
     @OneToMany(() => RanchUser,(ranchUser) => ranchUser.user)
     ranchUsers: RanchUser[]
+
+    @ManyToMany(() => Ranch,(ranch) => ranch.users)
+    @JoinTable({
+        name: 'ranch_users',
+        joinColumn: { name: 'id_user' },
+        inverseJoinColumn: { name: 'id_ranch' }
+    })
+    ranches: Ranch[]
 }

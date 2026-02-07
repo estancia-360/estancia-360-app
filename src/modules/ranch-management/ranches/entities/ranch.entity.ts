@@ -1,9 +1,10 @@
 import { BaseCreatedUpdated } from "src/infrastructure/database/utils";
 import { City } from "src/modules/core/cities/entities/city.entity";
 import { ProductionType } from "src/modules/core/production-types/entities/production-type.entity";
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { RanchUser } from "../../ranch-users/entities/ranch-user.entity";
 import { RanchAnimal } from "../../ranch-animals/entities/ranch-animal.entity";
+import { User } from "src/modules/user-management/users/entities/user.entity";
 
 @Entity('ranches')
 export class Ranch extends BaseCreatedUpdated {
@@ -42,4 +43,7 @@ export class Ranch extends BaseCreatedUpdated {
 
     @OneToMany(() => RanchAnimal,(animal) => animal.ranch)
     animals?: RanchAnimal[]
+
+    @ManyToMany(() => User,(user) => user.ranches)
+    users: User[]
 }

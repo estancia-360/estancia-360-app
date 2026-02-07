@@ -7,6 +7,7 @@ import { plainToInstance } from 'class-transformer';
 import { findWithAutoMapper } from 'src/infrastructure/database/utils';
 import { UserNotFoundByCiException, UserNotFoundByEmailException, UserNotFoundByIdException } from '../exceptions/user-not-found.exception';
 import { UserDto } from '../dto/user.dto';
+import { UserWithRanchesDto } from '../dto/user-with-ranches.dto';
 
 @Injectable()
 export class UsersService {
@@ -72,5 +73,16 @@ export class UsersService {
 		}
 		if (!user) return null;
 		return plainToInstance(templateClass, user, { excludeExtraneousValues: true });
+	}
+
+	async findOneUserWithRanches(idUser: number){
+		let template = findWithAutoMapper(UserWithRanchesDto);
+		const ranchUsers = await this.userRepository.findOne({
+			...template,
+			where: {
+				id: idUser,
+			}
+		})
+		return ranchUsers;
 	}
 }
