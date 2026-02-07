@@ -14,6 +14,9 @@ import { ProductionTypesModule } from './modules/core/production-types/productio
 import { RanchesModule } from './modules/ranch-management/ranches/ranches.module';
 import { RanchUsersModule } from './modules/ranch-management/ranch-users/ranch-users.module';
 import { RanchRolesModule } from './modules/core/ranch-roles/ranch-roles.module';
+import { AnimalBreedsModule } from './modules/ranch-management/animal-breeds/animal-breeds.module';
+import { AnimalStatusesModule } from './modules/ranch-management/animal-statuses/animal-statuses.module';
+import { RanchAnimalsModule } from './modules/ranch-management/ranch-animals/ranch-animals.module';
 
 @Module({
 	imports: [
@@ -32,6 +35,9 @@ import { RanchRolesModule } from './modules/core/ranch-roles/ranch-roles.module'
 		RanchesModule,
 		RanchUsersModule,
 		RanchRolesModule,
+		AnimalBreedsModule,
+		AnimalStatusesModule,
+		RanchAnimalsModule,
 	],
 })
 export class AppModule { }

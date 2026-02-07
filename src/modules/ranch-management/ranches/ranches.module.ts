@@ -18,5 +18,6 @@ import { UsersModule } from 'src/modules/user-management/users/users.module';
 	],
 	controllers: [RanchesController],
 	providers: [RanchesService],
+	exports: [RanchesService]
 })
 export class RanchesModule { }

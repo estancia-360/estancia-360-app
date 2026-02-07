@@ -1,0 +1,1 @@
+export * from './ranch-animal-not-found.exception'
