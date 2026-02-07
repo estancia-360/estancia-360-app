@@ -38,7 +38,7 @@ export class AnimalBreedsService {
 		return plainToInstance(templateClass, breed, { excludeExtraneousValues: true });
 	}
 
-	async findAll<T>(optionsData: OptionsFindDto<T, AnimalBreed>){
+	async findAll<T>(optionsData: OptionsFindDto<T, AnimalBreed>): Promise<AnimalBreedDto[]>{
 		const template = findWithAutoMapper(AnimalBreedDto)
 		const options = Object.assign(new OptionsFindDto(), optionsData)
 		const breeds = await this.animalBreedRepository.find({
@@ -47,6 +47,6 @@ export class AnimalBreedsService {
 				...(options.where ? options.where : {}),
 			}
 		})
-		return breeds;
+		return plainToInstance(AnimalBreedDto,breeds, {excludeExtraneousValues: true });
 	}
 }
