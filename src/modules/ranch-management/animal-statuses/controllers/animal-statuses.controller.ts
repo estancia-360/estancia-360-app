@@ -8,7 +8,7 @@ import * as express from 'express'
 import { OkRes } from 'src/shared/utils';
 
 @ApiTags('Estados de animales')
-@Controller('animal-statuses')
+@Controller('animal-states')
 export class AnimalStatusesController {
 	constructor(private readonly animalStatusesService: AnimalStatusesService) { }
 
