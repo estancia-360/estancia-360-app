@@ -17,6 +17,9 @@ import { RanchDto } from '../../ranches/dto/ranch.dto';
 import { AnimalBreedDto } from '../../animal-breeds/dto/animal-breed.dto';
 import { FindAllRanchAnimalsParamsDto } from '../dto/inputs/find-all-ranch-animals-params.dto';
 import { PaginationResponseDto } from 'src/shared/dto/pagination-response.dto';
+import { RanchAnimalNotFoundByCodeException } from '../exceptions/ranch-animal-not-found-by-code.exception';
+import { RanchAnimalPlainDto } from '../dto/ranch-animal-plain.dto';
+import { MyConflictException } from 'src/shared/exceptions';
 
 @Injectable()
 export class RanchAnimalsService {
@@ -29,6 +32,14 @@ export class RanchAnimalsService {
 	) { }
 
 	async create<T>(data: CreateRanchAnimalDto, cls: new () => T): Promise<T> {
+
+		const existCode = await this.findOneByCode(data.code,{
+			throwException: false,
+			template: RanchAnimalPlainDto
+		})
+		if (existCode){
+			throw new MyConflictException('El codigo del animal a crear ya se encuentra en uso')
+		}
 		const ranch = await this.ranchesService.findOneById(data.idRanch, {
 			template: RanchDto,
 			throwException: true,
@@ -50,7 +61,23 @@ export class RanchAnimalsService {
 			throwException: true,
 		})
 
+		if ((data.codeFather && data.codeMother) && (data.codeFather === data.codeMother)){
+			throw new MyConflictException('El padre y la madre no pueden tenrer el mismo codigo.');
+		}
+
 		const ranchAnimal = new RanchAnimal();
+		if (data.codeMother){
+			ranchAnimal.idMother = (await this.findOneByCode(data.codeMother,{
+				throwException: true,
+				template: RanchAnimalPlainDto
+			}))!.id;
+		}
+		if (data.codeFather){
+			ranchAnimal.idFather = (await this.findOneByCode(data.codeFather,{
+				throwException: true,
+				template: RanchAnimalPlainDto
+			}))!.id;
+		}
 		ranchAnimal.idRanch = ranch!.id;
 		ranchAnimal.idStatus = status!.id;
 		ranchAnimal.idBreed = breed!.id
@@ -90,6 +117,27 @@ export class RanchAnimalsService {
 		return plainToInstance(templateClass, animal, { excludeExtraneousValues: true });
 	}
 
+	async findOneByCode<T>(code: string, optionsData: OptionsFindDto<T, RanchAnimal>): Promise<T | null> {
+		const options = Object.assign(new OptionsFindDto(), optionsData)
+		const templateClass = options.template ? options.template : (RanchAnimalDto as unknown as new () => T)
+		let template = findWithAutoMapper(templateClass);
+		const animal = await this.ranchAnimalRepository.findOne({
+			where: {
+				code: code,
+				...(options.where ? options.where : {}),
+			},
+			select: template.select,
+			relations: template.relations
+		}) as T
+		if (!animal && options.throwException === true) {
+			throw new RanchAnimalNotFoundByCodeException(code);
+		}
+		if (!animal) {
+			return null;
+		}
+		return plainToInstance(templateClass, animal, { excludeExtraneousValues: true });
+	}
+
 	async findAll<T>(idRanch: number, data: FindAllRanchAnimalsParamsDto, optionsData: OptionsFindDto<T>): Promise<PaginationResponseDto<T>> {
 		const options = Object.assign(new OptionsFindDto(), optionsData)
 		const templateClass = options.template ? options.template : (RanchAnimalDto as unknown as new () => T)
@@ -103,6 +151,12 @@ export class RanchAnimalsService {
 				...(data.idBreed ? {
 					idBreed: data.idBreed
 				} : {}),
+				...(data.idMother ? {
+					idMother: data.idMother
+				}:{}),
+				...(data.idFather ? {
+					idMother: data.idFather
+				}:{}),
 				...(data.idStatus ? {
 					idStatus: data.idStatus
 				} : {}),

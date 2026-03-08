@@ -25,6 +25,24 @@ export class FindAllRanchAnimalsParamsDto extends PaginationParamsDto {
     idBreed?: number;
 
     @ApiPropertyOptional({
+        description: "ID de la madre",
+        example: 2
+    })
+    @IsOptional()
+    @IsInt()
+    @IsPositive()
+    idMother?: number;
+
+    @ApiPropertyOptional({
+        description: "ID del padre",
+        example: 3
+    })
+    @IsOptional()
+    @IsInt()
+    @IsPositive()
+    idFather?: number;
+
+    @ApiPropertyOptional({
         description: "ID del estado del animal",
         example: 2
     })

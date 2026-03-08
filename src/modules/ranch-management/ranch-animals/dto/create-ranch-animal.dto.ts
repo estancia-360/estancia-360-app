@@ -13,6 +13,7 @@ import {
     MaxLength,
     Min
 } from 'class-validator';
+import { string } from 'joi';
 
 export class CreateRanchAnimalDto {
     @ApiProperty({
@@ -23,6 +24,26 @@ export class CreateRanchAnimalDto {
     @IsPositive({ message: 'El id de la estancia debe ser un número positivo' })
     idRanch: number;
 
+
+    @ApiProperty({
+        description: 'Código de la madre',
+        example: 'VAC-002'
+    })
+    @IsOptional()
+    @IsString({ message: 'El código debe ser un texto' })
+    @IsNotEmpty({ message: 'El código es obligatorio' })
+    @MaxLength(50, { message: 'El código no puede superar los 50 caracteres' })
+    codeMother?: string;
+
+    @ApiProperty({
+        description: 'Código del padre',
+        example: 'VAC-003'
+    })
+    @IsOptional()
+    @IsString({ message: 'El código debe ser un texto' })
+    @IsNotEmpty({ message: 'El código es obligatorio' })
+    @MaxLength(50, { message: 'El código no puede superar los 50 caracteres' })
+    codeFather?: string;
 
     @ApiProperty({
         description: 'ID de la raza del animal',

@@ -13,6 +13,12 @@ export class RanchAnimal extends BaseCreated {
     @Column({ name: 'id_ranch', type: 'int', nullable: false })
     idRanch: number;
 
+    @Column({ name: 'id_mother', type: 'bigint', nullable: true })
+    idMother: number
+
+    @Column({ name: 'id_father', type: 'bigint', nullable: true })
+    idFather: number
+
     @Column({ name: 'id_breed', type: 'int', nullable: false })
     idBreed: number
 
@@ -57,4 +63,6 @@ export class RanchAnimal extends BaseCreated {
     @ManyToOne(() => AnimalStatus, (status) => status.animals)
     @JoinColumn({ name: 'id_status' })
     status: AnimalStatus;
+
+
 }

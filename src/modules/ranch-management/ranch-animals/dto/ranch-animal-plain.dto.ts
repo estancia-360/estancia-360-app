@@ -1,10 +1,7 @@
-import { Expose, Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
-import { AnimalBreedDto } from '../../animal-breeds/dto/animal-breed.dto';
-import { AnimalStatusDto } from '../../animal-statuses/dto/animal-status.dto';
+import { ApiProperty } from "@nestjs/swagger";
+import { Expose, Type } from "class-transformer";
 
-export class RanchAnimalDto {
-
+export class RanchAnimalPlainDto {
     @ApiProperty({
         description: 'Identificador único del animal dentro de la estancia',
         example: 10
@@ -14,38 +11,11 @@ export class RanchAnimalDto {
     id: number;
 
     @ApiProperty({
-        description: 'ID de la madre',
-        example: 'AR-000123',
-        nullable: true,
+        description: 'Código o arete del animal',
+        example: 'AR-000123'
     })
     @Expose()
-    @Type(() => Number)
-    idMother?: number;
-
-    @ApiProperty({
-        description: 'ID del padre',
-        example: 'AR-0001234',
-        nullable: true,
-    })
-    @Expose()
-    @Type(() => Number)
-    idFather?: number;
-
-    @ApiProperty({
-        description: 'Estado actual del animal',
-        type: AnimalStatusDto
-    })
-    @Expose()
-    @Type(() => AnimalStatusDto)
-    status: AnimalStatusDto = new AnimalStatusDto();
-
-    @ApiProperty({
-        description: 'Raza del animal',
-        type: AnimalBreedDto
-    })
-    @Expose()
-    @Type(() => AnimalBreedDto)
-    breed: AnimalBreedDto = new AnimalBreedDto();
+    code: string;
 
     @ApiProperty({
         description: 'Fecha de nacimiento del animal',
