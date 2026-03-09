@@ -19,7 +19,7 @@ import { FindAllRanchAnimalsParamsDto } from '../dto/inputs/find-all-ranch-anima
 import { PaginationResponseDto } from 'src/shared/dto/pagination-response.dto';
 import { RanchAnimalNotFoundByCodeException } from '../exceptions/ranch-animal-not-found-by-code.exception';
 import { RanchAnimalPlainDto } from '../dto/ranch-animal-plain.dto';
-import { MyConflictException } from 'src/shared/exceptions';
+import { MyConflictException, MyNotFoundException } from 'src/shared/exceptions';
 
 @Injectable()
 export class RanchAnimalsService {
@@ -30,6 +30,84 @@ export class RanchAnimalsService {
 		private readonly animalStatusesService: AnimalStatusesService,
 		private readonly animalBreedsService: AnimalBreedsService,
 	) { }
+
+	async update<T>(id: number,data: UpdateRanchAnimalDto, cls: new () => T): Promise<T> {
+
+		if ((data.codeFather && data.codeMother) && (data.codeFather === data.codeMother)){
+			throw new MyConflictException('El padre y la madre no pueden tenrer el mismo codigo.');
+		}
+
+		const ranchAnimal = await this.ranchAnimalRepository.findOne({
+			where: {
+				id: id
+			}
+		});
+		if (!ranchAnimal) throw new MyNotFoundException('El animal no fue encontrado');
+		if (data.codeMother){
+			ranchAnimal.idMother = (await this.findOneByCode(data.codeMother,{
+				throwException: true,
+				template: RanchAnimalPlainDto
+			}))!.id;
+		}
+		if (data.codeFather){
+			ranchAnimal.idFather = (await this.findOneByCode(data.codeFather,{
+				throwException: true,
+				template: RanchAnimalPlainDto
+			}))!.id;
+		}
+		if (data.idRanch){
+			const ranch = await this.ranchesService.findOneById(data.idRanch, {
+				template: RanchDto,
+				throwException: true,
+			})
+			ranchAnimal.idRanch = ranch!.id;
+		}
+		
+		if (data.idStatus){
+			const status = await this.animalStatusesService.findOneById(data.idStatus, {
+				where: {
+					isActive: true,
+				},
+				template: AnimalStatusDto,
+				throwException: true,
+			})
+			ranchAnimal.idStatus = status!.id;
+		}
+
+		if (data.idBreed){
+			const breed = await this.animalBreedsService.findOneById(data.idBreed, {
+				where: {
+					isActive: true,
+				},
+				template: AnimalBreedDto,
+				throwException: true,
+			})
+			ranchAnimal.idBreed = breed!.id
+		}
+		
+		if (data.code){
+			const existCode = await this.findOneByCode(data.code,{
+				throwException: false,
+				template: RanchAnimalPlainDto
+			})
+			if (existCode){
+				throw new MyConflictException('El codigo del animal a crear ya se encuentra en uso')
+			}
+			ranchAnimal.code = data.code;
+		}
+		if (data.birthdate)	ranchAnimal.birthdate = data.birthdate;
+		if (data.weight) { ranchAnimal.weight = data.weight }
+		if (data.sex) ranchAnimal.sex = data.sex;
+		if (data.isCastrated === false || data.isCastrated === true) { ranchAnimal.isCastrated = data.isCastrated }
+		if (data.isCastrated === false || data.isCastrated === true) { ranchAnimal.isCastrated = data.isCastrated }
+		if (data.isCastrated === false || data.isCastrated === true) { ranchAnimal.isCastrated = data.isCastrated }
+		if (data.createdAt) ranchAnimal.createdAt = data.createdAt;
+		const animalSaved = await this.ranchAnimalRepository.save(ranchAnimal);
+		return (await this.findOneById(animalSaved.id, {
+			throwException: true,
+			template: cls,
+		}))!
+	}
 
 	async create<T>(data: CreateRanchAnimalDto, cls: new () => T): Promise<T> {
 

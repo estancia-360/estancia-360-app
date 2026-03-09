@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, Query, ParseIntPipe, Put } from '@nestjs/common';
 import { RanchAnimalsService } from '../services/ranch-animals.service';
 import { CreateRanchAnimalDto } from '../dto/create-ranch-animal.dto';
 import { UpdateRanchAnimalDto } from '../dto/update-ranch-animal.dto';
@@ -9,6 +9,7 @@ import { CreatedRes, OkRes, SwaggerBadRequestCommon, SwaggerNotFoundCommon } fro
 import { FindAllRanchAnimalsResponseDto } from '../dto/find-all-ranch-animals-response.dto';
 import { CommonResponseDto } from 'src/shared/dto';
 import { FindAllRanchAnimalsParamsDto } from '../dto/inputs/find-all-ranch-animals-params.dto';
+import { UpdateRanchAnimalResponseDto } from '../dto/update-ranch-animal-response.dto';
 
 @ApiTags('Animales de estancia')
 @Controller('ranch-animals')
@@ -34,6 +35,30 @@ export class RanchAnimalsController {
 			message: 'Se registro el animal exitosamente'
 		})
 	}
+
+	@Put(':idAnimal')
+	@ApiOperation({
+		summary: 'Api para actualizar un animal en la estancia',
+	})
+	@ApiOkResponse({
+		type: UpdateRanchAnimalResponseDto,
+		description: 'Respuesta en caso de actualizar exitosamente al animal'
+	})
+	@ApiBadRequestResponse(SwaggerBadRequestCommon())
+	@ApiNotFoundResponse(SwaggerNotFoundCommon())
+	async update(
+		@Res() res: express.Response,
+		@Body() data: UpdateRanchAnimalDto,
+		@Param('idAnimal',ParseIntPipe) id: number
+	){
+		const animal = await this.ranchAnimalsService.update(id,data,RanchAnimalDto)
+		return OkRes(res,{
+			message: 'Se actualizo el animal exitosamente',
+			animal: animal
+		})
+	}
+
+
 
 	@Get(':idRanch')
 	@ApiOperation({

@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { Transform } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
     IsBoolean,
     IsDateString,
@@ -19,6 +19,7 @@ export class FindAllRanchAnimalsParamsDto extends PaginationParamsDto {
         description: "ID de la raza del animal",
         example: 4
     })
+    @Type(() => Number)
     @IsOptional()
     @IsInt()
     @IsPositive()
@@ -28,6 +29,7 @@ export class FindAllRanchAnimalsParamsDto extends PaginationParamsDto {
         description: "ID de la madre",
         example: 2
     })
+    @Type(() => Number)
     @IsOptional()
     @IsInt()
     @IsPositive()
@@ -37,6 +39,7 @@ export class FindAllRanchAnimalsParamsDto extends PaginationParamsDto {
         description: "ID del padre",
         example: 3
     })
+    @Type(() => Number)
     @IsOptional()
     @IsInt()
     @IsPositive()
@@ -46,6 +49,7 @@ export class FindAllRanchAnimalsParamsDto extends PaginationParamsDto {
         description: "ID del estado del animal",
         example: 2
     })
+    @Type(() => Number)
     @IsOptional()
     @IsInt()
     @IsPositive()
@@ -71,6 +75,7 @@ export class FindAllRanchAnimalsParamsDto extends PaginationParamsDto {
         description: "Peso del animal",
         example: 350
     })
+    @Type(() => Number)
     @IsOptional()
     @IsNumber()
     @IsPositive()
