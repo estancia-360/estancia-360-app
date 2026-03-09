@@ -32,6 +32,14 @@ export class RanchAnimalDto {
     idFather?: number;
 
     @ApiProperty({
+        description: 'Código o arete del animal',
+        example: 'AR-000123'
+    })
+    @Expose()
+    @Type(() => String)
+    code: string;
+
+    @ApiProperty({
         description: 'Estado actual del animal',
         type: AnimalStatusDto
     })
