@@ -82,4 +82,22 @@ export class RanchAnimalsController {
 		)
 		return OkRes(res,animals)
 	}
+
+	@Get('one/:idAnimal')
+	@ApiOperation({
+		summary: 'Api para obtener un animal'
+	})
+	@ApiOkResponse({
+		type: RanchAnimalDto,
+		description: 'Repsuesta en caso de obtener al animal de la estancia'
+	})
+	async findOneById(
+		@Param('idAnimal',ParseIntPipe) idAnimal: number,
+		@Res() res: express.Response
+	){
+		const animal = await this.ranchAnimalsService.findOneById(idAnimal,{
+			template: RanchAnimalDto,
+		})
+		return OkRes(res,animal)
+	}
 }
