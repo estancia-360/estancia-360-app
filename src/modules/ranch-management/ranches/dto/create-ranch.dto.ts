@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsNotEmpty, IsPositive, IsString, MaxLength } from "class-validator";
+import { ArrayMinSize, IsArray, IsInt, IsNotEmpty, IsPositive, IsString, MaxLength } from "class-validator";
 
 export class CreateRanchDto {
     @ApiProperty({
@@ -21,13 +21,15 @@ export class CreateRanchDto {
     idCity: number;
 
     @ApiProperty({
-        description: "ID del tipo de producción ganadera de la estancia",
-        example: 3
+        description: "IDs de los tipos de producción ganadera de la estancia",
+        example: [1, 2],
+        isArray: true,
     })
-    @IsInt()
-    @IsPositive()
-    @IsNotEmpty()
-    idProductionType: number;
+    @IsArray()
+    @ArrayMinSize(1)
+    @IsInt({ each: true })
+    @IsPositive({ each: true })
+    idProductionTypes: number[];
 
     @ApiProperty({
         description: "Nombre de la estancia ganadera",

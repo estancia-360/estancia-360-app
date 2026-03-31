@@ -17,12 +17,15 @@ import { UsersService } from 'src/modules/user-management/users/services/users.s
 import { RanchUsersService } from '../../ranch-users/services/ranch-users.service';
 import { UserDto } from 'src/modules/user-management/users/dto/user.dto';
 import { RanchRolesEnum } from 'src/shared/enums';
+import { RanchProductionType } from '../../ranch-production-types/entities/ranch-production-type.entity';
 
 @Injectable()
 export class RanchesService {
 	constructor(
 		@InjectRepository(Ranch)
 		private readonly ranchRepository: Repository<Ranch>,
+		@InjectRepository(RanchProductionType)
+		private readonly ranchProductionTypeRepository: Repository<RanchProductionType>,
 		private readonly citiesService: CitiesService,
 		private readonly productionTypesService: ProductionTypesService,
 		private readonly usersService: UsersService,
@@ -30,41 +33,47 @@ export class RanchesService {
 	) { }
 
 	async create<T>(data: CreateRanchDto, cls: new () => T) {
-		const user = await this.usersService.findOneById(data.idUser,{
+		const user = await this.usersService.findOneById(data.idUser, {
 			throwException: true,
 			where: {
 				isDeleted: false
 			},
 			template: UserDto,
-		})
+		});
 		const city = await this.citiesService.findOneById(data.idCity, {
 			throwException: true,
 			where: {
 				isActive: true
 			},
 			template: CityDto
-		})
-		const productionType = await this.productionTypesService.findOneById(data.idProductionType, {
-			throwException: true,
-			where: {
-				isActive: true
-			},
-			template: ProductionTypeDto
-		})
+		});
+		await Promise.all(data.idProductionTypes.map(idPt =>
+			this.productionTypesService.findOneById(idPt, {
+				throwException: true,
+				where: { isActive: true },
+				template: ProductionTypeDto
+			})
+		));
 		const ranch = new Ranch();
 		ranch.idCity = city!.id;
-		ranch.idProductionType = productionType!.id
-		ranch.name = data.name.trim()
+		ranch.name = data.name.trim();
 		const ranchSaved = await this.ranchRepository.save(ranch);
-		const ranchUser = await this.ranchUsersService.create({
+		await this.ranchProductionTypeRepository.save(
+			data.idProductionTypes.map(idPt => {
+				const rpt = new RanchProductionType();
+				rpt.idRanch = ranchSaved.id;
+				rpt.idProductionType = idPt;
+				return rpt;
+			})
+		);
+		await this.ranchUsersService.create({
 			idUser: data.idUser,
 			idRanch: ranchSaved.id,
 			idRanchRole: RanchRolesEnum.OWNER
 		});
-		return await this.findOneById<T>(ranchSaved.id,{
+		return await this.findOneById<T>(ranchSaved.id, {
 			template: cls
-		})
-
+		});
 	}
 
 	async findOneById<T>(idProductionType: number, optionsData: OptionsFindDto<T, Ranch>) {

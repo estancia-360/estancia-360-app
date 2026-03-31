@@ -3,6 +3,7 @@ import { RanchPasture } from '../../ranch-pastures/entities/ranch-pasture.entity
 import { Ranch } from '../../ranches/entities/ranch.entity';
 import { BaseCreatedUpdated } from 'src/infrastructure/database/utils';
 import { RanchAnimal } from '../../ranch-animals/entities/ranch-animal.entity';
+import { LotTypesEnum } from 'src/shared/enums';
 
 @Entity('ranch_lots')
 export class RanchLot extends BaseCreatedUpdated {
@@ -25,6 +26,21 @@ export class RanchLot extends BaseCreatedUpdated {
         length: 50,
     })
     name: string;
+
+    @Column({
+        name: 'lot_type',
+        type: 'varchar',
+        length: 30,
+        enum: LotTypesEnum,
+    })
+    lotType: LotTypesEnum;
+
+    @Column({
+        name: 'capacity',
+        type: 'int',
+        nullable: true,
+    })
+    capacity: number | null;
 
     @Column({
         name: 'is_active',

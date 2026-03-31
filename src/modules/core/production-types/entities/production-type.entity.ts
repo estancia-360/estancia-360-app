@@ -1,5 +1,5 @@
 import { BaseEntityTurnable } from 'src/infrastructure/database/utils';
-import { Ranch } from 'src/modules/ranch-management/ranches/entities/ranch.entity';
+import { RanchProductionType } from 'src/modules/ranch-management/ranch-production-types/entities/ranch-production-type.entity';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
 @Entity('production_types')
@@ -14,6 +14,6 @@ export class ProductionType extends BaseEntityTurnable {
     })
     name: string;
 
-    @OneToMany(() => Ranch,(ranch) => ranch.productionType)
-    ranches: Ranch[]
+    @OneToMany(() => RanchProductionType, (rpt) => rpt.productionType)
+    ranchProductionTypes: RanchProductionType[]
 }

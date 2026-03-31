@@ -7,10 +7,11 @@ import { CitiesModule } from 'src/modules/core/cities/cities.module';
 import { ProductionTypesModule } from 'src/modules/core/production-types/production-types.module';
 import { RanchUsersModule } from '../ranch-users/ranch-users.module';
 import { UsersModule } from 'src/modules/user-management/users/users.module';
+import { RanchProductionType } from '../ranch-production-types/entities/ranch-production-type.entity';
 
 @Module({
 	imports: [
-		TypeOrmModule.forFeature([Ranch]),
+		TypeOrmModule.forFeature([Ranch, RanchProductionType]),
 		CitiesModule,
 		ProductionTypesModule,
 		RanchUsersModule,
