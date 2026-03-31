@@ -17,6 +17,16 @@ import { RanchRolesModule } from './modules/core/ranch-roles/ranch-roles.module'
 import { AnimalBreedsModule } from './modules/ranch-management/animal-breeds/animal-breeds.module';
 import { AnimalStatusesModule } from './modules/ranch-management/animal-statuses/animal-statuses.module';
 import { RanchAnimalsModule } from './modules/ranch-management/ranch-animals/ranch-animals.module';
+import { ProductiveStatusesModule } from './modules/core/productive-statuses/productive-statuses.module';
+import { RanchPasturesModule } from './modules/ranch-management/ranch-pastures/ranch-pastures.module';
+import { RanchLotsModule } from './modules/ranch-management/ranch-lots/ranch-lots.module';
+import { EventTypesModule } from './modules/core/event-types/event-types.module';
+import { AnimalEventsModule } from './modules/ranch-management/animal-events/animal-events.module';
+import { AnimalDeclaredHistoryModule } from './modules/breeding-modules/animal-declared-history/animal-declared-history.module';
+import { BreedingServicesModule } from './modules/breeding-modules/breeding-services/breeding-services.module';
+import { GestationDiagnosesModule } from './modules/breeding-modules/gestation-diagnoses/gestation-diagnoses.module';
+import { ParturitionsModule } from './modules/breeding-modules/parturitions/parturitions.module';
+import { WeaningsModule } from './modules/breeding-modules/weanings/weanings.module';
 
 @Module({
 	imports: [
@@ -38,6 +48,16 @@ import { RanchAnimalsModule } from './modules/ranch-management/ranch-animals/ran
 		AnimalBreedsModule,
 		AnimalStatusesModule,
 		RanchAnimalsModule,
+		ProductiveStatusesModule,
+		RanchPasturesModule,
+		RanchLotsModule,
+		EventTypesModule,
+		AnimalEventsModule,
+		AnimalDeclaredHistoryModule,
+		BreedingServicesModule,
+		GestationDiagnosesModule,
+		ParturitionsModule,
+		WeaningsModule,
 	],
 })
 export class AppModule { }

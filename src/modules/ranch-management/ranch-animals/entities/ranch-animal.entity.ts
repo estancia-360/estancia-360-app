@@ -1,12 +1,18 @@
-import { BaseCreated } from "src/infrastructure/database/utils";
-import { Check, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BaseCreatedUpdated } from "src/infrastructure/database/utils";
+import { Check, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { AnimalBreed } from "../../animal-breeds/entities/animal-breed.entity";
 import { AnimalStatus } from "../../animal-statuses/entities/animal-status.entity";
 import { Ranch } from "../../ranches/entities/ranch.entity";
+import { ProductiveStatus } from "src/modules/core/productive-statuses/entities/productive-status.entity";
+import { RanchLot } from "../../ranch-lots/entities/ranch-lot.entity";
+import { AnimalEvent } from "../../animal-events/entities/animal-event.entity";
+import { AnimalDeclaredHistory } from "src/modules/breeding-modules/animal-declared-history/entities/animal-declared-history.entity";
+import { BreedingService } from "src/modules/breeding-modules/breeding-services/entities/breeding-service.entity";
+import { Parturition } from "src/modules/breeding-modules/parturitions/entities/parturition.entity";
 
 @Entity('ranch_animals')
 @Check(`sex IN ('F','M')`)
-export class RanchAnimal extends BaseCreated {
+export class RanchAnimal extends BaseCreatedUpdated {
     @PrimaryGeneratedColumn({ name: 'id_ranch_animal' })
     id: number;
 
@@ -24,6 +30,12 @@ export class RanchAnimal extends BaseCreated {
 
     @Column({ name: 'id_status', type: 'int', nullable: false })
     idStatus: number
+
+    @Column({ name: 'id_productive_status', type: 'int', nullable: true })
+    idProductiveStatus: number
+
+    @Column({ name: 'id_lot', type: 'bigint', nullable: true })
+    idLot?: number
 
     @Column({ name: 'code', type: 'varchar', length: 50, unique: true })
     code: string;
@@ -43,6 +55,9 @@ export class RanchAnimal extends BaseCreated {
     @Column({ name: 'sex', type: 'char', length: 1 })
     sex: 'F' | 'M';
 
+    @Column({ name: 'origin', type: 'varchar', length: 300, nullable: true })
+    origin: string
+
     @Column({ name: 'is_castrated', type: 'boolean', nullable: true })
     isCastrated?: boolean;
 
@@ -52,17 +67,38 @@ export class RanchAnimal extends BaseCreated {
     @Column({ name: 'has_calved', type: 'boolean', nullable: true })
     hasCalved?: boolean;
 
+    @Column({ name: 'is_weaned', type: 'boolean', nullable: true })
+    isWeared?: boolean
+
     @ManyToOne(() => Ranch, (ranch) => ranch.animals)
     @JoinColumn({ name: 'id_ranch' })
-    ranch: Ranch;
+    ranch?: Ranch;
 
     @ManyToOne(() => AnimalBreed, (breed) => breed.animals)
     @JoinColumn({ name: 'id_breed' })
-    breed: AnimalBreed;
+    breed?: AnimalBreed;
 
     @ManyToOne(() => AnimalStatus, (status) => status.animals)
     @JoinColumn({ name: 'id_status' })
-    status: AnimalStatus;
+    status?: AnimalStatus;
 
+    @ManyToOne(() => ProductiveStatus,(ps) => ps.animals)
+    @JoinColumn({ name: 'id_productive_status' })
+    productiveStatus?: ProductiveStatus 
 
+    @ManyToOne(() => RanchLot,(lot) => lot.animals )
+    @JoinColumn({ name: 'id_lot' })
+    lot?: RanchLot
+
+    @OneToMany(() => AnimalEvent,(ae) => ae.animal)
+    events?: AnimalEvent[]
+
+    @OneToOne(() => AnimalDeclaredHistory,(adh) => adh.animal)
+    declaredHistory?: AnimalDeclaredHistory
+
+    @OneToMany(() => BreedingService,(bs) => bs.animalMale)
+    breedingService?: BreedingService[]
+
+    @OneToMany(() => Parturition,(p) => p.cria)
+    parturitionsAsCria?: Parturition[]
 }

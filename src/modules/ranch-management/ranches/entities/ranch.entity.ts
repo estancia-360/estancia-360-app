@@ -5,6 +5,8 @@ import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryGe
 import { RanchUser } from "../../ranch-users/entities/ranch-user.entity";
 import { RanchAnimal } from "../../ranch-animals/entities/ranch-animal.entity";
 import { User } from "src/modules/user-management/users/entities/user.entity";
+import { RanchPasture } from "../../ranch-pastures/entities/ranch-pasture.entity";
+import { RanchLot } from "../../ranch-lots/entities/ranch-lot.entity";
 
 @Entity('ranches')
 export class Ranch extends BaseCreatedUpdated {
@@ -46,4 +48,10 @@ export class Ranch extends BaseCreatedUpdated {
 
     @ManyToMany(() => User,(user) => user.ranches)
     users: User[]
+
+    @OneToMany(() => RanchPasture,(rp) => rp.ranch)
+    pastures?: RanchPasture[]
+
+    @OneToMany(() => RanchLot,(lot) => lot.ranch)
+    lots?: RanchLot[]
 }
