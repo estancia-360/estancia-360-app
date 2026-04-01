@@ -1,34 +1,44 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query, Res } from '@nestjs/common';
+import { ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import * as express from 'express';
 import { AnimalEventsService } from '../services/animal-events.service';
-import { CreateAnimalEventDto } from '../dto/create-animal-event.dto';
-import { UpdateAnimalEventDto } from '../dto/update-animal-event.dto';
+import { AnimalEventDto } from '../dto/animal-event.dto';
+import { PaginationParamsDto } from 'src/shared/dto/pagination-params.dto';
+import { OkRes, SwaggerNotFoundCommon } from 'src/shared/utils';
 
+@ApiTags('Eventos de animales')
 @Controller('animal-events')
 export class AnimalEventsController {
-  constructor(private readonly animalEventsService: AnimalEventsService) {}
+    constructor(private readonly animalEventsService: AnimalEventsService) {}
 
-  @Post()
-  create(@Body() createAnimalEventDto: CreateAnimalEventDto) {
-    return this.animalEventsService.create(createAnimalEventDto);
-  }
+    @Get('animal/:idRanchAnimal')
+    @ApiOperation({ summary: 'Obtener todos los eventos de un animal con paginación' })
+    @ApiOkResponse({ description: 'Lista paginada de eventos del animal' })
+    async findAllByAnimal(
+        @Param('idRanchAnimal', ParseIntPipe) idRanchAnimal: number,
+        @Query() pagination: PaginationParamsDto,
+        @Res() res: express.Response,
+    ) {
+        const result = await this.animalEventsService.findAllByAnimal(
+            idRanchAnimal,
+            pagination,
+            { template: AnimalEventDto },
+        );
+        return OkRes(res, result);
+    }
 
-  @Get()
-  findAll() {
-    return this.animalEventsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.animalEventsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAnimalEventDto: UpdateAnimalEventDto) {
-    return this.animalEventsService.update(+id, updateAnimalEventDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.animalEventsService.remove(+id);
-  }
+    @Get(':idEvent')
+    @ApiOperation({ summary: 'Obtener un evento de animal por ID' })
+    @ApiOkResponse({ description: 'Evento encontrado', type: AnimalEventDto })
+    @ApiNotFoundResponse(SwaggerNotFoundCommon())
+    async findOneById(
+        @Param('idEvent', ParseIntPipe) idEvent: number,
+        @Res() res: express.Response,
+    ) {
+        const event = await this.animalEventsService.findOneById(idEvent, {
+            throwException: true,
+            template: AnimalEventDto,
+        });
+        return OkRes(res, { animalEvent: event });
+    }
 }

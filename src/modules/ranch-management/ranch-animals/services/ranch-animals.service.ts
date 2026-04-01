@@ -3,7 +3,7 @@ import { CreateRanchAnimalDto } from '../dto/create-ranch-animal.dto';
 import { UpdateRanchAnimalDto } from '../dto/update-ranch-animal.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RanchAnimal } from '../entities/ranch-animal.entity';
-import { Like, Repository } from 'typeorm';
+import { EntityManager, Like, Repository } from 'typeorm';
 import { AnimalStatusesService } from '../../animal-statuses/services/animal-statuses.service';
 import { AnimalBreedsService } from '../../animal-breeds/services/animal-breeds.service';
 import { OptionsFindDto } from 'src/shared/dto/options-find.dto';
@@ -214,6 +214,62 @@ export class RanchAnimalsService {
 			return null;
 		}
 		return plainToInstance(templateClass, animal, { excludeExtraneousValues: true });
+	}
+
+	/**
+	 * Crea una cría (nuevo animal) dentro de una transacción activa.
+	 * Usado por el caso de uso de parto cuando la cría nació viva.
+	 * El llamador es responsable de las validaciones previas (raza, estado, código único).
+	 */
+	async createCria(data: {
+		idRanch: number;
+		idBreed: number;
+		idStatus: number;
+		code: string;
+		sex: 'F' | 'M';
+		birthdate: Date;
+		weight?: number;
+		idMother?: number;
+	}, manager: EntityManager): Promise<RanchAnimal> {
+		const repo = manager.getRepository(RanchAnimal);
+		const cria = new RanchAnimal();
+		cria.idRanch = data.idRanch;
+		cria.idBreed = data.idBreed;
+		cria.idStatus = data.idStatus;
+		cria.code = data.code;
+		cria.sex = data.sex;
+		cria.birthdate = data.birthdate;
+		if (data.weight) cria.weight = data.weight;
+		if (data.idMother) cria.idMother = data.idMother;
+		return await repo.save(cria);
+	}
+
+	/**
+	 * Marca un animal como que ya ha parido (hasCalved = true).
+	 * Si se pasa manager, opera dentro de la transacción activa.
+	 */
+	async markHasCalved(idRanchAnimal: number, manager: EntityManager): Promise<void> {
+		const repo = manager.getRepository(RanchAnimal);
+		await repo.update({ id: idRanchAnimal }, { hasCalved: true });
+	}
+
+	/**
+	 * Marca una cría como destetada (isWeared = true).
+	 * Si se pasa manager, opera dentro de la transacción activa.
+	 */
+	async markIsWeaned(idRanchAnimal: number, manager: EntityManager): Promise<void> {
+		const repo = manager.getRepository(RanchAnimal);
+		await repo.update({ id: idRanchAnimal }, { isWeared: true });
+	}
+
+	/**
+	 * Revierte el marcado de destete de un animal (isWeared = null).
+	 * Se usa al eliminar un registro de destete.
+	 * Si se pasa manager, opera dentro de la transacción activa.
+	 */
+	async markIsNotWeaned(idRanchAnimal: number, manager: EntityManager): Promise<void> {
+		const repo = manager.getRepository(RanchAnimal);
+		await repo.update({ id: idRanchAnimal }, { isWeared: null as any });
 	}
 
 	async findAll<T>(idRanch: number, data: FindAllRanchAnimalsParamsDto, optionsData: OptionsFindDto<T>): Promise<PaginationResponseDto<T>> {

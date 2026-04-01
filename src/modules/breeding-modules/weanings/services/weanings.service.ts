@@ -1,26 +1,125 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EntityManager, Repository } from 'typeorm';
+import { Weaning } from '../entities/weaning.entity';
 import { CreateWeaningDto } from '../dto/create-weaning.dto';
-import { UpdateWeaningDto } from '../dto/update-weaning.dto';
+import { WeaningDto } from '../dto/weaning.dto';
+import { OptionsFindDto } from 'src/shared/dto/options-find.dto';
+import { findWithAutoMapper } from 'src/infrastructure/database/utils';
+import { plainToInstance } from 'class-transformer';
+import { PaginationParamsDto } from 'src/shared/dto/pagination-params.dto';
+import { PaginationResponseDto } from 'src/shared/dto/pagination-response.dto';
+import { WeaningNotFoundException } from '../exceptions/weaning-not-found.exception';
 
 @Injectable()
 export class WeaningsService {
-  create(createWeaningDto: CreateWeaningDto) {
-    return 'This action adds a new weaning';
-  }
+    constructor(
+        @InjectRepository(Weaning)
+        private readonly weaningsRepository: Repository<Weaning>,
+    ) {}
 
-  findAll() {
-    return `This action returns all weanings`;
-  }
+    /**
+     * Crea un registro en weanings.
+     * Si se pasa manager, opera dentro de la transacción activa.
+     */
+    async create(data: CreateWeaningDto, manager?: EntityManager): Promise<Weaning> {
+        const repo = manager?.getRepository(Weaning) ?? this.weaningsRepository;
+        const weaning = new Weaning();
+        weaning.idEvent = data.idEvent;
+        if (data.weaningWeight) weaning.weaningWeight = data.weaningWeight;
+        if (data.ageDays) weaning.ageDays = data.ageDays;
+        return await repo.save(weaning);
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} weaning`;
-  }
+    /**
+     * Busca un destete por ID.
+     * Si se pasa manager, opera dentro de la transacción activa.
+     */
+    async findOneById<T>(
+        id: number,
+        optionsData: OptionsFindDto<T, Weaning>,
+        manager?: EntityManager,
+    ): Promise<T | null> {
+        const repo = manager?.getRepository(Weaning) ?? this.weaningsRepository;
+        const options = Object.assign(new OptionsFindDto(), optionsData);
+        const templateClass = options.template ?? (WeaningDto as unknown as new () => T);
+        const template = findWithAutoMapper(templateClass);
+        const weaning = await repo.findOne({
+            where: {
+                id,
+                ...(options.where ?? {}),
+            },
+            select: template.select,
+            relations: template.relations,
+        }) as T;
+        if (!weaning && options.throwException) throw new WeaningNotFoundException(id);
+        if (!weaning) return null;
+        return plainToInstance(templateClass, weaning, { excludeExtraneousValues: true });
+    }
 
-  update(id: number, updateWeaningDto: UpdateWeaningDto) {
-    return `This action updates a #${id} weaning`;
-  }
+    /**
+     * Actualiza los campos editables de un destete.
+     */
+    async update(
+        id: number,
+        data: { weaningWeight?: number; ageDays?: number },
+        manager?: EntityManager,
+    ): Promise<Weaning> {
+        const repo = manager?.getRepository(Weaning) ?? this.weaningsRepository;
+        const weaning = await repo.findOne({ where: { id } });
+        if (!weaning) throw new WeaningNotFoundException(id);
+        if (data.weaningWeight !== undefined) weaning.weaningWeight = data.weaningWeight;
+        if (data.ageDays !== undefined) weaning.ageDays = data.ageDays;
+        return await repo.save(weaning);
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} weaning`;
-  }
+    /**
+     * Elimina un destete por ID.
+     * Si se pasa manager, opera dentro de la transacción activa.
+     */
+    async deleteById(id: number, manager?: EntityManager): Promise<void> {
+        const repo = manager?.getRepository(Weaning) ?? this.weaningsRepository;
+        await repo.delete({ id });
+    }
+
+    /**
+     * Verifica si ya existe un destete para un evento dado.
+     */
+    async findOneByEventId(idEvent: number, manager?: EntityManager): Promise<Weaning | null> {
+        const repo = manager?.getRepository(Weaning) ?? this.weaningsRepository;
+        return await repo.findOne({ where: { idEvent } }) ?? null;
+    }
+
+    /**
+     * Lista todos los destetes de un animal con paginación.
+     */
+    async findAllByAnimal<T>(
+        idRanchAnimal: number,
+        paginationData: PaginationParamsDto,
+        optionsData: OptionsFindDto<T>,
+    ): Promise<PaginationResponseDto<T>> {
+        const options = Object.assign(new OptionsFindDto(), optionsData);
+        const templateClass = options.template ?? (WeaningDto as unknown as new () => T);
+        const template = findWithAutoMapper(templateClass);
+        const { page, limit } = paginationData;
+        const [weanings, total] = await this.weaningsRepository.findAndCount({
+            select: template.select,
+            relations: template.relations,
+            where: {
+                event: { idRanchAnimal },
+            },
+            skip: (page - 1) * limit,
+            take: limit,
+            order: { createdAt: 'DESC' },
+        }) as [T[], number];
+        return {
+            data: plainToInstance(templateClass, weanings),
+            meta: {
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                total,
+            },
+        };
+    }
 }

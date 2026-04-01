@@ -5,10 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AnimalEvent } from './entities/animal-event.entity';
 
 @Module({
-	imports: [
-		TypeOrmModule.forFeature([AnimalEvent]),
-	],
-	controllers: [AnimalEventsController],
-	providers: [AnimalEventsService],
+    imports: [
+        TypeOrmModule.forFeature([AnimalEvent]),
+    ],
+    controllers: [AnimalEventsController],
+    providers: [AnimalEventsService],
+    exports: [AnimalEventsService],
 })
-export class AnimalEventsModule { }
+export class AnimalEventsModule {}

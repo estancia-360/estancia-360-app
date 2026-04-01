@@ -1,34 +1,133 @@
 import { Injectable } from '@nestjs/common';
-import { CreateGestationDiagnosisDto } from '../dto/create-gestation-diagnosis.dto';
-import { UpdateGestationDiagnosisDto } from '../dto/update-gestation-diagnosis.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { GestationDiagnosis } from '../entities/gestation-diagnosis.entity';
-import { Repository } from 'typeorm';
+import { CreateGestationDiagnosisDto } from '../dto/create-gestation-diagnosis.dto';
+import { GestationDiagnosisDto } from '../dto/gestation-diagnosis.dto';
+import { OptionsFindDto } from 'src/shared/dto/options-find.dto';
+import { findWithAutoMapper } from 'src/infrastructure/database/utils';
+import { plainToInstance } from 'class-transformer';
+import { PaginationParamsDto } from 'src/shared/dto/pagination-params.dto';
+import { PaginationResponseDto } from 'src/shared/dto/pagination-response.dto';
+import { GestationDiagnosisNotFoundException } from '../exceptions/gestation-diagnosis-not-found.exception';
 
 @Injectable()
 export class GestationDiagnosesService {
-	constructor(
-		@InjectRepository(GestationDiagnosis)
-		private readonly gestationDiagnosisRepository: Repository<GestationDiagnosis>
-	){}
+    constructor(
+        @InjectRepository(GestationDiagnosis)
+        private readonly gestationDiagnosisRepository: Repository<GestationDiagnosis>,
+    ) {}
 
-	create(createGestationDiagnosisDto: CreateGestationDiagnosisDto) {
-		return 'This action adds a new gestationDiagnosis';
-	}
+    /**
+     * Crea un registro en gestation_diagnoses.
+     * Si se pasa manager, opera dentro de la transacción activa.
+     */
+    async create(data: CreateGestationDiagnosisDto, manager?: EntityManager): Promise<GestationDiagnosis> {
+        const repo = manager?.getRepository(GestationDiagnosis) ?? this.gestationDiagnosisRepository;
+        const gd = new GestationDiagnosis();
+        gd.idEvent = data.idEvent;
+        gd.idService = data.idService;
+        gd.method = data.method;
+        gd.result = data.result;
+        if (data.gestationDays) gd.gestationDays = data.gestationDays;
+        if (data.estimatedBirth) gd.estimatedBirth = data.estimatedBirth;
+        if (data.veterinarian) gd.veterinarian = data.veterinarian;
+        return await repo.save(gd);
+    }
 
-	findAll() {
-		return `This action returns all gestationDiagnoses`;
-	}
+    /**
+     * Busca un diagnóstico de gestación por ID.
+     * Si se pasa manager, opera dentro de la transacción activa.
+     */
+    async findOneById<T>(
+        id: number,
+        optionsData: OptionsFindDto<T, GestationDiagnosis>,
+        manager?: EntityManager,
+    ): Promise<T | null> {
+        const repo = manager?.getRepository(GestationDiagnosis) ?? this.gestationDiagnosisRepository;
+        const options = Object.assign(new OptionsFindDto(), optionsData);
+        const templateClass = options.template ?? (GestationDiagnosisDto as unknown as new () => T);
+        const template = findWithAutoMapper(templateClass);
+        const gd = await repo.findOne({
+            where: {
+                id,
+                ...(options.where ?? {}),
+            },
+            select: template.select,
+            relations: template.relations,
+        }) as T;
+        if (!gd && options.throwException) throw new GestationDiagnosisNotFoundException(id);
+        if (!gd) return null;
+        return plainToInstance(templateClass, gd, { excludeExtraneousValues: true });
+    }
 
-	findOne(id: number) {
-		return `This action returns a #${id} gestationDiagnosis`;
-	}
+    /**
+     * Actualiza los campos editables de un diagnóstico de gestación.
+     */
+    async update(
+        id: number,
+        data: { method?: string; result?: string; gestationDays?: number; estimatedBirth?: Date; veterinarian?: string },
+        manager?: EntityManager,
+    ): Promise<GestationDiagnosis> {
+        const repo = manager?.getRepository(GestationDiagnosis) ?? this.gestationDiagnosisRepository;
+        const gd = await repo.findOne({ where: { id } });
+        if (!gd) throw new GestationDiagnosisNotFoundException(id);
+        if (data.method !== undefined) gd.method = data.method as any;
+        if (data.result !== undefined) gd.result = data.result as any;
+        if (data.gestationDays !== undefined) gd.gestationDays = data.gestationDays;
+        if (data.estimatedBirth !== undefined) gd.estimatedBirth = data.estimatedBirth;
+        if (data.veterinarian !== undefined) gd.veterinarian = data.veterinarian;
+        return await repo.save(gd);
+    }
 
-	update(id: number, updateGestationDiagnosisDto: UpdateGestationDiagnosisDto) {
-		return `This action updates a #${id} gestationDiagnosis`;
-	}
+    /**
+     * Elimina un diagnóstico de gestación por ID.
+     * Si se pasa manager, opera dentro de la transacción activa.
+     */
+    async deleteById(id: number, manager?: EntityManager): Promise<void> {
+        const repo = manager?.getRepository(GestationDiagnosis) ?? this.gestationDiagnosisRepository;
+        await repo.delete({ id });
+    }
 
-	remove(id: number) {
-		return `This action removes a #${id} gestationDiagnosis`;
-	}
+    /**
+     * Verifica si ya existe un diagnóstico para un servicio de monta dado.
+     * Usado en app/breeding para validar unicidad 1:1.
+     */
+    async findOneByServiceId(idService: number, manager?: EntityManager): Promise<GestationDiagnosis | null> {
+        const repo = manager?.getRepository(GestationDiagnosis) ?? this.gestationDiagnosisRepository;
+        return await repo.findOne({ where: { idService } }) ?? null;
+    }
+
+    /**
+     * Lista todos los diagnósticos de gestación de un animal con paginación.
+     */
+    async findAllByAnimal<T>(
+        idRanchAnimal: number,
+        paginationData: PaginationParamsDto,
+        optionsData: OptionsFindDto<T>,
+    ): Promise<PaginationResponseDto<T>> {
+        const options = Object.assign(new OptionsFindDto(), optionsData);
+        const templateClass = options.template ?? (GestationDiagnosisDto as unknown as new () => T);
+        const template = findWithAutoMapper(templateClass);
+        const { page, limit } = paginationData;
+        const [diagnoses, total] = await this.gestationDiagnosisRepository.findAndCount({
+            select: template.select,
+            relations: template.relations,
+            where: {
+                event: { idRanchAnimal },
+            },
+            skip: (page - 1) * limit,
+            take: limit,
+            order: { createdAt: 'DESC' },
+        }) as [T[], number];
+        return {
+            data: plainToInstance(templateClass, diagnoses),
+            meta: {
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                total,
+            },
+        };
+    }
 }

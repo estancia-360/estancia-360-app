@@ -11,6 +11,14 @@ export class RanchAnimalPlainDto {
     id: number;
 
     @ApiProperty({
+        description: 'ID de la estancia a la que pertenece el animal',
+        example: 1
+    })
+    @Expose()
+    @Type(() => Number)
+    idRanch: number;
+
+    @ApiProperty({
         description: 'Código o arete del animal',
         example: 'AR-000123'
     })

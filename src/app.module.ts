@@ -27,6 +27,7 @@ import { BreedingServicesModule } from './modules/breeding-modules/breeding-serv
 import { GestationDiagnosesModule } from './modules/breeding-modules/gestation-diagnoses/gestation-diagnoses.module';
 import { ParturitionsModule } from './modules/breeding-modules/parturitions/parturitions.module';
 import { WeaningsModule } from './modules/breeding-modules/weanings/weanings.module';
+import { BreedingModule } from './app/breeding/breeding.module';
 
 @Module({
 	imports: [
@@ -58,6 +59,7 @@ import { WeaningsModule } from './modules/breeding-modules/weanings/weanings.mod
 		GestationDiagnosesModule,
 		ParturitionsModule,
 		WeaningsModule,
+		BreedingModule,
 	],
 })
 export class AppModule { }
