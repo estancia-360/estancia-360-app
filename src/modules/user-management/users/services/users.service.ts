@@ -8,6 +8,7 @@ import { findWithAutoMapper } from 'src/infrastructure/database/utils';
 import { UserNotFoundByCiException, UserNotFoundByEmailException, UserNotFoundByIdException } from '../exceptions/user-not-found.exception';
 import { UserDto } from '../dto/user.dto';
 import { UserWithRanchesDto } from '../dto/user-with-ranches.dto';
+import { RanchRolesEnum } from 'src/shared/enums';
 
 @Injectable()
 export class UsersService {
@@ -84,5 +85,23 @@ export class UsersService {
 			}
 		})
 		return ranchUsers;
+	}
+
+	/**
+	 * Obtiene el ID de la estancia donde el usuario es OWNER.
+	 * Usa QueryBuilder para una consulta eficiente y directa.
+	 * 
+	 * @param idUser - ID del usuario
+	 * @returns idRanch si es dueño, null si no es dueño de ninguna estancia
+	 */
+	async findRanchIdWhereUserIsOwner(idUser: number): Promise<number | null> {
+		const result = await this.userRepository
+			.createQueryBuilder('u')
+			.innerJoin('u.ranchUsers', 'ru', 'ru.idRole = :ownerRole', { ownerRole: RanchRolesEnum.OWNER })
+			.select('ru.idRanch', 'idRanch')
+			.where('u.id = :idUser', { idUser })
+			.getRawOne();
+		
+		return result ? result.idRanch : null;
 	}
 }

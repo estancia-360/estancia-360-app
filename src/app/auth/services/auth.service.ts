@@ -53,11 +53,16 @@ export class AuthService {
         const { secret, expiresIn } = this.jwtConfig.get();
         const expires = expiresIn as ms.StringValue;
         const token = this.jwtService.sign(payload, { secret, expiresIn: expires });
+        
+        // Obtener ID de la estancia si el usuario es dueño
+        const idRanch = await this.usersService.findRanchIdWhereUserIsOwner(user.id);
+        
         return {
             message: 'Ingreso exitoso',
             accessToken: token,
             idUser: user.id,
-            idRole: user.role.id
+            idRole: user.role.id,
+            idRanch: idRanch  // null si no es dueño
         };
     }
 

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LoginResponseDto {
     @ApiProperty({
@@ -24,4 +24,11 @@ export class LoginResponseDto {
         example: 2,
     })
     idRole: number;
+
+    @ApiPropertyOptional({
+        description: 'Identificador de la estancia donde el usuario es dueño (Owner). Será null si el usuario no es dueño de ninguna estancia.',
+        example: 5,
+        nullable: true,
+    })
+    idRanch?: number | null;
 }
