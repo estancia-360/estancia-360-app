@@ -28,6 +28,7 @@ import { GestationDiagnosesModule } from './modules/breeding-modules/gestation-d
 import { ParturitionsModule } from './modules/breeding-modules/parturitions/parturitions.module';
 import { WeaningsModule } from './modules/breeding-modules/weanings/weanings.module';
 import { BreedingModule } from './app/breeding/breeding.module';
+import { AnimalClassesModule } from './modules/core/animal-classes/animal-classes.module';
 
 @Module({
 	imports: [
@@ -60,6 +61,7 @@ import { BreedingModule } from './app/breeding/breeding.module';
 		ParturitionsModule,
 		WeaningsModule,
 		BreedingModule,
+		AnimalClassesModule,
 	],
 })
 export class AppModule { }

@@ -26,8 +26,10 @@ export class WeaningsService {
         const repo = manager?.getRepository(Weaning) ?? this.weaningsRepository;
         const weaning = new Weaning();
         weaning.idEvent = data.idEvent;
+        weaning.idCria = data.idCria;
+        weaning.idLotDest = data.idLotDest;
         if (data.weaningWeight) weaning.weaningWeight = data.weaningWeight;
-        if (data.ageDays) weaning.ageDays = data.ageDays;
+        if (data.weaningAge) weaning.weaningAge = data.weaningAge;
         return await repo.save(weaning);
     }
 
@@ -62,14 +64,14 @@ export class WeaningsService {
      */
     async update(
         id: number,
-        data: { weaningWeight?: number; ageDays?: number },
+        data: { weaningWeight?: number; weaningAge?: number },
         manager?: EntityManager,
     ): Promise<Weaning> {
         const repo = manager?.getRepository(Weaning) ?? this.weaningsRepository;
         const weaning = await repo.findOne({ where: { id } });
         if (!weaning) throw new WeaningNotFoundException(id);
         if (data.weaningWeight !== undefined) weaning.weaningWeight = data.weaningWeight;
-        if (data.ageDays !== undefined) weaning.ageDays = data.ageDays;
+        if (data.weaningAge !== undefined) weaning.weaningAge = data.weaningAge;
         return await repo.save(weaning);
     }
 
@@ -83,11 +85,19 @@ export class WeaningsService {
     }
 
     /**
-     * Verifica si ya existe un destete para un evento dado.
+     * Verifica si ya existe un destete para una cría y evento dados.
      */
     async findOneByEventId(idEvent: number, manager?: EntityManager): Promise<Weaning | null> {
         const repo = manager?.getRepository(Weaning) ?? this.weaningsRepository;
         return await repo.findOne({ where: { idEvent } }) ?? null;
+    }
+
+    /**
+     * Busca destete por ID de cría.
+     */
+    async findOneByCriaId(idCria: number, manager?: EntityManager): Promise<Weaning | null> {
+        const repo = manager?.getRepository(Weaning) ?? this.weaningsRepository;
+        return await repo.findOne({ where: { idCria } }) ?? null;
     }
 
     /**
@@ -106,7 +116,7 @@ export class WeaningsService {
             select: template.select,
             relations: template.relations,
             where: {
-                event: { idRanchAnimal },
+                idCria: idRanchAnimal,
             },
             skip: (page - 1) * limit,
             take: limit,

@@ -20,6 +20,9 @@ import { PaginationResponseDto } from 'src/shared/dto/pagination-response.dto';
 import { RanchAnimalNotFoundByCodeException } from '../exceptions/ranch-animal-not-found-by-code.exception';
 import { RanchAnimalPlainDto } from '../dto/ranch-animal-plain.dto';
 import { MyConflictException, MyNotFoundException } from 'src/shared/exceptions';
+import { AnimalClassesService } from 'src/modules/core/animal-classes/services/animal-classes.service';
+import { AnimalClassDto } from 'src/modules/core/animal-classes/dto/animal-class.dto';
+import { PRODUCTIVE_STATUS_IDS } from 'src/app/breeding/constants/productive-status-ids.constant';
 
 @Injectable()
 export class RanchAnimalsService {
@@ -29,6 +32,7 @@ export class RanchAnimalsService {
 		private readonly ranchesService: RanchesService,
 		private readonly animalStatusesService: AnimalStatusesService,
 		private readonly animalBreedsService: AnimalBreedsService,
+		private readonly animalClassesService: AnimalClassesService,
 	) { }
 
 	async update<T>(id: number,data: UpdateRanchAnimalDto, cls: new () => T): Promise<T> {
@@ -95,12 +99,16 @@ export class RanchAnimalsService {
 			}
 			ranchAnimal.code = data.code;
 		}
+		if (data.idAnimalClass) {
+			await this.animalClassesService.findOneById(data.idAnimalClass, {
+				template: AnimalClassDto,
+				throwException: true,
+			});
+			ranchAnimal.idAnimalClass = data.idAnimalClass;
+		}
 		if (data.birthdate)	ranchAnimal.birthdate = data.birthdate;
 		if (data.weight) { ranchAnimal.weight = data.weight }
 		if (data.sex) ranchAnimal.sex = data.sex;
-		if (data.isCastrated === false || data.isCastrated === true) { ranchAnimal.isCastrated = data.isCastrated }
-		if (data.isCastrated === false || data.isCastrated === true) { ranchAnimal.isCastrated = data.isCastrated }
-		if (data.isCastrated === false || data.isCastrated === true) { ranchAnimal.isCastrated = data.isCastrated }
 		if (data.createdAt) ranchAnimal.createdAt = data.createdAt;
 		const animalSaved = await this.ranchAnimalRepository.save(ranchAnimal);
 		return (await this.findOneById(animalSaved.id, {
@@ -158,14 +166,12 @@ export class RanchAnimalsService {
 		}
 		ranchAnimal.idRanch = ranch!.id;
 		ranchAnimal.idStatus = status!.id;
-		ranchAnimal.idBreed = breed!.id
+		ranchAnimal.idBreed = breed!.id;
+		ranchAnimal.idAnimalClass = data.idAnimalClass;
 		ranchAnimal.code = data.code;
 		ranchAnimal.birthdate = data.birthdate;
 		if (data.weight) { ranchAnimal.weight = data.weight }
 		ranchAnimal.sex = data.sex;
-		if (data.isCastrated === false || data.isCastrated === true) { ranchAnimal.isCastrated = data.isCastrated }
-		if (data.isCastrated === false || data.isCastrated === true) { ranchAnimal.isCastrated = data.isCastrated }
-		if (data.isCastrated === false || data.isCastrated === true) { ranchAnimal.isCastrated = data.isCastrated }
 		ranchAnimal.createdAt = data.createdAt;
 		const animalSaved = await this.ranchAnimalRepository.save(ranchAnimal);
 		return (await this.findOneById(animalSaved.id, {
@@ -216,15 +222,11 @@ export class RanchAnimalsService {
 		return plainToInstance(templateClass, animal, { excludeExtraneousValues: true });
 	}
 
-	/**
-	 * Crea una cría (nuevo animal) dentro de una transacción activa.
-	 * Usado por el caso de uso de parto cuando la cría nació viva.
-	 * El llamador es responsable de las validaciones previas (raza, estado, código único).
-	 */
 	async createCria(data: {
 		idRanch: number;
 		idBreed: number;
 		idStatus: number;
+		idAnimalClass: number;
 		code: string;
 		sex: 'F' | 'M';
 		birthdate: Date;
@@ -236,40 +238,15 @@ export class RanchAnimalsService {
 		cria.idRanch = data.idRanch;
 		cria.idBreed = data.idBreed;
 		cria.idStatus = data.idStatus;
+		cria.idAnimalClass = data.idAnimalClass;
+		cria.idProductiveStatus = PRODUCTIVE_STATUS_IDS.CRIA; // Cría
 		cria.code = data.code;
 		cria.sex = data.sex;
 		cria.birthdate = data.birthdate;
+		cria.origin = 'born';
 		if (data.weight) cria.weight = data.weight;
 		if (data.idMother) cria.idMother = data.idMother;
 		return await repo.save(cria);
-	}
-
-	/**
-	 * Marca un animal como que ya ha parido (hasCalved = true).
-	 * Si se pasa manager, opera dentro de la transacción activa.
-	 */
-	async markHasCalved(idRanchAnimal: number, manager: EntityManager): Promise<void> {
-		const repo = manager.getRepository(RanchAnimal);
-		await repo.update({ id: idRanchAnimal }, { hasCalved: true });
-	}
-
-	/**
-	 * Marca una cría como destetada (isWeared = true).
-	 * Si se pasa manager, opera dentro de la transacción activa.
-	 */
-	async markIsWeaned(idRanchAnimal: number, manager: EntityManager): Promise<void> {
-		const repo = manager.getRepository(RanchAnimal);
-		await repo.update({ id: idRanchAnimal }, { isWeared: true });
-	}
-
-	/**
-	 * Revierte el marcado de destete de un animal (isWeared = null).
-	 * Se usa al eliminar un registro de destete.
-	 * Si se pasa manager, opera dentro de la transacción activa.
-	 */
-	async markIsNotWeaned(idRanchAnimal: number, manager: EntityManager): Promise<void> {
-		const repo = manager.getRepository(RanchAnimal);
-		await repo.update({ id: idRanchAnimal }, { isWeared: null as any });
 	}
 
 	async findAll<T>(idRanch: number, data: FindAllRanchAnimalsParamsDto, optionsData: OptionsFindDto<T>): Promise<PaginationResponseDto<T>> {
@@ -309,15 +286,9 @@ export class RanchAnimalsService {
 				...(data.createdAt ? {
 					createdAt: data.createdAt
 				} : {}),
-				...(data.isCastrated === undefined ? {}:{
-					isCastrated: data.isCastrated
-				}),
-				...(data.isSterilized === undefined ? {}:{
-					isSterilized: data.isSterilized
-				}),
-				...(data.hasCalved === undefined ? {}:{
-					hasCalved: data.hasCalved
-				}),
+				...(data.idAnimalClass ? {
+					idAnimalClass: data.idAnimalClass
+				} : {}),
 			},
 			skip: (page - 1) * limit,
 			take: limit
@@ -332,5 +303,37 @@ export class RanchAnimalsService {
 				total: total,
 			}
 		}
+	}
+
+	/**
+	 * Marca un animal como destetado.
+	 * Actualiza el estado productivo de Cría (1) a Recría (2).
+	 * Utilizado por register-weaning.use-case.
+	 * 
+	 * @param idRanchAnimal - ID del animal a destetado
+	 * @param manager - EntityManager para operación dentro de transacción
+	 */
+	async markIsWeaned(idRanchAnimal: number, manager: EntityManager): Promise<void> {
+		await manager.update(
+			RanchAnimal,
+			{ id: idRanchAnimal },
+			{ idProductiveStatus: PRODUCTIVE_STATUS_IDS.RECRIA }, // Recría
+		);
+	}
+
+	/**
+	 * Deshace el destete de un animal.
+	 * Actualiza el estado productivo de Recría (2) a Cría (1).
+	 * Utilizado por delete-weaning.use-case.
+	 * 
+	 * @param idRanchAnimal - ID del animal
+	 * @param manager - EntityManager para operación dentro de transacción
+	 */
+	async markIsNotWeaned(idRanchAnimal: number, manager: EntityManager): Promise<void> {
+		await manager.update(
+			RanchAnimal,
+			{ id: idRanchAnimal },
+			{ idProductiveStatus: PRODUCTIVE_STATUS_IDS.CRIA }, // Cría
+		);
 	}
 }

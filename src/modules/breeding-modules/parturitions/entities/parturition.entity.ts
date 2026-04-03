@@ -11,9 +11,22 @@ import {
 } from 'typeorm';
 import { GestationDiagnosis } from '../../gestation-diagnoses/entities/gestation-diagnosis.entity';
 
-export const BIRTH_TYPES = ['normal', 'assisted', 'cesarean'] as const;
-export const CRIA_STATUS = ['alive', 'dead'] as const;
-export const MOTHER_CONDITION = ['good', 'regular', 'bad'] as const;
+export enum BirthTypeEnum {
+    NORMAL = 'normal',
+    ASSISTED = 'assisted',
+    CESAREAN = 'cesarean',
+}
+
+export enum CriaStatusEnum {
+    ALIVE = 'alive',
+    DEAD = 'dead',
+}
+
+export enum MotherConditionEnum {
+    GOOD = 'good',
+    REGULAR = 'regular',
+    BAD = 'bad',
+}
 
 @Entity('parturitions')
 export class Parturition extends BaseCreatedUpdated {
@@ -37,7 +50,7 @@ export class Parturition extends BaseCreatedUpdated {
         type: 'varchar',
         length: 20,
     })
-    birthType: typeof BIRTH_TYPES[number];
+    birthType: BirthTypeEnum;
 
     @Column({
         name: 'cria_weight',
@@ -51,7 +64,7 @@ export class Parturition extends BaseCreatedUpdated {
         type: 'varchar',
         length: 20,
     })
-    criaStatus: typeof CRIA_STATUS[number];
+    criaStatus: CriaStatusEnum;
 
     @Column({
         name: 'mother_condition',
@@ -59,7 +72,7 @@ export class Parturition extends BaseCreatedUpdated {
         length: 20,
         nullable: true,
     })
-    motherCondition?: typeof MOTHER_CONDITION[number];
+    motherCondition?: MotherConditionEnum;
 
     @ManyToOne(() => AnimalEvent, (event) => event.parturitions, {
         onDelete: 'CASCADE',

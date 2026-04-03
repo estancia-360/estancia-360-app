@@ -6,6 +6,7 @@ import { RanchAnimal } from './entities/ranch-animal.entity';
 import { AnimalStatusesModule } from '../animal-statuses/animal-statuses.module';
 import { AnimalBreedsModule } from '../animal-breeds/animal-breeds.module';
 import { RanchesModule } from '../ranches/ranches.module';
+import { AnimalClassesModule } from 'src/modules/core/animal-classes/animal-classes.module';
 
 @Module({
 	imports: [
@@ -13,6 +14,7 @@ import { RanchesModule } from '../ranches/ranches.module';
 		RanchesModule,
 		AnimalStatusesModule,
 		AnimalBreedsModule,
+		AnimalClassesModule,
 	],
 	controllers: [RanchAnimalsController],
 	providers: [RanchAnimalsService],

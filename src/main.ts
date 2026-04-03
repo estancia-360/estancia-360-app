@@ -4,6 +4,7 @@ import { environmentConfig, getCorsOptions, logServerStatus, MyServerConfig } fr
 import { EnviromentEnum } from './shared/enums';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 
 async function bootstrap() {
 	const config = environmentConfig[process.env.NODE_ENV ?? EnviromentEnum.DEVELOPMENT]
@@ -34,6 +35,8 @@ async function bootstrap() {
 
 	const corsOptions = getCorsOptions(myServer.domainFrontend);
 	app.enableCors(corsOptions);
+
+	app.useGlobalFilters(new AllExceptionsFilter());
 
 	app.useGlobalPipes(new ValidationPipe({
 		transform: true,

@@ -3,6 +3,21 @@ import { Expose, Type } from "class-transformer";
 import { CityDto } from "src/modules/core/cities/dto/city.dto";
 import { ProductionTypeDto } from "src/modules/core/production-types/dto/production-type.dto";
 
+/**
+ * DTO intermedio para la tabla de unión ranch_production_types.
+ * Refleja la relación Ranch → RanchProductionType → ProductionType.
+ */
+export class RanchProductionTypeDto {
+    @ApiProperty({ description: "ID del tipo de producción", example: 1 })
+    @Expose()
+    idProductionType: number;
+
+    @ApiProperty({ description: "Tipo de producción", type: ProductionTypeDto })
+    @Expose()
+    @Type(() => ProductionTypeDto)
+    productionType: ProductionTypeDto = new ProductionTypeDto();
+}
+
 export class RanchDto {
     @ApiProperty({
         description: "Identificador único de la estancia ganadera",
@@ -27,12 +42,12 @@ export class RanchDto {
     city: CityDto = new CityDto();
 
     @ApiProperty({
-        description: "Tipo de producción principal de la estancia ganadera",
-        type: ProductionTypeDto
+        description: "Tipos de producción de la estancia ganadera",
+        type: [RanchProductionTypeDto]
     })
     @Expose()
-    @Type(() => ProductionTypeDto)
-    productionType: ProductionTypeDto = new ProductionTypeDto();
+    @Type(() => RanchProductionTypeDto)
+    productionTypes: RanchProductionTypeDto[] = [new RanchProductionTypeDto()];
 
     @ApiProperty({
         description: "Fecha de creación del registro de la estancia",

@@ -10,6 +10,8 @@ import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/
 import { GestationDiagnosisDto } from 'src/modules/breeding-modules/gestation-diagnoses/dto/gestation-diagnosis.dto';
 import { EVENT_TYPE_IDS } from '../constants/event-type-ids.constant';
 import { MyConflictException, MyNotFoundException, MyBadRequestException } from 'src/shared/exceptions';
+import { CriaStatusEnum } from 'src/modules/breeding-modules/parturitions/entities/parturition.entity';
+import { GestationResultEnum } from 'src/modules/breeding-modules/gestation-diagnoses/entities/gestation-diagnosis.entity';
 
 @Injectable()
 export class RegisterParturitionUseCase {
@@ -58,8 +60,7 @@ export class RegisterParturitionUseCase {
             );
         }
 
-        // Verificar que el resultado del diagnóstico es 'pregnant'
-        if (diagnosis!.result !== 'pregnant') {
+        if (diagnosis!.result !== GestationResultEnum.PREGNANT) {
             throw new MyBadRequestException(
                 `El diagnóstico ID=${dto.idDiagnosis} tiene resultado "${diagnosis!.result}". Solo se puede registrar un parto sobre un diagnóstico positivo (pregnant).`,
             );
@@ -83,14 +84,14 @@ export class RegisterParturitionUseCase {
                 eventDate: new Date(dto.eventDate),
             }, manager);
 
-            // 2. Si la cría nació viva, crear el registro de la cría
             let idCria: number | undefined;
-            if (dto.criaStatus === 'alive' && dto.criaData) {
+            if (dto.criaStatus === CriaStatusEnum.ALIVE && dto.criaData) {
                 const cria = await this.ranchAnimalsService.createCria(
                     {
                         idRanch: mother!.idRanch,
                         idBreed: dto.criaData.idBreed,
                         idStatus: dto.criaData.idStatus,
+                        idAnimalClass: dto.criaData.idAnimalClass,
                         code: dto.criaData.code,
                         sex: dto.criaData.sex,
                         birthdate: new Date(dto.eventDate),
@@ -102,7 +103,6 @@ export class RegisterParturitionUseCase {
                 idCria = cria.id;
             }
 
-            // 3. Crear el registro del parto
             const parturition = await this.parturitionsService.create({
                 idEvent: event.id,
                 idDiagnosis: dto.idDiagnosis,
@@ -113,10 +113,6 @@ export class RegisterParturitionUseCase {
                 motherCondition: dto.motherCondition,
             }, manager);
 
-            // 4. Marcar a la madre como hasCalved = true
-            await this.ranchAnimalsService.markHasCalved(dto.idRanchAnimal, manager);
-
-            // 5. Retornar el DTO completo
             return (await this.parturitionsService.findOneById(
                 parturition.id,
                 { throwException: true, template: ParturitionDto },

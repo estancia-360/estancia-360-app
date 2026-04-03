@@ -1,7 +1,7 @@
 export enum LotTypesEnum {
-    BREEDING    = 'breeding',
-    REARING     = 'rearing',
-    FATTENING   = 'fattening',
-    REPRODUCTIVE = 'reproductive',
+    BREEDING    = 'cria',
+    REARING     = 'recria',
+    FATTENING   = 'engorde',
+    REPRODUCTIVE = 'reproductiva',
     GENERAL     = 'general',
 }

@@ -1,7 +1,6 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { Transform, Type } from "class-transformer";
+import { Type } from "class-transformer";
 import {
-    IsBoolean,
     IsDateString,
     IsEnum,
     IsInt,
@@ -11,116 +10,67 @@ import {
     IsString
 } from "class-validator";
 import { PaginationParamsDto } from "src/shared/dto/pagination-params.dto";
-import { transformToBoolean } from "src/shared/utils";
 
 export class FindAllRanchAnimalsParamsDto extends PaginationParamsDto {
 
-    @ApiPropertyOptional({
-        description: "ID de la raza del animal",
-        example: 4
-    })
+    @ApiPropertyOptional({ description: "ID de la raza del animal", example: 4 })
     @Type(() => Number)
     @IsOptional()
     @IsInt()
     @IsPositive()
     idBreed?: number;
 
-    @ApiPropertyOptional({
-        description: "ID de la madre",
-        example: 2
-    })
+    @ApiPropertyOptional({ description: "ID de la madre", example: 2 })
     @Type(() => Number)
     @IsOptional()
     @IsInt()
     @IsPositive()
     idMother?: number;
 
-    @ApiPropertyOptional({
-        description: "ID del padre",
-        example: 3
-    })
+    @ApiPropertyOptional({ description: "ID del padre", example: 3 })
     @Type(() => Number)
     @IsOptional()
     @IsInt()
     @IsPositive()
     idFather?: number;
 
-    @ApiPropertyOptional({
-        description: "ID del estado del animal",
-        example: 2
-    })
+    @ApiPropertyOptional({ description: "ID del estado del animal", example: 2 })
     @Type(() => Number)
     @IsOptional()
     @IsInt()
     @IsPositive()
     idStatus?: number;
 
-    @ApiPropertyOptional({
-        description: "Código identificador del animal",
-        example: "BOV-2024-001"
-    })
+    @ApiPropertyOptional({ description: "ID de la clase del animal", example: 1 })
+    @Type(() => Number)
+    @IsOptional()
+    @IsInt()
+    @IsPositive()
+    idAnimalClass?: number;
+
+    @ApiPropertyOptional({ description: "Código identificador del animal", example: "BOV-2024-001" })
     @IsOptional()
     @IsString()
     code?: string;
 
-    @ApiPropertyOptional({
-        description: "Fecha de nacimiento del animal en formato ISO (YYYY-MM-DD)",
-        example: "2024-03-15"
-    })
+    @ApiPropertyOptional({ description: "Fecha de nacimiento del animal (YYYY-MM-DD)", example: "2024-03-15" })
     @IsOptional()
     @IsDateString()
     birthdate?: Date;
 
-    @ApiPropertyOptional({
-        description: "Peso del animal",
-        example: 350
-    })
+    @ApiPropertyOptional({ description: "Peso del animal", example: 350 })
     @Type(() => Number)
     @IsOptional()
     @IsNumber()
     @IsPositive()
     weight?: number;
 
-    @ApiPropertyOptional({
-        description: "Sexo del animal",
-        enum: ['F', 'M'],
-        example: "M"
-    })
+    @ApiPropertyOptional({ description: "Sexo del animal", enum: ['F', 'M'], example: "M" })
     @IsOptional()
     @IsEnum(['F', 'M'])
     sex?: 'F' | 'M';
 
-    @ApiPropertyOptional({
-        description: "Indica si el animal está castrado",
-        example: true
-    })
-    @IsOptional()
-    @IsBoolean()
-    @Transform(({ value }) => transformToBoolean(value, 'isCastrated'))
-    isCastrated?: boolean;
-
-    @ApiPropertyOptional({
-        description: "Indica si el animal está esterilizado",
-        example: false
-    })
-    @IsOptional()
-    @IsBoolean()
-    @Transform(({ value }) => transformToBoolean(value, 'isSterilized'))
-    isSterilized?: boolean;
-
-    @ApiPropertyOptional({
-        description: "Indica si el animal ya ha parido",
-        example: true
-    })
-    @IsOptional()
-    @IsBoolean()
-    @Transform(({ value }) => transformToBoolean(value, 'hasCalved'))
-    hasCalved?: boolean;
-
-    @ApiPropertyOptional({
-        description: "Fecha y hora exacta de creación del registro (ISO 8601)",
-        example: "2026-01-10T14:35:20.000Z"
-    })
+    @ApiPropertyOptional({ description: "Fecha y hora exacta de creación del registro (ISO 8601)", example: "2026-01-10T14:35:20.000Z" })
     @IsOptional()
     @IsDateString()
     createdAt?: Date;

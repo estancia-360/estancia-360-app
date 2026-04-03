@@ -8,6 +8,16 @@ export class CreateWeaningDto {
     @IsPositive({ message: 'El id del evento debe ser positivo' })
     idEvent: number;
 
+    @ApiProperty({ description: 'ID de la cría a destetar', example: 5 })
+    @IsInt({ message: 'El id de la cría debe ser un número entero' })
+    @IsPositive({ message: 'El id de la cría debe ser positivo' })
+    idCria: number;
+
+    @ApiProperty({ description: 'ID del lote de recría destino', example: 3 })
+    @IsInt({ message: 'El id del lote destino debe ser un número entero' })
+    @IsPositive({ message: 'El id del lote destino debe ser positivo' })
+    idLotDest: number;
+
     @ApiProperty({ description: 'Peso de la cría al destete en kg', required: false, example: 120.5 })
     @IsOptional()
     @Type(() => Number)
@@ -21,5 +31,5 @@ export class CreateWeaningDto {
     @IsInt({ message: 'La edad en días debe ser un número entero' })
     @Min(1, { message: 'La edad debe ser mayor a 0' })
     @Max(730, { message: 'La edad no puede superar 730 días' })
-    ageDays?: number;
+    weaningAge?: number;
 }

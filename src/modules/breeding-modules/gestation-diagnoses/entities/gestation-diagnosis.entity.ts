@@ -11,8 +11,15 @@ import {
 import { BreedingService } from '../../breeding-services/entities/breeding-service.entity';
 import { Parturition } from '../../parturitions/entities/parturition.entity';
 
-export const GESTATION_METHODS = ['palpation', 'ultrasound'] as const;
-export const GESTATION_RESULTS = ['pregnant', 'empty'] as const;
+export enum GestationMethodEnum {
+    PALPATION = 'palpation',
+    ULTRASOUND = 'ultrasound',
+}
+
+export enum GestationResultEnum {
+    PREGNANT = 'pregnant',
+    EMPTY = 'empty',
+}
 
 @Entity('gestation_diagnoses')
 export class GestationDiagnosis extends BaseCreatedUpdated {
@@ -33,14 +40,14 @@ export class GestationDiagnosis extends BaseCreatedUpdated {
         type: 'varchar',
         length: 20,
     })
-    method: typeof GESTATION_METHODS[number];
+    method: GestationMethodEnum;
 
     @Column({
         name: 'result',
         type: 'varchar',
         length: 20,
     })
-    result: typeof GESTATION_RESULTS[number];
+    result: GestationResultEnum;
 
     @Column({
         name: 'gestation_days',

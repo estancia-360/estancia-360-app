@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDateString, IsIn, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, Max, MaxLength, Min } from 'class-validator';
-import { GESTATION_METHODS, GESTATION_RESULTS } from 'src/modules/breeding-modules/gestation-diagnoses/entities/gestation-diagnosis.entity';
+import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, Max, MaxLength, Min } from 'class-validator';
+import { GestationMethodEnum, GestationResultEnum } from 'src/modules/breeding-modules/gestation-diagnoses/entities/gestation-diagnosis.entity';
 
 export class RegisterGestationDiagnosisDto {
     @ApiProperty({ description: 'ID del animal hembra a diagnosticar', example: 10 })
@@ -14,13 +14,13 @@ export class RegisterGestationDiagnosisDto {
     @IsPositive({ message: 'El id del servicio debe ser positivo' })
     idService: number;
 
-    @ApiProperty({ description: 'Método de diagnóstico utilizado', enum: GESTATION_METHODS, example: 'ultrasound' })
-    @IsIn(GESTATION_METHODS, { message: 'El método debe ser: palpation o ultrasound' })
-    method: typeof GESTATION_METHODS[number];
+    @ApiProperty({ description: 'Método de diagnóstico utilizado', enum: GestationMethodEnum, example: GestationMethodEnum.ULTRASOUND })
+    @IsEnum(GestationMethodEnum, { message: 'El método debe ser: palpation o ultrasound' })
+    method: GestationMethodEnum;
 
-    @ApiProperty({ description: 'Resultado del diagnóstico', enum: GESTATION_RESULTS, example: 'pregnant' })
-    @IsIn(GESTATION_RESULTS, { message: 'El resultado debe ser: pregnant o empty' })
-    result: typeof GESTATION_RESULTS[number];
+    @ApiProperty({ description: 'Resultado del diagnóstico', enum: GestationResultEnum, example: GestationResultEnum.PREGNANT })
+    @IsEnum(GestationResultEnum, { message: 'El resultado debe ser: pregnant o empty' })
+    result: GestationResultEnum;
 
     @ApiProperty({ description: 'Días de gestación estimados al momento del diagnóstico', required: false, example: 45 })
     @IsOptional()

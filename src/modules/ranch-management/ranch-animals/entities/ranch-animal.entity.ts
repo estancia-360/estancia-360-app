@@ -9,6 +9,7 @@ import { AnimalEvent } from "../../animal-events/entities/animal-event.entity";
 import { AnimalDeclaredHistory } from "src/modules/breeding-modules/animal-declared-history/entities/animal-declared-history.entity";
 import { BreedingService } from "src/modules/breeding-modules/breeding-services/entities/breeding-service.entity";
 import { Parturition } from "src/modules/breeding-modules/parturitions/entities/parturition.entity";
+import { AnimalClass } from "src/modules/core/animal-classes/entities/animal-class.entity";
 
 @Entity('ranch_animals')
 @Check(`sex IN ('F','M')`)
@@ -34,6 +35,9 @@ export class RanchAnimal extends BaseCreatedUpdated {
     @Column({ name: 'id_productive_status', type: 'int', nullable: true })
     idProductiveStatus: number
 
+    @Column({ name: 'id_animal_class', type: 'int', nullable: false })
+    idAnimalClass: number
+
     @Column({ name: 'id_lot', type: 'bigint', nullable: true })
     idLot?: number
 
@@ -58,18 +62,6 @@ export class RanchAnimal extends BaseCreatedUpdated {
     @Column({ name: 'origin', type: 'varchar', length: 300, nullable: true })
     origin: string
 
-    @Column({ name: 'is_castrated', type: 'boolean', nullable: true })
-    isCastrated?: boolean;
-
-    @Column({ name: 'is_sterilized', type: 'boolean', nullable: true })
-    isSterilized?: boolean;
-
-    @Column({ name: 'has_calved', type: 'boolean', nullable: true })
-    hasCalved?: boolean;
-
-    @Column({ name: 'is_weaned', type: 'boolean', nullable: true })
-    isWeared?: boolean
-
     @ManyToOne(() => Ranch, (ranch) => ranch.animals)
     @JoinColumn({ name: 'id_ranch' })
     ranch?: Ranch;
@@ -84,9 +76,13 @@ export class RanchAnimal extends BaseCreatedUpdated {
 
     @ManyToOne(() => ProductiveStatus,(ps) => ps.animals)
     @JoinColumn({ name: 'id_productive_status' })
-    productiveStatus?: ProductiveStatus 
+    productiveStatus?: ProductiveStatus
 
-    @ManyToOne(() => RanchLot,(lot) => lot.animals )
+    @ManyToOne(() => AnimalClass)
+    @JoinColumn({ name: 'id_animal_class' })
+    animalClass?: AnimalClass
+
+    @ManyToOne(() => RanchLot,(lot) => lot.animals)
     @JoinColumn({ name: 'id_lot' })
     lot?: RanchLot
 

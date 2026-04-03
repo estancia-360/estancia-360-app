@@ -1,26 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsInt, IsOptional, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
 import {
-    BIRTH_TYPES,
-    CRIA_STATUS,
-    MOTHER_CONDITION,
+    BirthTypeEnum,
+    CriaStatusEnum,
+    MotherConditionEnum,
 } from 'src/modules/breeding-modules/parturitions/entities/parturition.entity';
 
-/**
- * DTO para actualizar un parto.
- * Todos los campos son opcionales — solo se actualiza lo que se envía.
- * No se puede cambiar el evento, el diagnóstico ni la cría vinculada.
- */
 export class UpdateParturitionDto {
     @ApiProperty({
         description: 'Tipo de parto',
-        enum: BIRTH_TYPES,
+        enum: BirthTypeEnum,
         required: false,
-        example: 'assisted',
+        example: BirthTypeEnum.ASSISTED,
     })
     @IsOptional()
-    @IsIn(BIRTH_TYPES, { message: `El tipo de parto debe ser uno de: ${BIRTH_TYPES.join(', ')}` })
-    birthType?: typeof BIRTH_TYPES[number];
+    @IsEnum(BirthTypeEnum, { message: 'El tipo de parto debe ser: normal, assisted o cesarean' })
+    birthType?: BirthTypeEnum;
 
     @ApiProperty({
         description: 'Peso de la cría al nacer en kilogramos',
@@ -34,21 +29,21 @@ export class UpdateParturitionDto {
 
     @ApiProperty({
         description: 'Estado de la cría al nacer',
-        enum: CRIA_STATUS,
+        enum: CriaStatusEnum,
         required: false,
-        example: 'alive',
+        example: CriaStatusEnum.ALIVE,
     })
     @IsOptional()
-    @IsIn(CRIA_STATUS, { message: `El estado de la cría debe ser uno de: ${CRIA_STATUS.join(', ')}` })
-    criaStatus?: typeof CRIA_STATUS[number];
+    @IsEnum(CriaStatusEnum, { message: 'El estado de la cría debe ser: alive o dead' })
+    criaStatus?: CriaStatusEnum;
 
     @ApiProperty({
         description: 'Condición de la madre tras el parto',
-        enum: MOTHER_CONDITION,
+        enum: MotherConditionEnum,
         required: false,
-        example: 'good',
+        example: MotherConditionEnum.GOOD,
     })
     @IsOptional()
-    @IsIn(MOTHER_CONDITION, { message: `La condición de la madre debe ser uno de: ${MOTHER_CONDITION.join(', ')}` })
-    motherCondition?: typeof MOTHER_CONDITION[number];
+    @IsEnum(MotherConditionEnum, { message: 'La condición de la madre debe ser: good, regular o bad' })
+    motherCondition?: MotherConditionEnum;
 }

@@ -8,6 +8,11 @@ export class RegisterWeaningDto {
     @IsPositive({ message: 'El id de la cría debe ser positivo' })
     idRanchAnimal: number;
 
+    @ApiProperty({ description: 'ID del lote de recría destino', example: 3 })
+    @IsInt({ message: 'El id del lote destino debe ser un número entero' })
+    @IsPositive({ message: 'El id del lote destino debe ser positivo' })
+    idLotDest: number;
+
     @ApiProperty({ description: 'Peso de la cría al momento del destete (kg)', required: false, example: 120.5 })
     @IsOptional()
     @Type(() => Number)
@@ -21,7 +26,7 @@ export class RegisterWeaningDto {
     @IsInt({ message: 'La edad en días debe ser un número entero' })
     @Min(1)
     @Max(730)
-    ageDays?: number;
+    weaningAge?: number;
 
     @ApiProperty({ description: 'Notas adicionales del destete', required: false })
     @IsOptional()

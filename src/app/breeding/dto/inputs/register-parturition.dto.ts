@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
     IsBoolean,
     IsDateString,
+    IsEnum,
     IsIn,
     IsInt,
     IsNotEmpty,
@@ -15,12 +16,8 @@ import {
     ValidateIf,
     ValidateNested,
 } from 'class-validator';
-import { BIRTH_TYPES, CRIA_STATUS, MOTHER_CONDITION } from 'src/modules/breeding-modules/parturitions/entities/parturition.entity';
+import { BirthTypeEnum, CriaStatusEnum, MotherConditionEnum } from 'src/modules/breeding-modules/parturitions/entities/parturition.entity';
 
-/**
- * Datos para registrar la cría en el sistema cuando nació viva.
- * Si criaStatus = 'alive', este objeto es obligatorio.
- */
 export class CriaRegistrationDto {
     @ApiProperty({ description: 'Código/arete único de la cría en la estancia', example: 'BOV-2026-045' })
     @IsString()
@@ -37,6 +34,11 @@ export class CriaRegistrationDto {
     @IsInt()
     @IsPositive()
     idStatus: number;
+
+    @ApiProperty({ description: 'ID de la clase del animal (ej: Ternera=1, Ternero Macho Entero=2)', example: 1 })
+    @IsInt()
+    @IsPositive()
+    idAnimalClass: number;
 
     @ApiProperty({ description: 'Sexo de la cría', enum: ['F', 'M'], example: 'F' })
     @IsIn(['F', 'M'], { message: 'El sexo de la cría debe ser F o M' })
@@ -61,13 +63,13 @@ export class RegisterParturitionDto {
     @IsPositive({ message: 'El id del diagnóstico debe ser positivo' })
     idDiagnosis: number;
 
-    @ApiProperty({ description: 'Tipo de parto', enum: BIRTH_TYPES, example: 'normal' })
-    @IsIn(BIRTH_TYPES, { message: 'El tipo de parto debe ser: normal, assisted o cesarean' })
-    birthType: typeof BIRTH_TYPES[number];
+    @ApiProperty({ description: 'Tipo de parto', enum: BirthTypeEnum, example: BirthTypeEnum.NORMAL })
+    @IsEnum(BirthTypeEnum, { message: 'El tipo de parto debe ser: normal, assisted o cesarean' })
+    birthType: BirthTypeEnum;
 
-    @ApiProperty({ description: 'Estado de la cría al nacer', enum: CRIA_STATUS, example: 'alive' })
-    @IsIn(CRIA_STATUS, { message: 'El estado de la cría debe ser: alive o dead' })
-    criaStatus: typeof CRIA_STATUS[number];
+    @ApiProperty({ description: 'Estado de la cría al nacer', enum: CriaStatusEnum, example: CriaStatusEnum.ALIVE })
+    @IsEnum(CriaStatusEnum, { message: 'El estado de la cría debe ser: alive o dead' })
+    criaStatus: CriaStatusEnum;
 
     @ApiProperty({ description: 'Peso de la cría al nacer (kg)', required: false, example: 35 })
     @IsOptional()
@@ -76,17 +78,17 @@ export class RegisterParturitionDto {
     @Min(0)
     criaWeight?: number;
 
-    @ApiProperty({ description: 'Condición de la madre tras el parto', enum: MOTHER_CONDITION, required: false, example: 'good' })
+    @ApiProperty({ description: 'Condición de la madre tras el parto', enum: MotherConditionEnum, required: false, example: MotherConditionEnum.GOOD })
     @IsOptional()
-    @IsIn(MOTHER_CONDITION)
-    motherCondition?: typeof MOTHER_CONDITION[number];
+    @IsEnum(MotherConditionEnum, { message: 'La condición de la madre debe ser: good, regular o bad' })
+    motherCondition?: MotherConditionEnum;
 
     @ApiProperty({
         description: 'Datos para registrar la cría en el sistema. OBLIGATORIO si criaStatus = "alive".',
         type: CriaRegistrationDto,
         required: false,
     })
-    @ValidateIf(o => o.criaStatus === 'alive')
+    @ValidateIf(o => o.criaStatus === CriaStatusEnum.ALIVE)
     @ValidateNested()
     @Type(() => CriaRegistrationDto)
     criaData?: CriaRegistrationDto;

@@ -1,5 +1,7 @@
 import { BaseCreatedUpdated } from 'src/infrastructure/database/utils';
 import { AnimalEvent } from 'src/modules/ranch-management/animal-events/entities/animal-event.entity';
+import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
+import { RanchLot } from 'src/modules/ranch-management/ranch-lots/entities/ranch-lot.entity';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('weanings')
@@ -13,6 +15,12 @@ export class Weaning extends BaseCreatedUpdated {
     @Column({ name: 'id_event', type: 'bigint', nullable: false })
     idEvent: number;
 
+    @Column({ name: 'id_cria', type: 'bigint', nullable: false })
+    idCria: number;
+
+    @Column({ name: 'id_lot_dest', type: 'bigint', nullable: false })
+    idLotDest: number;
+
     @Column({
         name: 'weaning_weight',
         type: 'decimal',
@@ -23,13 +31,21 @@ export class Weaning extends BaseCreatedUpdated {
     weaningWeight?: number;
 
     @Column({
-        name: 'age_days',
+        name: 'weaning_age',
         type: 'int',
         nullable: true,
     })
-    ageDays?: number;
+    weaningAge?: number;
 
     @ManyToOne(() => AnimalEvent)
     @JoinColumn({ name: 'id_event' })
     event?: AnimalEvent;
+
+    @ManyToOne(() => RanchAnimal)
+    @JoinColumn({ name: 'id_cria' })
+    cria?: RanchAnimal;
+
+    @ManyToOne(() => RanchLot)
+    @JoinColumn({ name: 'id_lot_dest' })
+    lotDest?: RanchLot;
 }

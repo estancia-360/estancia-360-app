@@ -4,31 +4,77 @@ import { UpdateRanchLotDto } from '../dto/update-ranch-lot.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RanchLot } from '../entities/ranch-lot.entity';
 import { Repository } from 'typeorm';
+import { MyNotFoundException } from 'src/shared/exceptions';
+import { RanchesService } from '../../ranches/services/ranches.service';
+import { RanchPasturesService } from '../../ranch-pastures/services/ranch-pastures.service';
 
 @Injectable()
 export class RanchLotsService {
 	constructor(
 		@InjectRepository(RanchLot)
-		private readonly ranchLotsRepository: Repository<RanchLot>
+		private readonly ranchLotsRepository: Repository<RanchLot>,
+		private readonly ranchesService: RanchesService,
+		private readonly ranchPasturesService: RanchPasturesService,
 	){}
 
-	create(createRanchLotDto: CreateRanchLotDto) {
-		return 'This action adds a new ranchLot';
+	async create(createRanchLotDto: CreateRanchLotDto) {
+		// Validar que la estancia existe
+		await this.ranchesService.findOneById(createRanchLotDto.idRanch, { throwException: true });
+
+		// Validar que el potrero existe
+		await this.ranchPasturesService.findOne(createRanchLotDto.idRanchPasture);
+
+		const lot = new RanchLot();
+		lot.idRanch = createRanchLotDto.idRanch;
+		lot.idRanchPasture = createRanchLotDto.idRanchPasture;
+		lot.name = createRanchLotDto.name;
+		lot.lotType = createRanchLotDto.lotType;
+		lot.capacity = createRanchLotDto.capacity || null;
+		lot.isActive = true;
+		lot.createdAt = new Date();
+		lot.updatedAt = new Date();
+
+		return await this.ranchLotsRepository.save(lot);
 	}
 
-	findAll() {
-		return `This action returns all ranchLots`;
+	async findAll() {
+		return await this.ranchLotsRepository.find({
+			relations: ['ranch', 'pasture'],
+			order: { id: 'DESC' },
+		});
 	}
 
-	findOne(id: number) {
-		return `This action returns a #${id} ranchLot`;
+	async findOne(id: number) {
+		const lot = await this.ranchLotsRepository.findOne({
+			where: { id },
+			relations: ['ranch', 'pasture'],
+		});
+		if (!lot) {
+			throw new MyNotFoundException(`Lote con ID ${id} no encontrado`);
+		}
+		return lot;
 	}
 
-	update(id: number, updateRanchLotDto: UpdateRanchLotDto) {
-		return `This action updates a #${id} ranchLot`;
+	async update(id: number, updateRanchLotDto: UpdateRanchLotDto) {
+		const lot = await this.ranchLotsRepository.findOne({ where: { id } });
+		if (!lot) {
+			throw new MyNotFoundException(`Lote con ID ${id} no encontrado`);
+		}
+
+		if (updateRanchLotDto.name) lot.name = updateRanchLotDto.name;
+		if (updateRanchLotDto.lotType) lot.lotType = updateRanchLotDto.lotType;
+		if (updateRanchLotDto.capacity !== undefined) lot.capacity = updateRanchLotDto.capacity;
+
+		const updated = await this.ranchLotsRepository.save(lot);
+		return this.findOne(updated.id);
 	}
 
-	remove(id: number) {
-		return `This action removes a #${id} ranchLot`;
+	async remove(id: number) {
+		const lot = await this.ranchLotsRepository.findOne({ where: { id } });
+		if (!lot) {
+			throw new MyNotFoundException(`Lote con ID ${id} no encontrado`);
+		}
+		await this.ranchLotsRepository.remove(lot);
+		return { message: `Lote ${id} eliminado exitosamente` };
 	}
 }

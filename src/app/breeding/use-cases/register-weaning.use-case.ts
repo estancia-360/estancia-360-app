@@ -46,17 +46,15 @@ export class RegisterWeaningUseCase {
                 eventDate: new Date(dto.eventDate),
             }, manager);
 
-            // 2. Crear el registro del destete
+            // 2. Crear el registro de destete con el evento creado
             const weaning = await this.weaningsService.create({
                 idEvent: event.id,
+                idCria: dto.idRanchAnimal,
+                idLotDest: dto.idLotDest,
                 weaningWeight: dto.weaningWeight,
-                ageDays: dto.ageDays,
+                weaningAge: dto.weaningAge,
             }, manager);
 
-            // 3. Marcar al animal como destetado
-            await this.ranchAnimalsService.markIsWeaned(dto.idRanchAnimal, manager);
-
-            // 4. Retornar el DTO completo
             return (await this.weaningsService.findOneById(
                 weaning.id,
                 { throwException: true, template: WeaningDto },

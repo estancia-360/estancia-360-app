@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsNumber, IsOptional, IsPositive, Max, Min } from 'class-validator';
-import { BIRTH_TYPES, CRIA_STATUS, MOTHER_CONDITION } from '../entities/parturition.entity';
+import { IsEnum, IsInt, IsNumber, IsOptional, IsPositive, Min } from 'class-validator';
+import { BirthTypeEnum, CriaStatusEnum, MotherConditionEnum } from '../entities/parturition.entity';
 
 export class CreateParturitionDto {
     @ApiProperty({ description: 'ID del evento animal al que pertenece este parto', example: 7 })
@@ -20,9 +20,9 @@ export class CreateParturitionDto {
     @IsPositive({ message: 'El id de la cría debe ser positivo' })
     idCria?: number;
 
-    @ApiProperty({ description: 'Tipo de parto', enum: BIRTH_TYPES, example: 'normal' })
-    @IsIn(BIRTH_TYPES, { message: 'El tipo de parto debe ser: normal, assisted o cesarean' })
-    birthType: typeof BIRTH_TYPES[number];
+    @ApiProperty({ description: 'Tipo de parto', enum: BirthTypeEnum, example: BirthTypeEnum.NORMAL })
+    @IsEnum(BirthTypeEnum, { message: 'El tipo de parto debe ser: normal, assisted o cesarean' })
+    birthType: BirthTypeEnum;
 
     @ApiProperty({ description: 'Peso de la cría al nacer en kg', required: false, example: 35 })
     @IsOptional()
@@ -31,12 +31,12 @@ export class CreateParturitionDto {
     @Min(0, { message: 'El peso no puede ser negativo' })
     criaWeight?: number;
 
-    @ApiProperty({ description: 'Estado de la cría al nacer', enum: CRIA_STATUS, example: 'alive' })
-    @IsIn(CRIA_STATUS, { message: 'El estado de la cría debe ser: alive o dead' })
-    criaStatus: typeof CRIA_STATUS[number];
+    @ApiProperty({ description: 'Estado de la cría al nacer', enum: CriaStatusEnum, example: CriaStatusEnum.ALIVE })
+    @IsEnum(CriaStatusEnum, { message: 'El estado de la cría debe ser: alive o dead' })
+    criaStatus: CriaStatusEnum;
 
-    @ApiProperty({ description: 'Condición de la madre tras el parto', enum: MOTHER_CONDITION, required: false, example: 'good' })
+    @ApiProperty({ description: 'Condición de la madre tras el parto', enum: MotherConditionEnum, required: false, example: MotherConditionEnum.GOOD })
     @IsOptional()
-    @IsIn(MOTHER_CONDITION, { message: 'La condición de la madre debe ser: good, regular o bad' })
-    motherCondition?: typeof MOTHER_CONDITION[number];
+    @IsEnum(MotherConditionEnum, { message: 'La condición de la madre debe ser: good, regular o bad' })
+    motherCondition?: MotherConditionEnum;
 }

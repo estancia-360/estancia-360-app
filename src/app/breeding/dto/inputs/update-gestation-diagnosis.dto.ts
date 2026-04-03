@@ -1,35 +1,30 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 import {
-    GESTATION_METHODS,
-    GESTATION_RESULTS,
+    GestationMethodEnum,
+    GestationResultEnum,
 } from 'src/modules/breeding-modules/gestation-diagnoses/entities/gestation-diagnosis.entity';
 
-/**
- * DTO para actualizar un diagnóstico de gestación.
- * Todos los campos son opcionales — solo se actualiza lo que se envía.
- * No se puede cambiar el evento ni el servicio de monta vinculado.
- */
 export class UpdateGestationDiagnosisDto {
     @ApiProperty({
         description: 'Método de diagnóstico utilizado',
-        enum: GESTATION_METHODS,
+        enum: GestationMethodEnum,
         required: false,
-        example: 'ultrasound',
+        example: GestationMethodEnum.ULTRASOUND,
     })
     @IsOptional()
-    @IsIn(GESTATION_METHODS, { message: `El método debe ser uno de: ${GESTATION_METHODS.join(', ')}` })
-    method?: typeof GESTATION_METHODS[number];
+    @IsEnum(GestationMethodEnum, { message: 'El método debe ser: palpation o ultrasound' })
+    method?: GestationMethodEnum;
 
     @ApiProperty({
         description: 'Resultado del diagnóstico de gestación',
-        enum: GESTATION_RESULTS,
+        enum: GestationResultEnum,
         required: false,
-        example: 'pregnant',
+        example: GestationResultEnum.PREGNANT,
     })
     @IsOptional()
-    @IsIn(GESTATION_RESULTS, { message: `El resultado debe ser uno de: ${GESTATION_RESULTS.join(', ')}` })
-    result?: typeof GESTATION_RESULTS[number];
+    @IsEnum(GestationResultEnum, { message: 'El resultado debe ser: pregnant o empty' })
+    result?: GestationResultEnum;
 
     @ApiProperty({
         description: 'Días de gestación estimados al momento del diagnóstico',
