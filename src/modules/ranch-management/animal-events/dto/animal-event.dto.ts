@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
+import { RanchAnimalPlainDto } from '../../ranch-animals/dto/ranch-animal-plain.dto';
 
 export class AnimalEventDto {
     @ApiProperty({ description: 'ID del evento', example: 1 })
@@ -32,4 +33,8 @@ export class AnimalEventDto {
     @ApiProperty({ description: 'Fecha de creación del registro', example: '2026-03-10T09:00:00.000Z' })
     @Expose()
     createdAt: Date;
+
+    @Expose()
+    @Type(() => RanchAnimalPlainDto)
+    animal: RanchAnimalPlainDto = new RanchAnimalPlainDto();
 }

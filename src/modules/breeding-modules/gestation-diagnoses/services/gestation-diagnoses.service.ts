@@ -99,10 +99,14 @@ export class GestationDiagnosesService {
     }
 
     /**
-     * Lista todos los diagnósticos de gestación de un animal con paginación.
+     * Lista todos los diagnósticos de gestación de un animal (por código) con paginación.
+     * @param animalCode - Código del animal
+     * @param paginationData - Datos de paginación
+     * @param optionsData - Opciones de búsqueda y template DTO
+     * @returns Página de diagnósticos
      */
-    async findAllByAnimal<T>(
-        idRanchAnimal: number,
+    async findAllByAnimalCode<T>(
+        animalCode: string,
         paginationData: PaginationParamsDto,
         optionsData: OptionsFindDto<T>,
     ): Promise<PaginationResponseDto<T>> {
@@ -114,14 +118,58 @@ export class GestationDiagnosesService {
             select: template.select,
             relations: template.relations,
             where: {
-                event: { idRanchAnimal },
+                event: { animal: { code: animalCode } },
             },
             skip: (page - 1) * limit,
             take: limit,
             order: { createdAt: 'DESC' },
-        }) as [T[], number];
+        });
         return {
-            data: plainToInstance(templateClass, diagnoses),
+            data: plainToInstance(templateClass, diagnoses, { excludeExtraneousValues: true }),
+            meta: {
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                total,
+            },
+        };
+    }
+
+    /**
+     * Lista todos los diagnósticos de gestación de una estancia con paginación.
+     * Filtra por idRanch a través de animal_events → ranch_animals.
+     * @param idRanch - ID de la estancia
+     * @param paginationData - Datos de paginación
+     * @param optionsData - Opciones de búsqueda y template DTO
+     * @returns Página de diagnósticos con conversión de tipos (bigint→number)
+     */
+    async findAllByRanch<T>(
+        idRanch: number,
+        paginationData: PaginationParamsDto,
+        optionsData: OptionsFindDto<T>,
+    ): Promise<PaginationResponseDto<T>> {
+        const options = Object.assign(new OptionsFindDto(), optionsData);
+        const templateClass = options.template ?? (GestationDiagnosisDto as unknown as new () => T);
+        const template = findWithAutoMapper(templateClass);
+        const { page, limit } = paginationData;
+
+        const [diagnoses, total] = await this.gestationDiagnosisRepository.findAndCount({
+            select: template.select,
+            relations: template.relations,
+            where: {
+                event: {
+                    animal: {
+                        idRanch,
+                    },
+                },
+            },
+            skip: (page - 1) * limit,
+            take: limit,
+            order: { createdAt: 'DESC' },
+        });
+
+        return {
+            data: plainToInstance(templateClass, diagnoses, { excludeExtraneousValues: true }),
             meta: {
                 page,
                 limit,

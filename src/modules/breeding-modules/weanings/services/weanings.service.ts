@@ -101,10 +101,14 @@ export class WeaningsService {
     }
 
     /**
-     * Lista todos los destetes de un animal con paginación.
+     * Lista todos los destetes de un animal (por código) con paginación.
+     * @param animalCode - Código del animal (cría)
+     * @param paginationData - Datos de paginación
+     * @param optionsData - Opciones de búsqueda y template DTO
+     * @returns Página de destetes
      */
-    async findAllByAnimal<T>(
-        idRanchAnimal: number,
+    async findAllByAnimalCode<T>(
+        animalCode: string,
         paginationData: PaginationParamsDto,
         optionsData: OptionsFindDto<T>,
     ): Promise<PaginationResponseDto<T>> {
@@ -116,14 +120,56 @@ export class WeaningsService {
             select: template.select,
             relations: template.relations,
             where: {
-                idCria: idRanchAnimal,
+                cria: { code: animalCode },
             },
             skip: (page - 1) * limit,
             take: limit,
             order: { createdAt: 'DESC' },
-        }) as [T[], number];
+        });
         return {
-            data: plainToInstance(templateClass, weanings),
+            data: plainToInstance(templateClass, weanings, { excludeExtraneousValues: true }),
+            meta: {
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                total,
+            },
+        };
+    }
+
+    /**
+     * Lista todos los destetes de una estancia con paginación.
+     * Filtra por idRanch a través de ranch_animals.
+     * @param idRanch - ID de la estancia
+     * @param paginationData - Datos de paginación
+     * @param optionsData - Opciones de búsqueda y template DTO
+     * @returns Página de destetes con conversión de tipos (bigint→number)
+     */
+    async findAllByRanch<T>(
+        idRanch: number,
+        paginationData: PaginationParamsDto,
+        optionsData: OptionsFindDto<T>,
+    ): Promise<PaginationResponseDto<T>> {
+        const options = Object.assign(new OptionsFindDto(), optionsData);
+        const templateClass = options.template ?? (WeaningDto as unknown as new () => T);
+        const template = findWithAutoMapper(templateClass);
+        const { page, limit } = paginationData;
+
+        const [weanings, total] = await this.weaningsRepository.findAndCount({
+            select: template.select,
+            relations: template.relations,
+            where: {
+                cria: {
+                    idRanch,
+                },
+            },
+            skip: (page - 1) * limit,
+            take: limit,
+            order: { createdAt: 'DESC' },
+        });
+
+        return {
+            data: plainToInstance(templateClass, weanings, { excludeExtraneousValues: true }),
             meta: {
                 page,
                 limit,

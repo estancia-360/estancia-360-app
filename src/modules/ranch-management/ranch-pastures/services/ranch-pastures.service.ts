@@ -33,6 +33,34 @@ export class RanchPasturesService {
 		return await this.ranchPasturesRepository.save(pasture);
 	}
 
+	/**
+	 * Obtiene todos los potreros de una estancia específica
+	 * @param idRanch - ID de la estancia
+	 * @returns Array de potreros con tipado correcto (bigint→number)
+	 */
+	async findAllByRanch(idRanch: number) {
+		const pastures = await this.ranchPasturesRepository.find({
+			where: { idRanch },
+			relations: ['ranch'],
+			order: { id: 'DESC' },
+		});
+		// Convertir bigint a number en response
+		return pastures.map(p => ({
+			id: Number(p.id),
+			idRanch: Number(p.idRanch),
+			name: p.name,
+			areaHectares: p.areaHectares,
+			description: p.description,
+			isActive: p.isActive,
+			createdAt: p.createdAt,
+			updatedAt: p.updatedAt,
+		}));
+	}
+
+	/**
+	 * Obtiene todos los potreros (deprecated - usar findAllByRanch)
+	 * @deprecated Usar findAllByRanch(idRanch) en su lugar
+	 */
 	async findAll() {
 		return await this.ranchPasturesRepository.find({
 			relations: ['ranch'],

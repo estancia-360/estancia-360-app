@@ -11,6 +11,49 @@ import { PaginationParamsDto } from 'src/shared/dto/pagination-params.dto';
 export class BreedingServicesController {
     constructor(private readonly breedingServicesService: BreedingServicesService) {}
 
+    /**
+     * Obtiene todos los servicios de monta de una estancia con paginación.
+     * Los servicios se filtran automáticamente por los animales de la estancia.
+     * @param idRanch - ID de la estancia
+     * @returns Página de servicios de monta de la estancia
+     */
+    @Get('by-ranch/:idRanch')
+    @ApiOperation({ summary: 'Listar servicios de monta de una estancia' })
+    @ApiOkResponse({ description: 'Lista paginada de servicios de monta' })
+    async findAllByRanch(
+        @Param('idRanch', ParseIntPipe) idRanch: number,
+        @Query() pagination: PaginationParamsDto,
+        @Res() res: express.Response,
+    ) {
+        const result = await this.breedingServicesService.findAllByRanch(
+            idRanch,
+            pagination,
+            { template: BreedingServiceDto },
+        );
+        return OkRes(res, result);
+    }
+
+    /**
+     * Obtiene todos los servicios de monta de un animal por código con paginación.
+     * @param animalCode - Código del animal
+     * @returns Página de servicios de monta del animal
+     */
+    @Get('by-code/:animalCode')
+    @ApiOperation({ summary: 'Listar servicios de monta de un animal por código' })
+    @ApiOkResponse({ description: 'Lista paginada de servicios de monta del animal' })
+    async findAllByAnimalCode(
+        @Param('animalCode') animalCode: string,
+        @Query() pagination: PaginationParamsDto,
+        @Res() res: express.Response,
+    ) {
+        const result = await this.breedingServicesService.findAllByAnimalCode(
+            animalCode,
+            pagination,
+            { template: BreedingServiceDto },
+        );
+        return OkRes(res, result);
+    }
+
     @Get('animal/:idRanchAnimal')
     @ApiOperation({ summary: 'Obtener todos los servicios de monta de un animal con paginación' })
     @ApiOkResponse({ description: 'Lista paginada de servicios de monta' })
@@ -19,8 +62,8 @@ export class BreedingServicesController {
         @Query() pagination: PaginationParamsDto,
         @Res() res: express.Response,
     ) {
-        const result = await this.breedingServicesService.findAllByAnimal(
-            idRanchAnimal,
+        const result = await this.breedingServicesService.findAllByAnimalCode(
+            idRanchAnimal.toString(),
             pagination,
             { template: BreedingServiceDto },
         );

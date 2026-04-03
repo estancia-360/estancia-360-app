@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiNotFoundResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { RanchPasturesService } from '../services/ranch-pastures.service';
 import { CreateRanchPastureDto } from '../dto/create-ranch-pasture.dto';
 import { UpdateRanchPastureDto } from '../dto/update-ranch-pasture.dto';
@@ -16,10 +16,27 @@ export class RanchPasturesController {
     return this.ranchPasturesService.create(createRanchPastureDto);
   }
 
+  /**
+   * Obtiene todos los potreros de una estancia específica
+   * @param idRanch - ID de la estancia (requerido)
+   * @returns Array de potreros con tipado correcto
+   */
+  @Get('by-ranch/:idRanch')
+  @ApiOperation({ summary: 'Listar potreros de una estancia' })
+  @ApiParam({ name: 'idRanch', description: 'ID de la estancia', type: 'number' })
+  @ApiOkResponse({ description: 'Lista de potreros de la estancia' })
+  async findByRanch(@Param('idRanch', ParseIntPipe) idRanch: number) {
+    return await this.ranchPasturesService.findAllByRanch(idRanch);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Listar todos los potreros' })
   @ApiOkResponse({ description: 'Lista de potreros' })
-  findAll() {
+  @ApiQuery({ name: 'idRanch', description: 'ID de la estancia (opcional)', required: false })
+  async findAll(@Query('idRanch') idRanch?: string) {
+    if (idRanch) {
+      return await this.ranchPasturesService.findAllByRanch(parseInt(idRanch, 10));
+    }
     return this.ranchPasturesService.findAll();
   }
 
@@ -27,8 +44,9 @@ export class RanchPasturesController {
   @ApiOperation({ summary: 'Obtener un potrero por ID' })
   @ApiOkResponse({ description: 'Datos del potrero' })
   @ApiNotFoundResponse({ description: 'Potrero no encontrado' })
-  findOne(@Param('id') id: string) {
-    return this.ranchPasturesService.findOne(+id);
+  @ApiParam({ name: 'id', description: 'ID del potrero', type: 'number' })
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.ranchPasturesService.findOne(id);
   }
 
   @Patch(':id')

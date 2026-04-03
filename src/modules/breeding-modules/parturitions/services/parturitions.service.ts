@@ -98,10 +98,14 @@ export class ParturitionsService {
     }
 
     /**
-     * Lista todos los partos de un animal (como madre) con paginación.
+     * Lista todos los partos de un animal (por código) con paginación.
+     * @param animalCode - Código del animal (madre)
+     * @param paginationData - Datos de paginación
+     * @param optionsData - Opciones de búsqueda y template DTO
+     * @returns Página de partos
      */
-    async findAllByAnimal<T>(
-        idRanchAnimal: number,
+    async findAllByAnimalCode<T>(
+        animalCode: string,
         paginationData: PaginationParamsDto,
         optionsData: OptionsFindDto<T>,
     ): Promise<PaginationResponseDto<T>> {
@@ -113,14 +117,58 @@ export class ParturitionsService {
             select: template.select,
             relations: template.relations,
             where: {
-                event: { idRanchAnimal },
+                event: { animal: { code: animalCode } },
             },
             skip: (page - 1) * limit,
             take: limit,
             order: { createdAt: 'DESC' },
-        }) as [T[], number];
+        });
         return {
-            data: plainToInstance(templateClass, parturitions),
+            data: plainToInstance(templateClass, parturitions, { excludeExtraneousValues: true }),
+            meta: {
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                total,
+            },
+        };
+    }
+
+    /**
+     * Lista todos los partos de una estancia con paginación.
+     * Filtra por idRanch a través de animal_events → ranch_animals.
+     * @param idRanch - ID de la estancia
+     * @param paginationData - Datos de paginación
+     * @param optionsData - Opciones de búsqueda y template DTO
+     * @returns Página de partos con conversión de tipos (bigint→number)
+     */
+    async findAllByRanch<T>(
+        idRanch: number,
+        paginationData: PaginationParamsDto,
+        optionsData: OptionsFindDto<T>,
+    ): Promise<PaginationResponseDto<T>> {
+        const options = Object.assign(new OptionsFindDto(), optionsData);
+        const templateClass = options.template ?? (ParturitionDto as unknown as new () => T);
+        const template = findWithAutoMapper(templateClass);
+        const { page, limit } = paginationData;
+
+        const [parturitions, total] = await this.parturitionsRepository.findAndCount({
+            select: template.select,
+            relations: template.relations,
+            where: {
+                event: {
+                    animal: {
+                        idRanch,
+                    },
+                },
+            },
+            skip: (page - 1) * limit,
+            take: limit,
+            order: { createdAt: 'DESC' },
+        });
+
+        return {
+            data: plainToInstance(templateClass, parturitions, { excludeExtraneousValues: true }),
             meta: {
                 page,
                 limit,

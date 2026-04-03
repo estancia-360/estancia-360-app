@@ -89,11 +89,53 @@ export class BreedingServicesService {
     }
 
     /**
-     * Lista todos los servicios de monta de un animal con paginación.
-     * Filtra por idRanchAnimal a través de la relación event.
+     * Lista todos los servicios de monta de un animal (por código) con paginación.
+     * @param animalCode - Código del animal
+     * @param paginationData - Datos de paginación
+     * @param optionsData - Opciones de búsqueda y template DTO
+     * @returns Página de servicios
      */
-    async findAllByAnimal<T>(
-        idRanchAnimal: number,
+    async findAllByAnimalCode<T>(
+        animalCode: string,
+        paginationData: PaginationParamsDto,
+        optionsData: OptionsFindDto<T>,
+    ): Promise<PaginationResponseDto<T>> {
+        const options = Object.assign(new OptionsFindDto(), optionsData);
+        const templateClass = options.template ?? (BreedingServiceDto as unknown as new () => T);
+        const template = findWithAutoMapper(templateClass);
+        console.log(template.select)
+        const { page, limit } = paginationData;
+        const [services, total] = await this.breedingServicesRepository.findAndCount({
+            select: template.select,
+            relations: template.relations,
+            where: {
+                event: { animal: { code: animalCode.trim() } },
+            },
+            skip: (page - 1) * limit,
+            take: limit,
+            order: { createdAt: 'DESC' },
+        });
+        return {
+            data: plainToInstance(templateClass, services, { excludeExtraneousValues: true }),
+            meta: {
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                total,
+            },
+        };
+    }
+
+    /**
+     * Lista todos los servicios de monta de una estancia con paginación.
+     * Filtra por idRanch a través de animal_events → ranch_animals.
+     * @param idRanch - ID de la estancia
+     * @param paginationData - Datos de paginación
+     * @param optionsData - Opciones de búsqueda y template DTO
+     * @returns Página de servicios con conversión de tipos (bigint→number)
+     */
+    async findAllByRanch<T>(
+        idRanch: number,
         paginationData: PaginationParamsDto,
         optionsData: OptionsFindDto<T>,
     ): Promise<PaginationResponseDto<T>> {
@@ -101,18 +143,24 @@ export class BreedingServicesService {
         const templateClass = options.template ?? (BreedingServiceDto as unknown as new () => T);
         const template = findWithAutoMapper(templateClass);
         const { page, limit } = paginationData;
+
         const [services, total] = await this.breedingServicesRepository.findAndCount({
             select: template.select,
             relations: template.relations,
             where: {
-                event: { idRanchAnimal },
+                event: {
+                    animal: {
+                        idRanch,
+                    },
+                },
             },
             skip: (page - 1) * limit,
             take: limit,
             order: { createdAt: 'DESC' },
-        }) as [T[], number];
+        });
+
         return {
-            data: plainToInstance(templateClass, services),
+            data: plainToInstance(templateClass, services, { excludeExtraneousValues: true }),
             meta: {
                 page,
                 limit,

@@ -37,6 +37,35 @@ export class RanchLotsService {
 		return await this.ranchLotsRepository.save(lot);
 	}
 
+	/**
+	 * Obtiene todos los lotes de una estancia específica
+	 * @param idRanch - ID de la estancia
+	 * @returns Array de lotes con tipado correcto (bigint→number)
+	 */
+	async findAllByRanch(idRanch: number) {
+		const lots = await this.ranchLotsRepository.find({
+			where: { idRanch },
+			relations: ['ranch', 'pasture'],
+			order: { id: 'DESC' },
+		});
+		// Convertir bigint a number en response
+		return lots.map(l => ({
+			id: Number(l.id),
+			idRanch: Number(l.idRanch),
+			idRanchPasture: Number(l.idRanchPasture),
+			name: l.name,
+			lotType: l.lotType,
+			capacity: l.capacity,
+			isActive: l.isActive,
+			createdAt: l.createdAt,
+			updatedAt: l.updatedAt,
+		}));
+	}
+
+	/**
+	 * Obtiene todos los lotes (deprecated - usar findAllByRanch)
+	 * @deprecated Usar findAllByRanch(idRanch) en su lugar
+	 */
 	async findAll() {
 		return await this.ranchLotsRepository.find({
 			relations: ['ranch', 'pasture'],

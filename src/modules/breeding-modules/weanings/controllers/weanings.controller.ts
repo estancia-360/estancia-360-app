@@ -70,8 +70,53 @@ export class WeaningsController {
         @Query() pagination: PaginationParamsDto,
         @Res() res: express.Response,
     ) {
-        const result = await this.weaningsService.findAllByAnimal(
-            idRanchAnimal,
+        // Para mantener compatibilidad, usamos el código del animal
+        // En la práctica, el código se debe pasar directamente
+        const result = await this.weaningsService.findAllByAnimalCode(
+            idRanchAnimal.toString(),
+            pagination,
+            { template: WeaningDto },
+        );
+        return OkRes(res, result);
+    }
+
+    /**
+     * Obtiene todos los destetes de una estancia con paginación.
+     * Los destetes se filtran automáticamente por las crías de la estancia.
+     * @param idRanch - ID de la estancia
+     * @returns Página de destetes de la estancia
+     */
+    @Get('by-ranch/:idRanch')
+    @ApiOperation({ summary: 'Listar destetes de una estancia' })
+    @ApiOkResponse({ description: 'Lista paginada de destetes' })
+    async findAllByRanch(
+        @Param('idRanch', ParseIntPipe) idRanch: number,
+        @Query() pagination: PaginationParamsDto,
+        @Res() res: express.Response,
+    ) {
+        const result = await this.weaningsService.findAllByRanch(
+            idRanch,
+            pagination,
+            { template: WeaningDto },
+        );
+        return OkRes(res, result);
+    }
+
+    /**
+     * Obtiene todos los destetes de una cría por código con paginación.
+     * @param animalCode - Código del animal (cría)
+     * @returns Página de destetes de la cría
+     */
+    @Get('by-code/:animalCode')
+    @ApiOperation({ summary: 'Listar destetes de una cría por código' })
+    @ApiOkResponse({ description: 'Lista paginada de destetes de la cría' })
+    async findAllByAnimalCode(
+        @Param('animalCode') animalCode: string,
+        @Query() pagination: PaginationParamsDto,
+        @Res() res: express.Response,
+    ) {
+        const result = await this.weaningsService.findAllByAnimalCode(
+            animalCode,
             pagination,
             { template: WeaningDto },
         );
