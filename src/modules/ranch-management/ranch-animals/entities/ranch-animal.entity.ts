@@ -44,6 +44,9 @@ export class RanchAnimal extends BaseCreatedUpdated {
     @Column({ name: 'code', type: 'varchar', length: 50, unique: true })
     code: string;
 
+    @Column({ name: 'local_id', type: 'varchar', length: 100, nullable: true, unique: true })
+    localId?: string;
+
     @Column({ name: 'birthdate', type: 'date' })
     birthdate: Date;
 

@@ -4,7 +4,7 @@ import { Ranch } from '../../ranches/entities/ranch.entity';
 import { RanchLot } from '../../ranch-lots/entities/ranch-lot.entity';
 
 @Entity('ranch_pastures')
-export class RanchPasture extends BaseCreatedUpdated  {
+export class RanchPasture extends BaseCreatedUpdated {
 
     @PrimaryGeneratedColumn({
         name: 'id_ranch_pasture',
@@ -21,6 +21,9 @@ export class RanchPasture extends BaseCreatedUpdated  {
         length: 50,
     })
     name: string;
+
+    @Column({ name: 'local_id', type: 'varchar', length: 100, nullable: true, unique: true })
+    localId?: string;
 
     @Column({
         name: 'area_hectares',
@@ -48,6 +51,6 @@ export class RanchPasture extends BaseCreatedUpdated  {
     @JoinColumn({ name: 'id_ranch' })
     ranch?: Ranch;
 
-    @OneToMany(() => RanchLot,(lot) => lot.pasture)
+    @OneToMany(() => RanchLot, (lot) => lot.pasture)
     lots?: RanchLot[]
 }

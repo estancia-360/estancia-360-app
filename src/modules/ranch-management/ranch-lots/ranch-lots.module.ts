@@ -14,5 +14,6 @@ import { RanchPasturesModule } from '../ranch-pastures/ranch-pastures.module';
 	],
 	controllers: [RanchLotsController],
 	providers: [RanchLotsService],
+	exports: [RanchLotsService],
 })
 export class RanchLotsModule { }

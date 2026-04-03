@@ -11,6 +11,9 @@ export class AnimalDeclaredHistory extends BaseCreatedUpdated {
     })
     id: number;
 
+    @Column({ name: 'local_id', type: 'varchar', length: 100, nullable: true, unique: true })
+    localId?: string;
+
     @Column({ name: 'id_ranch_animal', type: 'bigint', nullable: false })
     idRanchAnimal: number;
 

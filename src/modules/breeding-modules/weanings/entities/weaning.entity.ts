@@ -12,6 +12,9 @@ export class Weaning extends BaseCreatedUpdated {
     })
     id: number;
 
+    @Column({ name: 'local_id', type: 'varchar', length: 100, nullable: true, unique: true })
+    localId?: string;
+
     @Column({ name: 'id_event', type: 'bigint', nullable: false })
     idEvent: number;
 

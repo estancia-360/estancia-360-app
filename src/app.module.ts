@@ -29,6 +29,7 @@ import { ParturitionsModule } from './modules/breeding-modules/parturitions/part
 import { WeaningsModule } from './modules/breeding-modules/weanings/weanings.module';
 import { BreedingModule } from './app/breeding/breeding.module';
 import { AnimalClassesModule } from './modules/core/animal-classes/animal-classes.module';
+import { SyncModule } from './app/sync/sync.module';
 
 @Module({
 	imports: [
@@ -62,6 +63,7 @@ import { AnimalClassesModule } from './modules/core/animal-classes/animal-classe
 		WeaningsModule,
 		BreedingModule,
 		AnimalClassesModule,
+		SyncModule,
 	],
 })
 export class AppModule { }

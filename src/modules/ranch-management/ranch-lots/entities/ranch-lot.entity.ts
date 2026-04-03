@@ -27,6 +27,9 @@ export class RanchLot extends BaseCreatedUpdated {
     })
     name: string;
 
+    @Column({ name: 'local_id', type: 'varchar', length: 100, nullable: true, unique: true })
+    localId?: string;
+
     @Column({
         name: 'lot_type',
         type: 'varchar',
@@ -57,6 +60,6 @@ export class RanchLot extends BaseCreatedUpdated {
     @JoinColumn({ name: 'id_ranch_pasture' })
     pasture?: RanchPasture;
 
-    @OneToMany(() => RanchAnimal,(ra) => ra.lot)
+    @OneToMany(() => RanchAnimal, (ra) => ra.lot)
     animals?: RanchAnimal
 }
