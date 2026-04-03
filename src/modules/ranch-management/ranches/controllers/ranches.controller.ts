@@ -8,6 +8,8 @@ import { RanchDto } from '../dto/ranch.dto';
 import { CreatedRes, OkRes, SwaggerBadRequestCommon, SwaggerNotFoundCommon } from 'src/shared/utils';
 import { CreateRanchResponseDto } from '../dto/inputs/create-ranch-response.dto';
 import { FindOneRanchResponseDto } from '../dto/find-one-ranch-response.dto';
+import { RanchDetailedDto } from '../dto/ranch-detailed.dto';
+import { FindOneRanchDetailedResponseDto } from '../dto/find-one-ranch-detailed-response.dto';
 
 @ApiTags('Estancias')
 @Controller('ranches')
@@ -35,11 +37,11 @@ export class RanchesController {
 
 	@Get(':idRanch')
 	@ApiOperation({
-		summary: 'Api para obtener informacion de una estancia',
+		summary: 'Api para obtener informacion detallada de una estancia',
 	})
 	@ApiOkResponse({
-		description: 'respuesta en caso de obtener la estancia',
-		type: FindOneRanchResponseDto
+		description: 'respuesta en caso de obtener la estancia con usuarios y tipos de producción',
+		type: FindOneRanchDetailedResponseDto
 	})
 	@ApiBadRequestResponse(SwaggerBadRequestCommon())
 	@ApiNotFoundResponse(SwaggerNotFoundCommon())
@@ -49,7 +51,7 @@ export class RanchesController {
 	){
 		const ranch = await this.ranchesService.findOneById(idRanch,{
 			throwException: true,
-			template: RanchDto
+			template: RanchDetailedDto
 		})
 		return OkRes(res,{
 			ranch: ranch
