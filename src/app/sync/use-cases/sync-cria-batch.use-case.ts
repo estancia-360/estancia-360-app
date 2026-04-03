@@ -8,7 +8,11 @@ import {
     SyncRanchPastureOperationDto,
     SyncRanchLotOperationDto,
     SyncRanchAnimalOperationDto,
-    SyncBreedingEventOperationDto,
+    SyncBreedingServiceOperationDto,
+    SyncGestationDiagnosisOperationDto,
+    SyncParturitionOperationDto,
+    SyncWeaningOperationDto,
+    SyncAnimalDeclaredHistoryOperationDto,
 } from '../dto/inputs/sync-cria.dto';
 import {
     SyncCriaResponseDto,
@@ -109,7 +113,11 @@ export class SyncCriaBatchUseCase {
      *   1. ranchPastures  → sin dependencias externas
      *   2. ranchLots      → pueden depender de potreros del mismo batch
      *   3. ranchAnimals   → pueden depender de lotes del mismo batch
-     *   4. breedingEvents → pueden depender de animales del mismo batch
+     *   4. breedingServices → pueden depender de animales del mismo batch
+     *   5. gestationDiagnoses → pueden depender de servicios y animales del mismo batch
+     *   6. parturitions → pueden depender de diagnósticos y animales del mismo batch
+     *   7. weanings → pueden depender de animales y lotes del mismo batch
+     *   8. animalDeclaredHistories → pueden depender de animales del mismo batch
      *
      * Cada operación falla de forma independiente: si una falla, las demás continúan.
      * El mapa localId→serverId se comparte entre todas las secciones.
@@ -138,9 +146,33 @@ export class SyncCriaBatchUseCase {
             localIdToServerId,
         );
 
-        // ── 4. Eventos de CRÍA ───────────────────────────────────────────────
-        const breedingEventsSection = await this.processBreedingEvents(
-            dto.breedingEvents ?? [],
+        // ── 4. Servicios de reproducción ──────────────────────────────────────
+        const breedingServicesSection = await this.processBreedingServices(
+            dto.breedingServices ?? [],
+            localIdToServerId,
+        );
+
+        // ── 5. Diagnósticos de gestación ──────────────────────────────────────
+        const gestationDiagnosesSection = await this.processGestationDiagnoses(
+            dto.gestationDiagnoses ?? [],
+            localIdToServerId,
+        );
+
+        // ── 6. Partos ─────────────────────────────────────────────────────────
+        const parturitionsSection = await this.processParturitions(
+            dto.parturitions ?? [],
+            localIdToServerId,
+        );
+
+        // ── 7. Destetes ───────────────────────────────────────────────────────
+        const weaningsSection = await this.processWeanings(
+            dto.weanings ?? [],
+            localIdToServerId,
+        );
+
+        // ── 8. Historiales declarados ──────────────────────────────────────────
+        const animalDeclaredHistoriesSection = await this.processAnimalDeclaredHistories(
+            dto.animalDeclaredHistories ?? [],
             localIdToServerId,
         );
 
@@ -148,13 +180,21 @@ export class SyncCriaBatchUseCase {
             ranchPasturesSection.succeeded +
             ranchLotsSection.succeeded +
             ranchAnimalsSection.succeeded +
-            breedingEventsSection.succeeded;
+            breedingServicesSection.succeeded +
+            gestationDiagnosesSection.succeeded +
+            parturitionsSection.succeeded +
+            weaningsSection.succeeded +
+            animalDeclaredHistoriesSection.succeeded;
 
         const totalFailed =
             ranchPasturesSection.failed +
             ranchLotsSection.failed +
             ranchAnimalsSection.failed +
-            breedingEventsSection.failed;
+            breedingServicesSection.failed +
+            gestationDiagnosesSection.failed +
+            parturitionsSection.failed +
+            weaningsSection.failed +
+            animalDeclaredHistoriesSection.failed;
 
         return {
             totalSucceeded,
@@ -162,7 +202,11 @@ export class SyncCriaBatchUseCase {
             ranchPastures: ranchPasturesSection,
             ranchLots: ranchLotsSection,
             ranchAnimals: ranchAnimalsSection,
-            breedingEvents: breedingEventsSection,
+            breedingServices: breedingServicesSection,
+            gestationDiagnoses: gestationDiagnosesSection,
+            parturitions: parturitionsSection,
+            weanings: weaningsSection,
+            animalDeclaredHistories: animalDeclaredHistoriesSection,
         };
     }
 
@@ -431,12 +475,11 @@ export class SyncCriaBatchUseCase {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  Sección 4: Eventos de CRÍA
-    //  Reutiliza los mismos use-cases del módulo breeding (no duplicamos lógica)
+    //  Sección 4: Servicios de reproducción
     // ─────────────────────────────────────────────────────────────────────────
 
-    private async processBreedingEvents(
-        operations: SyncBreedingEventOperationDto[],
+    private async processBreedingServices(
+        operations: SyncBreedingServiceOperationDto[],
         localIdToServerId: Map<string, number>,
     ): Promise<SyncCriaSectionDto> {
         const results: SyncCriaOperationResultDto[] = [];
@@ -451,120 +494,281 @@ export class SyncCriaBatchUseCase {
                 let serverId: number | undefined;
 
                 switch (op.operation) {
-                    // ── CREATE ────────────────────────────────────────────────
                     case 'create': {
                         serverId = await this.executeInTransaction(async () => {
-                            let id: number | undefined;
-                            switch (op.type) {
-                                case 'breeding_service': {
-                                    const result = await this.registerBreedingServiceUseCase.execute(
-                                        { ...data, ...baseFields } as RegisterBreedingServiceDto,
-                                    );
-                                    id = result.id;
-                                    break;
-                                }
-                                case 'gestation_diagnosis': {
-                                    const result = await this.registerGestationDiagnosisUseCase.execute(
-                                        { ...data, ...baseFields } as RegisterGestationDiagnosisDto,
-                                    );
-                                    id = result.id;
-                                    break;
-                                }
-                                case 'parturition': {
-                                    const result = await this.registerParturitionUseCase.execute(
-                                        { ...data, ...baseFields } as RegisterParturitionDto,
-                                    );
-                                    id = result.id;
-                                    break;
-                                }
-                                case 'weaning': {
-                                    const result = await this.registerWeaningUseCase.execute(
-                                        { ...data, ...baseFields } as RegisterWeaningDto,
-                                    );
-                                    id = result.id;
-                                    break;
-                                }
-                                case 'animal_declared_history': {
-                                    const result = await this.registerAnimalDeclaredHistoryUseCase.execute(
-                                        { ...data } as RegisterAnimalDeclaredHistoryDto,
-                                    );
-                                    id = result.id;
-                                    break;
-                                }
-                                default:
-                                    throw new Error(`Tipo no soportado para create: ${(op as any).type}`);
-                            }
-                            return id!;
+                            const result = await this.registerBreedingServiceUseCase.execute(
+                                { ...data, ...baseFields } as RegisterBreedingServiceDto,
+                            );
+                            return result.id;
                         });
                         break;
                     }
-
-                    // ── UPDATE ────────────────────────────────────────────────
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId es requerido para update');
                         await this.executeInTransaction(async () => {
-                            switch (op.type) {
-                                case 'breeding_service':
-                                    await this.updateBreedingServiceUseCase.execute(op.serverId!, data as UpdateBreedingServiceDto);
-                                    break;
-                                case 'gestation_diagnosis':
-                                    await this.updateGestationDiagnosisUseCase.execute(op.serverId!, data as UpdateGestationDiagnosisDto);
-                                    break;
-                                case 'parturition':
-                                    await this.updateParturitionUseCase.execute(op.serverId!, data as UpdateParturitionDto);
-                                    break;
-                                case 'weaning':
-                                    await this.updateWeaningUseCase.execute(op.serverId!, data as UpdateWeaningDto);
-                                    break;
-                                case 'animal_declared_history':
-                                    await this.updateAnimalDeclaredHistoryUseCase.execute(op.serverId!, data as UpdateAnimalDeclaredHistoryDto);
-                                    break;
-                                default:
-                                    throw new Error(`Tipo no soportado para update: ${(op as any).type}`);
-                            }
+                            await this.updateBreedingServiceUseCase.execute(op.serverId!, data as UpdateBreedingServiceDto);
                         });
                         serverId = op.serverId;
                         break;
                     }
-
-                    // ── DELETE ────────────────────────────────────────────────
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId es requerido para delete');
                         await this.executeInTransaction(async () => {
-                            switch (op.type) {
-                                case 'breeding_service':
-                                    await this.deleteBreedingServiceUseCase.execute(op.serverId!);
-                                    break;
-                                case 'gestation_diagnosis':
-                                    await this.deleteGestationDiagnosisUseCase.execute(op.serverId!);
-                                    break;
-                                case 'parturition':
-                                    await this.deleteParturitionUseCase.execute(op.serverId!);
-                                    break;
-                                case 'weaning':
-                                    await this.deleteWeaningUseCase.execute(op.serverId!);
-                                    break;
-                                case 'animal_declared_history':
-                                    await this.deleteAnimalDeclaredHistoryUseCase.execute(op.serverId!);
-                                    break;
-                                default:
-                                    throw new Error(`Tipo no soportado para delete: ${(op as any).type}`);
-                            }
+                            await this.deleteBreedingServiceUseCase.execute(op.serverId!);
                         });
                         serverId = op.serverId;
                         break;
                     }
-
-                    default:
-                        throw new Error(`Operación no soportada: ${(op as any).operation}`);
                 }
 
-                if (serverId !== undefined) {
-                    localIdToServerId.set(op.localId, serverId);
-                }
-                results.push({ localId: op.localId, status: 'success', serverId });
+                localIdToServerId.set(op.localId, serverId!);
+                results.push({ localId: op.localId, status: 'success', serverId: serverId! });
             } catch (error: any) {
-                this.logOperationError(op.type ?? 'breeding_event', op.localId, op.operation, error);
+                this.logOperationError('breeding_service', op.localId, op.operation, error);
+                results.push({
+                    localId: op.localId,
+                    status: 'failed',
+                    error: this.extractErrorMessage(error),
+                });
+            }
+        }
+
+        return this.buildSectionResult(results);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Sección 5: Diagnósticos de gestación
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private async processGestationDiagnoses(
+        operations: SyncGestationDiagnosisOperationDto[],
+        localIdToServerId: Map<string, number>,
+    ): Promise<SyncCriaSectionDto> {
+        const results: SyncCriaOperationResultDto[] = [];
+
+        for (const op of operations) {
+            try {
+                const data = this.resolveLocalRefs(op.data, localIdToServerId);
+                const baseFields = {
+                    eventDate: op.happenedAt as unknown as Date,
+                    isSynced: true,
+                };
+                let serverId: number | undefined;
+
+                switch (op.operation) {
+                    case 'create': {
+                        serverId = await this.executeInTransaction(async () => {
+                            const result = await this.registerGestationDiagnosisUseCase.execute(
+                                { ...data, ...baseFields } as RegisterGestationDiagnosisDto,
+                            );
+                            return result.id;
+                        });
+                        break;
+                    }
+                    case 'update': {
+                        if (!op.serverId) throw new BadRequestException('serverId es requerido para update');
+                        await this.executeInTransaction(async () => {
+                            await this.updateGestationDiagnosisUseCase.execute(op.serverId!, data as UpdateGestationDiagnosisDto);
+                        });
+                        serverId = op.serverId;
+                        break;
+                    }
+                    case 'delete': {
+                        if (!op.serverId) throw new BadRequestException('serverId es requerido para delete');
+                        await this.executeInTransaction(async () => {
+                            await this.deleteGestationDiagnosisUseCase.execute(op.serverId!);
+                        });
+                        serverId = op.serverId;
+                        break;
+                    }
+                }
+
+                localIdToServerId.set(op.localId, serverId!);
+                results.push({ localId: op.localId, status: 'success', serverId: serverId! });
+            } catch (error: any) {
+                this.logOperationError('gestation_diagnosis', op.localId, op.operation, error);
+                results.push({
+                    localId: op.localId,
+                    status: 'failed',
+                    error: this.extractErrorMessage(error),
+                });
+            }
+        }
+
+        return this.buildSectionResult(results);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Sección 6: Partos
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private async processParturitions(
+        operations: SyncParturitionOperationDto[],
+        localIdToServerId: Map<string, number>,
+    ): Promise<SyncCriaSectionDto> {
+        const results: SyncCriaOperationResultDto[] = [];
+
+        for (const op of operations) {
+            try {
+                const data = this.resolveLocalRefs(op.data, localIdToServerId);
+                const baseFields = {
+                    eventDate: op.happenedAt as unknown as Date,
+                    isSynced: true,
+                };
+                let serverId: number | undefined;
+
+                switch (op.operation) {
+                    case 'create': {
+                        serverId = await this.executeInTransaction(async () => {
+                            const result = await this.registerParturitionUseCase.execute(
+                                { ...data, ...baseFields } as RegisterParturitionDto,
+                            );
+                            return result.id;
+                        });
+                        break;
+                    }
+                    case 'update': {
+                        if (!op.serverId) throw new BadRequestException('serverId es requerido para update');
+                        await this.executeInTransaction(async () => {
+                            await this.updateParturitionUseCase.execute(op.serverId!, data as UpdateParturitionDto);
+                        });
+                        serverId = op.serverId;
+                        break;
+                    }
+                    case 'delete': {
+                        if (!op.serverId) throw new BadRequestException('serverId es requerido para delete');
+                        await this.executeInTransaction(async () => {
+                            await this.deleteParturitionUseCase.execute(op.serverId!);
+                        });
+                        serverId = op.serverId;
+                        break;
+                    }
+                }
+
+                localIdToServerId.set(op.localId, serverId!);
+                results.push({ localId: op.localId, status: 'success', serverId: serverId! });
+            } catch (error: any) {
+                this.logOperationError('parturition', op.localId, op.operation, error);
+                results.push({
+                    localId: op.localId,
+                    status: 'failed',
+                    error: this.extractErrorMessage(error),
+                });
+            }
+        }
+
+        return this.buildSectionResult(results);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Sección 7: Destetes
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private async processWeanings(
+        operations: SyncWeaningOperationDto[],
+        localIdToServerId: Map<string, number>,
+    ): Promise<SyncCriaSectionDto> {
+        const results: SyncCriaOperationResultDto[] = [];
+
+        for (const op of operations) {
+            try {
+                const data = this.resolveLocalRefs(op.data, localIdToServerId);
+                const baseFields = {
+                    eventDate: op.happenedAt as unknown as Date,
+                    isSynced: true,
+                };
+                let serverId: number | undefined;
+
+                switch (op.operation) {
+                    case 'create': {
+                        serverId = await this.executeInTransaction(async () => {
+                            const result = await this.registerWeaningUseCase.execute(
+                                { ...data, ...baseFields } as RegisterWeaningDto,
+                            );
+                            return result.id;
+                        });
+                        break;
+                    }
+                    case 'update': {
+                        if (!op.serverId) throw new BadRequestException('serverId es requerido para update');
+                        await this.executeInTransaction(async () => {
+                            await this.updateWeaningUseCase.execute(op.serverId!, data as UpdateWeaningDto);
+                        });
+                        serverId = op.serverId;
+                        break;
+                    }
+                    case 'delete': {
+                        if (!op.serverId) throw new BadRequestException('serverId es requerido para delete');
+                        await this.executeInTransaction(async () => {
+                            await this.deleteWeaningUseCase.execute(op.serverId!);
+                        });
+                        serverId = op.serverId;
+                        break;
+                    }
+                }
+
+                localIdToServerId.set(op.localId, serverId!);
+                results.push({ localId: op.localId, status: 'success', serverId: serverId! });
+            } catch (error: any) {
+                this.logOperationError('weaning', op.localId, op.operation, error);
+                results.push({
+                    localId: op.localId,
+                    status: 'failed',
+                    error: this.extractErrorMessage(error),
+                });
+            }
+        }
+
+        return this.buildSectionResult(results);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Sección 8: Historiales declarados
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private async processAnimalDeclaredHistories(
+        operations: SyncAnimalDeclaredHistoryOperationDto[],
+        localIdToServerId: Map<string, number>,
+    ): Promise<SyncCriaSectionDto> {
+        const results: SyncCriaOperationResultDto[] = [];
+
+        for (const op of operations) {
+            try {
+                const data = this.resolveLocalRefs(op.data, localIdToServerId);
+                let serverId: number | undefined;
+
+                switch (op.operation) {
+                    case 'create': {
+                        serverId = await this.executeInTransaction(async () => {
+                            const result = await this.registerAnimalDeclaredHistoryUseCase.execute(
+                                data as RegisterAnimalDeclaredHistoryDto,
+                            );
+                            return result.id;
+                        });
+                        break;
+                    }
+                    case 'update': {
+                        if (!op.serverId) throw new BadRequestException('serverId es requerido para update');
+                        await this.executeInTransaction(async () => {
+                            await this.updateAnimalDeclaredHistoryUseCase.execute(op.serverId!, data as UpdateAnimalDeclaredHistoryDto);
+                        });
+                        serverId = op.serverId;
+                        break;
+                    }
+                    case 'delete': {
+                        if (!op.serverId) throw new BadRequestException('serverId es requerido para delete');
+                        await this.executeInTransaction(async () => {
+                            await this.deleteAnimalDeclaredHistoryUseCase.execute(op.serverId!);
+                        });
+                        serverId = op.serverId;
+                        break;
+                    }
+                }
+
+                localIdToServerId.set(op.localId, serverId!);
+                results.push({ localId: op.localId, status: 'success', serverId: serverId! });
+            } catch (error: any) {
+                this.logOperationError('animal_declared_history', op.localId, op.operation, error);
                 results.push({
                     localId: op.localId,
                     status: 'failed',

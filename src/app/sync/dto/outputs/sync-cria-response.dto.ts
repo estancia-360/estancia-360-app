@@ -120,10 +120,46 @@ export class SyncCriaResponseDto {
 
     @ApiProperty({
         description:
-            'Resultados de los eventos de cría. Orden: mismo que el enviado.',
+            'Resultados de las operaciones sobre servicios de reproducción (breeding_services). Orden: mismo que el enviado.',
         type: SyncCriaSectionDto,
     })
     @Expose()
     @Type(() => SyncCriaSectionDto)
-    breedingEvents: SyncCriaSectionDto;
+    breedingServices: SyncCriaSectionDto;
+
+    @ApiProperty({
+        description:
+            'Resultados de las operaciones sobre diagnósticos de gestación (gestation_diagnoses). Orden: mismo que el enviado.',
+        type: SyncCriaSectionDto,
+    })
+    @Expose()
+    @Type(() => SyncCriaSectionDto)
+    gestationDiagnoses: SyncCriaSectionDto;
+
+    @ApiProperty({
+        description:
+            'Resultados de las operaciones sobre partos (parturitions). Orden: mismo que el enviado.',
+        type: SyncCriaSectionDto,
+    })
+    @Expose()
+    @Type(() => SyncCriaSectionDto)
+    parturitions: SyncCriaSectionDto;
+
+    @ApiProperty({
+        description:
+            'Resultados de las operaciones sobre destetes (weanings). Orden: mismo que el enviado.',
+        type: SyncCriaSectionDto,
+    })
+    @Expose()
+    @Type(() => SyncCriaSectionDto)
+    weanings: SyncCriaSectionDto;
+
+    @ApiProperty({
+        description:
+            'Resultados de las operaciones sobre historiales declarados (animal_declared_histories). Orden: mismo que el enviado.',
+        type: SyncCriaSectionDto,
+    })
+    @Expose()
+    @Type(() => SyncCriaSectionDto)
+    animalDeclaredHistories: SyncCriaSectionDto;
 }
