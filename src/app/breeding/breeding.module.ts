@@ -27,6 +27,7 @@ import { DeleteAnimalDeclaredHistoryUseCase } from './use-cases/delete-animal-de
 // Module dependencies
 import { RanchAnimalsModule } from 'src/modules/ranch-management/ranch-animals/ranch-animals.module';
 import { AnimalEventsModule } from 'src/modules/ranch-management/animal-events/animal-events.module';
+import { RanchLotsModule } from 'src/modules/ranch-management/ranch-lots/ranch-lots.module';
 import { BreedingServicesModule } from 'src/modules/breeding-modules/breeding-services/breeding-services.module';
 import { GestationDiagnosesModule } from 'src/modules/breeding-modules/gestation-diagnoses/gestation-diagnoses.module';
 import { ParturitionsModule } from 'src/modules/breeding-modules/parturitions/parturitions.module';
@@ -37,6 +38,7 @@ import { AnimalDeclaredHistoryModule } from 'src/modules/breeding-modules/animal
     imports: [
         RanchAnimalsModule,
         AnimalEventsModule,
+        RanchLotsModule,
         BreedingServicesModule,
         GestationDiagnosesModule,
         ParturitionsModule,
