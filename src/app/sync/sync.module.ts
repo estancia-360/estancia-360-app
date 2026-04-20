@@ -38,10 +38,24 @@ import { DeleteParturitionUseCase } from 'src/app/breeding/use-cases/delete-part
 import { DeleteWeaningUseCase } from 'src/app/breeding/use-cases/delete-weaning.use-case';
 import { DeleteAnimalDeclaredHistoryUseCase } from 'src/app/breeding/use-cases/delete-animal-declared-history.use-case';
 
+// Módulos de RECRÍA
+import { WeightRecordsModule } from 'src/modules/rearing-modules/weight-records/weight-records.module';
+import { RearingSelectionsModule } from 'src/modules/rearing-modules/rearing-selections/rearing-selections.module';
+import { FatteningEntriesModule } from 'src/modules/fattening-modules/fattening-entries/fattening-entries.module';
+
+// Use-cases de RECRÍA
+import { RegisterWeightRecordUseCase } from 'src/app/rearing/use-cases/register-weight-record.use-case';
+import { UpdateWeightRecordUseCase } from 'src/app/rearing/use-cases/update-weight-record.use-case';
+import { DeleteWeightRecordUseCase } from 'src/app/rearing/use-cases/delete-weight-record.use-case';
+import { RegisterRearingSelectionUseCase } from 'src/app/rearing/use-cases/register-rearing-selection.use-case';
+import { UpdateRearingSelectionUseCase } from 'src/app/rearing/use-cases/update-rearing-selection.use-case';
+import { DeleteRearingSelectionUseCase } from 'src/app/rearing/use-cases/delete-rearing-selection.use-case';
+
 // Propios
 import { SyncService } from './sync.service';
 import { SyncController } from './sync.controller';
 import { SyncCriaBatchUseCase } from './use-cases/sync-cria-batch.use-case';
+import { SyncRecriaBatchUseCase } from './use-cases/sync-recria-batch.use-case';
 
 @Module({
     imports: [
@@ -60,11 +74,25 @@ import { SyncCriaBatchUseCase } from './use-cases/sync-cria-batch.use-case';
         ParturitionsModule,
         WeaningsModule,
         AnimalDeclaredHistoryModule,
+
+        // Módulos de RECRÍA
+        WeightRecordsModule,
+        RearingSelectionsModule,
+        FatteningEntriesModule,
     ],
     controllers: [SyncController],
     providers: [
         SyncService,
         SyncCriaBatchUseCase,
+        SyncRecriaBatchUseCase,
+
+        // Use-cases de RECRÍA
+        RegisterWeightRecordUseCase,
+        UpdateWeightRecordUseCase,
+        DeleteWeightRecordUseCase,
+        RegisterRearingSelectionUseCase,
+        UpdateRearingSelectionUseCase,
+        DeleteRearingSelectionUseCase,
 
         // Use-cases de CRÍA — Register
         RegisterBreedingServiceUseCase,

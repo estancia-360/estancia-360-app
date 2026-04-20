@@ -173,6 +173,8 @@ export class RanchAnimalsService {
 		if (data.weight) { ranchAnimal.weight = data.weight }
 		ranchAnimal.sex = data.sex;
 		ranchAnimal.createdAt = data.createdAt;
+		if (data.idLot) ranchAnimal.idLot = data.idLot;
+		if (data.idProductiveStatus) ranchAnimal.idProductiveStatus = data.idProductiveStatus;
 		const animalSaved = await this.ranchAnimalRepository.save(ranchAnimal);
 		return (await this.findOneById(animalSaved.id, {
 			throwException: true,

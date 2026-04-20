@@ -10,6 +10,8 @@ import { OkRes, SwaggerBadRequestCommon } from 'src/shared/utils';
 import { SyncService } from './sync.service';
 import { SyncCriaDto } from './dto/inputs/sync-cria.dto';
 import { SyncCriaResponseDto } from './dto/outputs/sync-cria-response.dto';
+import { SyncRecriaDto } from './dto/inputs/sync-recria.dto';
+import { SyncRecriaResponseDto } from './dto/outputs/sync-recria-response.dto';
 
 @ApiTags('Sincronización Offline')
 @Controller('sync')
@@ -473,6 +475,45 @@ Para detalles completos de cada campo (validaciones, constraints, ejemplos):
         @Res() res: express.Response,
     ) {
         const result = await this.syncService.syncCria(dto);
+        return OkRes(res, result);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  POST /sync/recria
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Post('recria')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Sincronizar datos offline del módulo de RECRÍA [REACT NATIVE]',
+        description: `**Endpoint de sincronización offline para el módulo de Recría.**
+
+Recibe un batch de operaciones registradas sin conexión (pesajes y selecciones de recría) y las procesa en orden.
+
+## Orden de procesamiento
+1. **weightRecords** — Pesajes de animales (actualiza peso en ranch_animals)
+2. **rearingSelections** — Selecciones de destino (replacement/fattening/sale)
+
+## Comportamiento por operación
+- **create**: Crea el evento animal + registro. Retorna serverId.
+- **update**: Actualiza campos editables. Retorna serverId.
+- **delete**: Elimina registro y evento asociado. Para selección fattening, también elimina fattening_entry.
+
+## Notas importantes
+- Destino **fattening** en rearingSelections: requiere \`idLotDest\` y \`systemType\`. Crea automáticamente un fattening_entry y cambia ps=3.
+- Destino **sale**: Cambia ps=4 y status=3 (IRREVERSIBLE). No se puede revertir.
+- Usar \`localRef_<campo>\` para referencias cruzadas dentro del mismo batch.`,
+    })
+    @ApiOkResponse({
+        description: 'Batch procesado. Revisar weightRecords y rearingSelections para ver resultados individuales.',
+        type: SyncRecriaResponseDto,
+    })
+    @ApiBadRequestResponse(SwaggerBadRequestCommon())
+    async syncRecria(
+        @Body() dto: SyncRecriaDto,
+        @Res() res: express.Response,
+    ) {
+        const result = await this.syncService.syncRecria(dto);
         return OkRes(res, result);
     }
 }

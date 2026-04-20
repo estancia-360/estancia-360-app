@@ -107,6 +107,29 @@ export class WeaningsService {
      * @param optionsData - Opciones de búsqueda y template DTO
      * @returns Página de destetes
      */
+    async findAllByAnimalId<T>(
+        idRanchAnimal: number,
+        paginationData: PaginationParamsDto,
+        optionsData: OptionsFindDto<T>,
+    ): Promise<PaginationResponseDto<T>> {
+        const options = Object.assign(new OptionsFindDto(), optionsData);
+        const templateClass = options.template ?? (WeaningDto as unknown as new () => T);
+        const template = findWithAutoMapper(templateClass);
+        const { page, limit } = paginationData;
+        const [weanings, total] = await this.weaningsRepository.findAndCount({
+            select: template.select,
+            relations: template.relations,
+            where: { idCria: idRanchAnimal },
+            skip: (page - 1) * limit,
+            take: limit,
+            order: { createdAt: 'DESC' },
+        });
+        return {
+            data: plainToInstance(templateClass, weanings, { excludeExtraneousValues: true }),
+            meta: { page, limit, pages: Math.ceil(total / limit), total },
+        };
+    }
+
     async findAllByAnimalCode<T>(
         animalCode: string,
         paginationData: PaginationParamsDto,

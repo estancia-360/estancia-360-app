@@ -30,6 +30,10 @@ import { WeaningsModule } from './modules/breeding-modules/weanings/weanings.mod
 import { BreedingModule } from './app/breeding/breeding.module';
 import { AnimalClassesModule } from './modules/core/animal-classes/animal-classes.module';
 import { SyncModule } from './app/sync/sync.module';
+import { WeightRecordsModule } from './modules/rearing-modules/weight-records/weight-records.module';
+import { RearingSelectionsModule } from './modules/rearing-modules/rearing-selections/rearing-selections.module';
+import { FatteningEntriesModule } from './modules/fattening-modules/fattening-entries/fattening-entries.module';
+import { RearingModule } from './app/rearing/rearing.module';
 
 @Module({
 	imports: [
@@ -64,6 +68,10 @@ import { SyncModule } from './app/sync/sync.module';
 		BreedingModule,
 		AnimalClassesModule,
 		SyncModule,
+		WeightRecordsModule,
+		RearingSelectionsModule,
+		FatteningEntriesModule,
+		RearingModule,
 	],
 })
 export class AppModule { }

@@ -9,7 +9,7 @@ import { GestationDiagnosisDto } from 'src/modules/breeding-modules/gestation-di
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 import { BreedingServiceDto } from 'src/modules/breeding-modules/breeding-services/dto/breeding-service.dto';
 import { EVENT_TYPE_IDS } from '../constants/event-type-ids.constant';
-import { MyConflictException, MyNotFoundException } from 'src/shared/exceptions';
+import { MyNotFoundException } from 'src/shared/exceptions';
 
 @Injectable()
 export class RegisterGestationDiagnosisUseCase {
@@ -48,14 +48,6 @@ export class RegisterGestationDiagnosisUseCase {
         if (service!.event.idRanchAnimal !== dto.idRanchAnimal) {
             throw new MyNotFoundException(
                 `El servicio de monta ID=${dto.idService} no pertenece al animal ID=${dto.idRanchAnimal}.`,
-            );
-        }
-
-        // Pre-transaction: verificar unicidad 1:1 servicio ↔ diagnóstico
-        const existing = await this.gestationDiagnosesService.findOneByServiceId(dto.idService);
-        if (existing) {
-            throw new MyConflictException(
-                `Ya existe un diagnóstico de gestación para el servicio de monta ID=${dto.idService}.`,
             );
         }
 

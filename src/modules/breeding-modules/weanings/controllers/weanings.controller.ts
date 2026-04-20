@@ -70,10 +70,8 @@ export class WeaningsController {
         @Query() pagination: PaginationParamsDto,
         @Res() res: express.Response,
     ) {
-        // Para mantener compatibilidad, usamos el código del animal
-        // En la práctica, el código se debe pasar directamente
-        const result = await this.weaningsService.findAllByAnimalCode(
-            idRanchAnimal.toString(),
+        const result = await this.weaningsService.findAllByAnimalId(
+            idRanchAnimal,
             pagination,
             { template: WeaningDto },
         );

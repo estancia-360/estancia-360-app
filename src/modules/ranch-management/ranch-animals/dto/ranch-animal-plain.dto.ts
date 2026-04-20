@@ -12,6 +12,11 @@ export class RanchAnimalPlainDto {
     @Type(() => Number)
     idRanch: number;
 
+    @ApiProperty({ description: 'ID del estado productivo del animal (1=Cría, 2=Recría, 3=Engorde, 4=Baja)', nullable: true })
+    @Expose()
+    @Type(() => Number)
+    idProductiveStatus?: number;
+
     @ApiProperty({ description: 'ID de la clase del animal', example: 1 })
     @Expose()
     @Type(() => Number)
