@@ -3,11 +3,12 @@ import { MyConfigService } from "../config.service";
 
 @Injectable()
 export class MyEmailConfig {
-    constructor(private readonly config: MyConfigService){}
-    get(){
+    constructor(private readonly config: MyConfigService) {}
+
+    get() {
         return {
-            user: this.config.get<string>('USER_EMAIL'),
-            pass: this.config.get<string>('PASS_AUTH'),
+            apiKey: this.config.get<string>('RESEND_API_KEY'),
+            fromAddress: this.config.get<string>('EMAIL_FROM'),
         };
     }
 }

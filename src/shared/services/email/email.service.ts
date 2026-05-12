@@ -1,50 +1,39 @@
-import { Injectable } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
-
-export interface EmailAttachment {
-	filename: string;
-	content: Buffer | string;
-	contentType?: string;
-}
+import { Injectable, Logger } from '@nestjs/common';
+import { Resend } from 'resend';
+import { MyEmailConfig } from 'src/infrastructure/config/services/email.config';
 
 export interface EmailOptions {
-	to: string | string[];
-	subject: string;
-	text?: string;
-	html?: string;
-	attachments?: EmailAttachment[];
-	template?: string;
-	context?: Record<string, any>;
+    to: string | string[];
+    subject: string;
+    html: string;
 }
 
 @Injectable()
 export class EmailService {
-	constructor(
-		private readonly mailerService: MailerService,
-	) { }
+    private readonly resend: Resend;
+    private readonly fromAddress: string;
+    private readonly logger = new Logger(EmailService.name);
 
-	private async sendEmailAsync(options: EmailOptions): Promise<void> {
-		try {
-			const { to, subject, text, html, attachments, template, context } = options;
-			await this.mailerService.sendMail({
-				to,
-				subject,
-				text,
-				html,
-				template,
-				context,
-				attachments: attachments?.map((att) => ({
-					filename: att.filename,
-					content: att.content,
-					contentType: att.contentType,
-				})),
-			});
-		} catch (error) {
-		}
-	}
-	async sendEmail(options: EmailOptions): Promise<void> {
-		setImmediate(() => {
-			this.sendEmailAsync(options);
-		});
-	}
+    constructor(private readonly emailConfig: MyEmailConfig) {
+        const { apiKey, fromAddress } = this.emailConfig.get();
+        this.resend = new Resend(apiKey);
+        this.fromAddress = fromAddress;
+    }
+
+    async sendEmail(options: EmailOptions): Promise<void> {
+        setImmediate(() => this.sendEmailAsync(options));
+    }
+
+    private async sendEmailAsync(options: EmailOptions): Promise<void> {
+        const { error } = await this.resend.emails.send({
+            from: this.fromAddress,
+            to: Array.isArray(options.to) ? options.to : [options.to],
+            subject: options.subject,
+            html: options.html,
+        });
+
+        if (error) {
+            this.logger.error(`Error al enviar email a ${options.to}: ${error.message}`);
+        }
+    }
 }
