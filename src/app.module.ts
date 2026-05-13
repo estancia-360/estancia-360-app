@@ -33,7 +33,9 @@ import { SyncModule } from './app/sync/sync.module';
 import { WeightRecordsModule } from './modules/rearing-modules/weight-records/weight-records.module';
 import { RearingSelectionsModule } from './modules/rearing-modules/rearing-selections/rearing-selections.module';
 import { FatteningEntriesModule } from './modules/fattening-modules/fattening-entries/fattening-entries.module';
+import { FeedRecordsModule } from './modules/fattening-modules/feed-records/feed-records.module';
 import { RearingModule } from './app/rearing/rearing.module';
+import { FatteningModule } from './app/fattening/fattening.module';
 
 @Module({
 	imports: [
@@ -71,7 +73,9 @@ import { RearingModule } from './app/rearing/rearing.module';
 		WeightRecordsModule,
 		RearingSelectionsModule,
 		FatteningEntriesModule,
+		FeedRecordsModule,
 		RearingModule,
+		FatteningModule,
 	],
 })
 export class AppModule { }

@@ -8,6 +8,8 @@ import { FatteningEntryNotFoundException } from '../exceptions/fattening-entry-n
 import { OptionsFindDto } from 'src/shared/dto/options-find.dto';
 import { findWithAutoMapper } from 'src/infrastructure/database/utils';
 import { plainToInstance } from 'class-transformer';
+import { PaginationParamsDto } from 'src/shared/dto/pagination-params.dto';
+import { PaginationResponseDto } from 'src/shared/dto/pagination-response.dto';
 
 @Injectable()
 export class FatteningEntriesService {
@@ -44,6 +46,15 @@ export class FatteningEntriesService {
         return plainToInstance(templateClass, record, { excludeExtraneousValues: true });
     }
 
+    async update(id: number, data: { initialWeight?: number; systemType?: string }, manager?: EntityManager): Promise<FatteningEntry> {
+        const repo = manager?.getRepository(FatteningEntry) ?? this.fatteningEntriesRepository;
+        const entry = await repo.findOne({ where: { id } });
+        if (!entry) throw new FatteningEntryNotFoundException(id);
+        if (data.initialWeight !== undefined) entry.initialWeight = data.initialWeight;
+        if (data.systemType !== undefined) (entry as any).systemType = data.systemType;
+        return await repo.save(entry);
+    }
+
     async deleteById(id: number, manager?: EntityManager): Promise<void> {
         const repo = manager?.getRepository(FatteningEntry) ?? this.fatteningEntriesRepository;
         await repo.delete({ id });
@@ -52,5 +63,28 @@ export class FatteningEntriesService {
     async findOneByEventId(idEvent: number, manager?: EntityManager): Promise<FatteningEntry | null> {
         const repo = manager?.getRepository(FatteningEntry) ?? this.fatteningEntriesRepository;
         return await repo.findOne({ where: { idEvent } }) ?? null;
+    }
+
+    async findAllByAnimal<T>(
+        idRanchAnimal: number,
+        paginationData: PaginationParamsDto,
+        optionsData: OptionsFindDto<T>,
+    ): Promise<PaginationResponseDto<T>> {
+        const options = Object.assign(new OptionsFindDto(), optionsData);
+        const templateClass = options.template ?? (FatteningEntryDto as unknown as new () => T);
+        const template = findWithAutoMapper(templateClass);
+        const { page, limit } = paginationData;
+        const [records, total] = await this.fatteningEntriesRepository.findAndCount({
+            select: template.select,
+            relations: template.relations,
+            where: { event: { idRanchAnimal } },
+            skip: (page - 1) * limit,
+            take: limit,
+            order: { createdAt: 'DESC' },
+        });
+        return {
+            data: plainToInstance(templateClass, records, { excludeExtraneousValues: true }),
+            meta: { page, limit, pages: Math.ceil(total / limit), total },
+        };
     }
 }

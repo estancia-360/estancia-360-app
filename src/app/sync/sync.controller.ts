@@ -12,6 +12,8 @@ import { SyncCriaDto } from './dto/inputs/sync-cria.dto';
 import { SyncCriaResponseDto } from './dto/outputs/sync-cria-response.dto';
 import { SyncRecriaDto } from './dto/inputs/sync-recria.dto';
 import { SyncRecriaResponseDto } from './dto/outputs/sync-recria-response.dto';
+import { SyncEngordeDto } from './dto/inputs/sync-engorde.dto';
+import { SyncEngordeResponseDto } from './dto/outputs/sync-engorde-response.dto';
 
 @ApiTags('Sincronización Offline')
 @Controller('sync')
@@ -514,6 +516,43 @@ Recibe un batch de operaciones registradas sin conexión (pesajes y selecciones 
         @Res() res: express.Response,
     ) {
         const result = await this.syncService.syncRecria(dto);
+        return OkRes(res, result);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  POST /sync/engorde
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Post('engorde')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Sincronizar datos offline del módulo de ENGORDE [REACT NATIVE]',
+        description: `Recibe un batch de operaciones registradas sin conexión (pesajes y alimentación de lote) y las procesa en orden.
+
+## Orden de procesamiento
+1. **weightRecords** — Pesajes de animales en Engorde (ps=3)
+2. **feedRecords** — Registros de alimentación por lote
+
+## Comportamiento por operación
+- **create**: Crea el registro. Retorna serverId.
+- **update**: Actualiza campos editables. Retorna serverId.
+- **delete**: Elimina el registro.
+
+## Notas importantes
+- **weightRecords**: Igual que en Recría — mismo endpoint, el animal debe tener ps=3.
+- **feedRecords**: No genera animal_event. Es el único tipo de registro sin evento animal. No requiere localRef cruzado con weightRecords.
+- Usar \`localRef_<campo>\` para referencias cruzadas dentro del mismo batch (ej. \`localRef_idLot\`).`,
+    })
+    @ApiOkResponse({
+        description: 'Batch procesado. Revisar weightRecords y feedRecords para ver resultados individuales.',
+        type: SyncEngordeResponseDto,
+    })
+    @ApiBadRequestResponse(SwaggerBadRequestCommon())
+    async syncEngorde(
+        @Body() dto: SyncEngordeDto,
+        @Res() res: express.Response,
+    ) {
+        const result = await this.syncService.syncEngorde(dto);
         return OkRes(res, result);
     }
 }
