@@ -30,6 +30,7 @@ export class ParturitionDto {
 
     @ApiProperty({ description: 'Peso de la cría al nacer (kg)', required: false, example: 35 })
     @Expose()
+    @Type(() => Number)
     criaWeight?: number;
 
     @ApiProperty({ description: 'Estado de la cría al nacer', enum: ['alive', 'dead'], example: 'alive' })

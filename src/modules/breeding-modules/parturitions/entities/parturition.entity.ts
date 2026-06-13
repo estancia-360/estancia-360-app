@@ -57,7 +57,9 @@ export class Parturition extends BaseCreatedUpdated {
 
     @Column({
         name: 'cria_weight',
-        type: 'int',
+        type: 'numeric',
+        precision: 6,
+        scale: 2,
         nullable: true,
     })
     criaWeight?: number;
