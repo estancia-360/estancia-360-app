@@ -245,8 +245,10 @@ export class SyncBreedingBatchUseCase {
      * ID real asignado por el servidor. El campo `localRef_idService: "uuid-001"`
      * se convierte en `idService: <serverId>` usando el mapa acumulado del batch.
      *
-     * Si un localRef no se puede resolver (la operación de origen falló), se omite
-     * el campo — la validación del caso de uso reportará el error adecuado.
+     * Si un localRef no se puede resolver (no corresponde a un localId de este batch,
+     * p.ej. porque la operación de origen falló o porque se referenció un serverId
+     * existente por error), se lanza BadRequestException — la operación se marca
+     * como fallida en el resultado del batch.
      */
     private resolveLocalRefs(
         data: Record<string, any>,
@@ -258,9 +260,10 @@ export class SyncBreedingBatchUseCase {
             if (key.startsWith('localRef_')) {
                 const targetField = key.replace('localRef_', '');
                 const id = localIdToServerId.get(value as string);
-                if (id !== undefined) {
-                    resolved[targetField] = id;
+                if (id === undefined) {
+                    throw new BadRequestException(`localRef_${targetField}="${value}" no corresponde a ningún localId registrado en este batch`);
                 }
+                resolved[targetField] = id;
             } else {
                 resolved[key] = value;
             }

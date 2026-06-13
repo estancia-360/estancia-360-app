@@ -829,10 +829,10 @@ export class SyncCriaBatchUseCase {
             if (key.startsWith('localRef_')) {
                 const targetField = key.replace('localRef_', '');
                 const id = localIdToServerId.get(value as string);
-                if (id !== undefined) {
-                    resolved[targetField] = id;
+                if (id === undefined) {
+                    throw new BadRequestException(`localRef_${targetField}="${value}" no corresponde a ningún localId registrado en este batch`);
                 }
-                // Si no se resuelve, se omite el campo intencionalmente
+                resolved[targetField] = id;
             } else {
                 resolved[key] = value;
             }

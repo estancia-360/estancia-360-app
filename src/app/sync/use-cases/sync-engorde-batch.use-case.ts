@@ -142,7 +142,10 @@ export class SyncEngordeBatchUseCase {
             if (key.startsWith('localRef_')) {
                 const field = key.replace('localRef_', '');
                 const id = map.get(value as string);
-                if (id !== undefined) resolved[field] = id;
+                if (id === undefined) {
+                    throw new BadRequestException(`localRef_${field}="${value}" no corresponde a ningún localId registrado en este batch`);
+                }
+                resolved[field] = id;
             } else {
                 resolved[key] = value;
             }
