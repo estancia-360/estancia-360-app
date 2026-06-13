@@ -24,5 +24,16 @@ export class RanchUsersService {
 		return await this.ranchUserRepository.save(ranchUser);
 	}
 
-	
+	async findByUser(idUser: number): Promise<RanchUser[]> {
+		return await this.ranchUserRepository.find({
+			where: { idUser },
+			relations: { ranch: true, role: true },
+		});
+	}
+
+	async findOne(idUser: number, idRanch: number): Promise<RanchUser | null> {
+		return await this.ranchUserRepository.findOne({
+			where: { idUser, idRanch },
+		});
+	}
 }

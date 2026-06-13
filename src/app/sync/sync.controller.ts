@@ -1,6 +1,9 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import {
     ApiBadRequestResponse,
+    ApiBearerAuth,
+    ApiForbiddenResponse,
     ApiOkResponse,
     ApiOperation,
     ApiTags,
@@ -8,17 +11,106 @@ import {
 import * as express from 'express';
 import { OkRes, SwaggerBadRequestCommon } from 'src/shared/utils';
 import { SyncService } from './sync.service';
+import { SyncDownloadService } from './services/sync-download.service';
 import { SyncCriaDto } from './dto/inputs/sync-cria.dto';
 import { SyncCriaResponseDto } from './dto/outputs/sync-cria-response.dto';
 import { SyncRecriaDto } from './dto/inputs/sync-recria.dto';
 import { SyncRecriaResponseDto } from './dto/outputs/sync-recria-response.dto';
 import { SyncEngordeDto } from './dto/inputs/sync-engorde.dto';
 import { SyncEngordeResponseDto } from './dto/outputs/sync-engorde-response.dto';
+import { SyncDownloadQueryDto } from './dto/inputs/sync-download-query.dto';
+import { SyncRanchDto } from './dto/outputs/sync-ranches-response.dto';
+import { SyncCatalogsResponseDto } from './dto/outputs/sync-catalogs-response.dto';
+import { SyncDownloadResponseDto } from './dto/outputs/sync-download-response.dto';
 
 @ApiTags('Sincronización Offline')
 @Controller('sync')
 export class SyncController {
-    constructor(private readonly syncService: SyncService) { }
+    constructor(
+        private readonly syncService: SyncService,
+        private readonly syncDownloadService: SyncDownloadService,
+    ) { }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  GET /sync/ranches
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Get('ranches')
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Listar estancias accesibles para el usuario autenticado [REACT NATIVE]',
+        description: `Devuelve las estancias a las que el usuario tiene acceso junto con su rol en cada una.
+
+Primer paso del flujo de sincronización: el cliente usa el/los \`idRanch\` devueltos aquí para llamar a \`GET /sync/download/:idRanch\`.`,
+    })
+    @ApiOkResponse({ description: 'Listado de estancias del usuario.', type: [SyncRanchDto] })
+    async getRanches(@Req() req: express.Request, @Res() res: express.Response) {
+        const idUser = (req.user as any).id;
+        const result = await this.syncDownloadService.getRanchesForUser(idUser);
+        return OkRes(res, result);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  GET /sync/catalogs
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Get('catalogs')
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Descargar catálogos del sistema [REACT NATIVE]',
+        description: `Devuelve todas las tablas de catálogo (clases de animal, razas, estados de animal, tipos de evento, estados productivos, tipos de producción).
+
+Son tablas pequeñas y estáticas: se descargan completas, sin paginación ni filtro por \`since\`. Recomendado al hacer bootstrap inicial o cuando el cliente detecte que su versión local de catálogos está desactualizada.`,
+    })
+    @ApiOkResponse({ description: 'Catálogos completos.', type: SyncCatalogsResponseDto })
+    async getCatalogs(@Res() res: express.Response) {
+        const result = await this.syncDownloadService.getCatalogs();
+        return OkRes(res, result);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  GET /sync/download/:idRanch
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Get('download/:idRanch')
+    @UseGuards(AuthGuard('jwt'))
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Descargar datos de una estancia (bootstrap o incremental) [REACT NATIVE]',
+        description: `**Endpoint unificado de descarga para cría, recría y engorde.**
+
+## Usos
+1. **Bootstrap inicial** (dispositivo nuevo): llamar sin \`since\`. Devuelve todas las entidades de la estancia.
+2. **Sincronización incremental**: llamar con \`since=<serverTime de la última descarga>\`. Devuelve solo lo creado/actualizado/eliminado desde entonces.
+3. **Paginación**: si \`nextCursor\` viene distinto de \`null\`, repetir la llamada con \`cursor=<nextCursor>\` (mismo \`since\`) hasta que \`nextCursor\` sea \`null\`.
+
+## Orden de entidades (respeta dependencias FK)
+ranchPastures → ranchLots → ranchAnimals → animalEvents → breedingServices → gestationDiagnoses → parturitions → weanings → animalDeclaredHistories → weightRecords → rearingSelections → fatteningEntries → feedRecords
+
+## Eliminaciones
+\`deletions\` agrupa por tabla los IDs eliminados en el servidor desde \`since\` (tombstones). En bootstrap (\`since\` omitido) viene vacío.
+
+## Guardado del estado de sincronización
+Al terminar de paginar (cuando \`nextCursor\` es \`null\`), el cliente debe guardar el último \`serverTime\` recibido y usarlo como \`since\` en la próxima sincronización.`,
+    })
+    @ApiOkResponse({ description: 'Datos de la estancia.', type: SyncDownloadResponseDto })
+    @ApiForbiddenResponse({ description: 'El usuario no tiene acceso a esta estancia.' })
+    @ApiBadRequestResponse(SwaggerBadRequestCommon())
+    async download(
+        @Param('idRanch', ParseIntPipe) idRanch: number,
+        @Query() query: SyncDownloadQueryDto,
+        @Req() req: express.Request,
+        @Res() res: express.Response,
+    ) {
+        const idUser = (req.user as any).id;
+        await this.syncDownloadService.assertRanchAccess(idUser, idRanch);
+
+        const since = query.since ? new Date(query.since) : undefined;
+        const result = await this.syncDownloadService.download(idRanch, since, query.cursor, query.limit);
+        return OkRes(res, result);
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     //  POST /sync/cria

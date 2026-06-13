@@ -4,6 +4,22 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RanchPasture } from 'src/modules/ranch-management/ranch-pastures/entities/ranch-pasture.entity';
 import { RanchLot } from 'src/modules/ranch-management/ranch-lots/entities/ranch-lot.entity';
 import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
+import { AnimalEvent } from 'src/modules/ranch-management/animal-events/entities/animal-event.entity';
+import { BreedingService as BreedingServiceEntity } from 'src/modules/breeding-modules/breeding-services/entities/breeding-service.entity';
+import { GestationDiagnosis } from 'src/modules/breeding-modules/gestation-diagnoses/entities/gestation-diagnosis.entity';
+import { Parturition } from 'src/modules/breeding-modules/parturitions/entities/parturition.entity';
+import { Weaning } from 'src/modules/breeding-modules/weanings/entities/weaning.entity';
+import { AnimalDeclaredHistory } from 'src/modules/breeding-modules/animal-declared-history/entities/animal-declared-history.entity';
+import { WeightRecord } from 'src/modules/rearing-modules/weight-records/entities/weight-record.entity';
+import { RearingSelection } from 'src/modules/rearing-modules/rearing-selections/entities/rearing-selection.entity';
+import { FatteningEntry } from 'src/modules/fattening-modules/fattening-entries/entities/fattening-entry.entity';
+import { FeedRecord } from 'src/modules/fattening-modules/feed-records/entities/feed-record.entity';
+import { AnimalClass } from 'src/modules/core/animal-classes/entities/animal-class.entity';
+import { AnimalBreed } from 'src/modules/ranch-management/animal-breeds/entities/animal-breed.entity';
+import { AnimalStatus } from 'src/modules/ranch-management/animal-statuses/entities/animal-status.entity';
+import { EventType } from 'src/modules/core/event-types/entities/event-type.entity';
+import { ProductiveStatus } from 'src/modules/core/productive-statuses/entities/productive-status.entity';
+import { ProductionType } from 'src/modules/core/production-types/entities/production-type.entity';
 
 import { RanchPasturesModule } from 'src/modules/ranch-management/ranch-pastures/ranch-pastures.module';
 import { RanchLotsModule } from 'src/modules/ranch-management/ranch-lots/ranch-lots.module';
@@ -18,6 +34,8 @@ import { WeightRecordsModule } from 'src/modules/rearing-modules/weight-records/
 import { RearingSelectionsModule } from 'src/modules/rearing-modules/rearing-selections/rearing-selections.module';
 import { FatteningEntriesModule } from 'src/modules/fattening-modules/fattening-entries/fattening-entries.module';
 import { FeedRecordsModule } from 'src/modules/fattening-modules/feed-records/feed-records.module';
+import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deletions.module';
+import { RanchUsersModule } from 'src/modules/ranch-management/ranch-users/ranch-users.module';
 
 import { RegisterBreedingServiceUseCase } from 'src/app/breeding/use-cases/register-breeding-service.use-case';
 import { RegisterGestationDiagnosisUseCase } from 'src/app/breeding/use-cases/register-gestation-diagnosis.use-case';
@@ -47,6 +65,7 @@ import { UpdateFeedRecordUseCase } from 'src/app/fattening/use-cases/update-feed
 import { DeleteFeedRecordUseCase } from 'src/app/fattening/use-cases/delete-feed-record.use-case';
 
 import { SyncService } from './sync.service';
+import { SyncDownloadService } from './services/sync-download.service';
 import { SyncController } from './sync.controller';
 import { SyncCriaBatchUseCase } from './use-cases/sync-cria-batch.use-case';
 import { SyncRecriaBatchUseCase } from './use-cases/sync-recria-batch.use-case';
@@ -54,7 +73,27 @@ import { SyncEngordeBatchUseCase } from './use-cases/sync-engorde-batch.use-case
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([RanchPasture, RanchLot, RanchAnimal]),
+        TypeOrmModule.forFeature([
+            RanchPasture,
+            RanchLot,
+            RanchAnimal,
+            AnimalEvent,
+            BreedingServiceEntity,
+            GestationDiagnosis,
+            Parturition,
+            Weaning,
+            AnimalDeclaredHistory,
+            WeightRecord,
+            RearingSelection,
+            FatteningEntry,
+            FeedRecord,
+            AnimalClass,
+            AnimalBreed,
+            AnimalStatus,
+            EventType,
+            ProductiveStatus,
+            ProductionType,
+        ]),
         RanchPasturesModule,
         RanchLotsModule,
         RanchAnimalsModule,
@@ -68,10 +107,13 @@ import { SyncEngordeBatchUseCase } from './use-cases/sync-engorde-batch.use-case
         RearingSelectionsModule,
         FatteningEntriesModule,
         FeedRecordsModule,
+        SyncDeletionsModule,
+        RanchUsersModule,
     ],
     controllers: [SyncController],
     providers: [
         SyncService,
+        SyncDownloadService,
         SyncCriaBatchUseCase,
         SyncRecriaBatchUseCase,
         SyncEngordeBatchUseCase,
