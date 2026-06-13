@@ -56,7 +56,7 @@ export class RegisterWeightRecordUseCase {
 
             await manager.getRepository(RanchAnimal).update(
                 { id: dto.idRanchAnimal },
-                { weight: dto.weight },
+                { weight: dto.weight, updatedAt: new Date() },
             );
 
             return (await this.weightRecordsService.findOneById(

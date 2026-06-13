@@ -76,14 +76,14 @@ export class RegisterRearingSelectionUseCase {
                     systemType: dto.systemType!,
                 }, manager);
 
-                const animalUpdates: Partial<RanchAnimal> = { idProductiveStatus: PRODUCTIVE_STATUS_IDS.ENGORDE };
+                const animalUpdates: Partial<RanchAnimal> = { idProductiveStatus: PRODUCTIVE_STATUS_IDS.ENGORDE, updatedAt: new Date() };
                 if (dto.idLotDest) animalUpdates.idLot = dto.idLotDest;
                 await manager.getRepository(RanchAnimal).update({ id: dto.idRanchAnimal }, animalUpdates);
 
             } else if (dto.destination === RearingDestinationEnum.SALE) {
                 await manager.getRepository(RanchAnimal).update(
                     { id: dto.idRanchAnimal },
-                    { idProductiveStatus: PRODUCTIVE_STATUS_IDS.BAJA, idStatus: 3 },
+                    { idProductiveStatus: PRODUCTIVE_STATUS_IDS.BAJA, idStatus: 3, updatedAt: new Date() },
                 );
             }
 

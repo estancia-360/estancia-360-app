@@ -56,7 +56,7 @@ export class RegisterWeaningUseCase {
             await this.ranchAnimalsService.markIsWeaned(dto.idRanchAnimal, manager);
             await manager.getRepository(RanchAnimal).update(
                 { id: dto.idRanchAnimal },
-                { idLot: dto.idLotDest },
+                { idLot: dto.idLotDest, updatedAt: new Date() },
             );
 
             return (await this.weaningsService.findOneById(

@@ -319,7 +319,7 @@ export class RanchAnimalsService {
 		await manager.update(
 			RanchAnimal,
 			{ id: idRanchAnimal },
-			{ idProductiveStatus: PRODUCTIVE_STATUS_IDS.RECRIA }, // Recría
+			{ idProductiveStatus: PRODUCTIVE_STATUS_IDS.RECRIA, updatedAt: new Date() }, // Recría
 		);
 	}
 
@@ -335,7 +335,7 @@ export class RanchAnimalsService {
 		await manager.update(
 			RanchAnimal,
 			{ id: idRanchAnimal },
-			{ idProductiveStatus: PRODUCTIVE_STATUS_IDS.CRIA }, // Cría
+			{ idProductiveStatus: PRODUCTIVE_STATUS_IDS.CRIA, updatedAt: new Date() }, // Cría
 		);
 	}
 }

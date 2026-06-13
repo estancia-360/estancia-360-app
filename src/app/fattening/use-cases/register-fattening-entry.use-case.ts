@@ -50,7 +50,7 @@ export class RegisterFatteningEntryUseCase {
 
             await manager.getRepository(RanchAnimal).update(
                 { id: dto.idRanchAnimal },
-                { idProductiveStatus: PRODUCTIVE_STATUS_IDS.ENGORDE, idLot: dto.idLotDest },
+                { idProductiveStatus: PRODUCTIVE_STATUS_IDS.ENGORDE, idLot: dto.idLotDest, updatedAt: new Date() },
             );
 
             return (await this.fatteningEntriesService.findOneById(
