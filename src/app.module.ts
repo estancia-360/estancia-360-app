@@ -36,6 +36,7 @@ import { FatteningEntriesModule } from './modules/fattening-modules/fattening-en
 import { FeedRecordsModule } from './modules/fattening-modules/feed-records/feed-records.module';
 import { RearingModule } from './app/rearing/rearing.module';
 import { FatteningModule } from './app/fattening/fattening.module';
+import { SyncDeletionsModule } from './modules/core/sync-deletions/sync-deletions.module';
 
 @Module({
 	imports: [
@@ -76,6 +77,7 @@ import { FatteningModule } from './app/fattening/fattening.module';
 		FeedRecordsModule,
 		RearingModule,
 		FatteningModule,
+		SyncDeletionsModule,
 	],
 })
 export class AppModule { }

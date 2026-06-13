@@ -14,6 +14,7 @@ import { AnimalEventsModule } from 'src/modules/ranch-management/animal-events/a
 import { WeightRecordsModule } from 'src/modules/rearing-modules/weight-records/weight-records.module';
 import { RearingSelectionsModule } from 'src/modules/rearing-modules/rearing-selections/rearing-selections.module';
 import { FatteningEntriesModule } from 'src/modules/fattening-modules/fattening-entries/fattening-entries.module';
+import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deletions.module';
 
 @Module({
     imports: [
@@ -22,6 +23,7 @@ import { FatteningEntriesModule } from 'src/modules/fattening-modules/fattening-
         WeightRecordsModule,
         RearingSelectionsModule,
         FatteningEntriesModule,
+        SyncDeletionsModule,
     ],
     controllers: [RearingController],
     providers: [

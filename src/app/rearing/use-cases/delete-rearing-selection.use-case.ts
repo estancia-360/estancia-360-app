@@ -6,6 +6,9 @@ import { RearingSelectionDto } from 'src/modules/rearing-modules/rearing-selecti
 import { FatteningEntriesService } from 'src/modules/fattening-modules/fattening-entries/services/fattening-entries.service';
 import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
 import { RearingDestinationEnum } from 'src/modules/rearing-modules/rearing-selections/entities/rearing-selection.entity';
+import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { SyncDeletionsService } from 'src/modules/core/sync-deletions/services/sync-deletions.service';
+import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 
 const PRODUCTIVE_STATUS_IDS = { RECRIA: 2 };
 
@@ -16,6 +19,8 @@ export class DeleteRearingSelectionUseCase {
         private readonly rearingSelectionsService: RearingSelectionsService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly fatteningEntriesService: FatteningEntriesService,
+        private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly syncDeletionsService: SyncDeletionsService,
     ) {}
 
     /**
@@ -30,22 +35,32 @@ export class DeleteRearingSelectionUseCase {
             template: RearingSelectionDto,
         });
 
+        const animal = await this.ranchAnimalsService.findOneById(selection!.event.idRanchAnimal, {
+            throwException: true,
+            template: RanchAnimalPlainDto,
+        });
+        const idRanch = animal!.idRanch;
+
         await this.dataSource.transaction(async (manager) => {
             if (selection!.destination === RearingDestinationEnum.FATTENING) {
                 const fatteningEntry = await this.fatteningEntriesService.findOneByEventId(selection!.idEvent, manager);
                 if (fatteningEntry) {
                     await this.fatteningEntriesService.deleteById(fatteningEntry.id, manager);
                     await this.animalEventsService.deleteById(fatteningEntry.idEvent, manager);
+                    await this.syncDeletionsService.log('fattening_entries', fatteningEntry.id, idRanch, manager);
+                    await this.syncDeletionsService.log('animal_events', fatteningEntry.idEvent, idRanch, manager);
                 }
                 await manager.createQueryBuilder()
                     .update(RanchAnimal)
-                    .set({ idProductiveStatus: PRODUCTIVE_STATUS_IDS.RECRIA, idLot: () => 'NULL' })
+                    .set({ idProductiveStatus: PRODUCTIVE_STATUS_IDS.RECRIA, idLot: () => 'NULL', updatedAt: () => 'CURRENT_TIMESTAMP' })
                     .where({ id: selection!.event.idRanchAnimal })
                     .execute();
             }
 
             await this.rearingSelectionsService.deleteById(id, manager);
             await this.animalEventsService.deleteById(selection!.idEvent, manager);
+            await this.syncDeletionsService.log('rearing_selections', id, idRanch, manager);
+            await this.syncDeletionsService.log('animal_events', selection!.idEvent, idRanch, manager);
         });
     }
 }

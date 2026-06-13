@@ -11,6 +11,8 @@ import { RanchAnimalsModule } from 'src/modules/ranch-management/ranch-animals/r
 import { AnimalEventsModule } from 'src/modules/ranch-management/animal-events/animal-events.module';
 import { FatteningEntriesModule } from 'src/modules/fattening-modules/fattening-entries/fattening-entries.module';
 import { FeedRecordsModule } from 'src/modules/fattening-modules/feed-records/feed-records.module';
+import { RanchLotsModule } from 'src/modules/ranch-management/ranch-lots/ranch-lots.module';
+import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deletions.module';
 
 @Module({
     imports: [
@@ -18,6 +20,8 @@ import { FeedRecordsModule } from 'src/modules/fattening-modules/feed-records/fe
         AnimalEventsModule,
         FatteningEntriesModule,
         FeedRecordsModule,
+        RanchLotsModule,
+        SyncDeletionsModule,
     ],
     controllers: [FatteningController],
     providers: [

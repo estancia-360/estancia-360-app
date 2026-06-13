@@ -5,6 +5,9 @@ import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/
 import { FatteningEntryDto } from 'src/modules/fattening-modules/fattening-entries/dto/fattening-entry.dto';
 import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
 import { PRODUCTIVE_STATUS_IDS } from 'src/app/breeding/constants/productive-status-ids.constant';
+import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { SyncDeletionsService } from 'src/modules/core/sync-deletions/services/sync-deletions.service';
+import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 
 @Injectable()
 export class DeleteFatteningEntryUseCase {
@@ -12,6 +15,8 @@ export class DeleteFatteningEntryUseCase {
         private readonly dataSource: DataSource,
         private readonly fatteningEntriesService: FatteningEntriesService,
         private readonly animalEventsService: AnimalEventsService,
+        private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly syncDeletionsService: SyncDeletionsService,
     ) {}
 
     async execute(id: number): Promise<void> {
@@ -22,15 +27,24 @@ export class DeleteFatteningEntryUseCase {
 
         const idRanchAnimal = entry!.event.idRanchAnimal;
 
+        const animal = await this.ranchAnimalsService.findOneById(idRanchAnimal, {
+            throwException: true,
+            template: RanchAnimalPlainDto,
+        });
+        const idRanch = animal!.idRanch;
+
         await this.dataSource.transaction(async (manager) => {
             await this.fatteningEntriesService.deleteById(id, manager);
             await this.animalEventsService.deleteById(entry!.idEvent, manager);
 
             await manager.createQueryBuilder()
                 .update(RanchAnimal)
-                .set({ idProductiveStatus: PRODUCTIVE_STATUS_IDS.RECRIA, idLot: () => 'NULL' })
+                .set({ idProductiveStatus: PRODUCTIVE_STATUS_IDS.RECRIA, idLot: () => 'NULL', updatedAt: () => 'CURRENT_TIMESTAMP' })
                 .where({ id: idRanchAnimal })
                 .execute();
+
+            await this.syncDeletionsService.log('fattening_entries', id, idRanch, manager);
+            await this.syncDeletionsService.log('animal_events', entry!.idEvent, idRanch, manager);
         });
     }
 }

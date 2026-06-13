@@ -4,6 +4,9 @@ import { WeightRecordsService } from 'src/modules/rearing-modules/weight-records
 import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/services/animal-events.service';
 import { WeightRecordDto } from 'src/modules/rearing-modules/weight-records/dto/weight-record.dto';
 import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
+import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { SyncDeletionsService } from 'src/modules/core/sync-deletions/services/sync-deletions.service';
+import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 
 @Injectable()
 export class DeleteWeightRecordUseCase {
@@ -11,6 +14,8 @@ export class DeleteWeightRecordUseCase {
         private readonly dataSource: DataSource,
         private readonly weightRecordsService: WeightRecordsService,
         private readonly animalEventsService: AnimalEventsService,
+        private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly syncDeletionsService: SyncDeletionsService,
     ) {}
 
     async execute(id: number): Promise<void> {
@@ -21,6 +26,12 @@ export class DeleteWeightRecordUseCase {
 
         const idRanchAnimal = record!.event.idRanchAnimal;
         const eventDate = new Date(record!.event.eventDate);
+
+        const animal = await this.ranchAnimalsService.findOneById(idRanchAnimal, {
+            throwException: true,
+            template: RanchAnimalPlainDto,
+        });
+        const idRanch = animal!.idRanch;
 
         await this.dataSource.transaction(async (manager) => {
             await this.weightRecordsService.deleteById(id, manager);
@@ -35,15 +46,18 @@ export class DeleteWeightRecordUseCase {
             if (previous) {
                 await manager.getRepository(RanchAnimal).update(
                     { id: idRanchAnimal },
-                    { weight: previous.weight },
+                    { weight: previous.weight, updatedAt: new Date() },
                 );
             } else {
                 await manager.createQueryBuilder()
                     .update(RanchAnimal)
-                    .set({ weight: () => 'NULL' })
+                    .set({ weight: () => 'NULL', updatedAt: () => 'CURRENT_TIMESTAMP' })
                     .where({ id: idRanchAnimal })
                     .execute();
             }
+
+            await this.syncDeletionsService.log('weight_records', id, idRanch, manager);
+            await this.syncDeletionsService.log('animal_events', record!.idEvent, idRanch, manager);
         });
     }
 }

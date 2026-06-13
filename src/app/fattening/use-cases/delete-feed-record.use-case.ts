@@ -1,11 +1,31 @@
 import { Injectable } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { FeedRecordsService } from 'src/modules/fattening-modules/feed-records/services/feed-records.service';
+import { FeedRecordDto } from 'src/modules/fattening-modules/feed-records/dto/feed-record.dto';
+import { RanchLotsService } from 'src/modules/ranch-management/ranch-lots/services/ranch-lots.service';
+import { SyncDeletionsService } from 'src/modules/core/sync-deletions/services/sync-deletions.service';
 
 @Injectable()
 export class DeleteFeedRecordUseCase {
-    constructor(private readonly feedRecordsService: FeedRecordsService) {}
+    constructor(
+        private readonly dataSource: DataSource,
+        private readonly feedRecordsService: FeedRecordsService,
+        private readonly ranchLotsService: RanchLotsService,
+        private readonly syncDeletionsService: SyncDeletionsService,
+    ) {}
 
     async execute(id: number): Promise<void> {
-        await this.feedRecordsService.deleteById(id);
+        const record = await this.feedRecordsService.findOneById(id, {
+            throwException: true,
+            template: FeedRecordDto,
+        });
+
+        const lot = await this.ranchLotsService.findOne(record!.idLot);
+        const idRanch = lot.idRanch;
+
+        await this.dataSource.transaction(async (manager) => {
+            await this.feedRecordsService.deleteById(id, manager);
+            await this.syncDeletionsService.log('feed_records', id, idRanch, manager);
+        });
     }
 }

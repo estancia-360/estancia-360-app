@@ -33,6 +33,7 @@ import { GestationDiagnosesModule } from 'src/modules/breeding-modules/gestation
 import { ParturitionsModule } from 'src/modules/breeding-modules/parturitions/parturitions.module';
 import { WeaningsModule } from 'src/modules/breeding-modules/weanings/weanings.module';
 import { AnimalDeclaredHistoryModule } from 'src/modules/breeding-modules/animal-declared-history/animal-declared-history.module';
+import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deletions.module';
 
 @Module({
     imports: [
@@ -44,6 +45,7 @@ import { AnimalDeclaredHistoryModule } from 'src/modules/breeding-modules/animal
         ParturitionsModule,
         WeaningsModule,
         AnimalDeclaredHistoryModule,
+        SyncDeletionsModule,
     ],
     controllers: [BreedingController],
     providers: [
