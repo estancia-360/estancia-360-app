@@ -34,7 +34,7 @@ export class AnimalDeclaredHistory extends BaseCreatedUpdated {
     @Column({
         name: 'prev_avg_weaning_weight',
         type: 'decimal',
-        precision: 10,
+        precision: 6,
         scale: 2,
         nullable: true,
     })

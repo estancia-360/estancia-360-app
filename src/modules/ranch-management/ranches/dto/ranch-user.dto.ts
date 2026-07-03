@@ -30,13 +30,4 @@ export class RanchUserDto {
     @Expose()
     @Type(() => RanchRoleDto)
     role: RanchRoleDto = new RanchRoleDto();
-
-    @ApiProperty({
-        description: 'Salario del usuario en esta estancia (si aplica)',
-        example: 5000.00,
-        required: false,
-        nullable: true,
-    })
-    @Expose()
-    salary?: number;
 }

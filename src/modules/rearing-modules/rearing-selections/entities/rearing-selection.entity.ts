@@ -26,7 +26,7 @@ export class RearingSelection extends BaseCreatedUpdated {
     @Column({ name: 'destination', type: 'varchar', length: 20, nullable: false })
     destination: RearingDestinationEnum;
 
-    @Column({ name: 'weight_at_selection', type: 'decimal', precision: 8, scale: 2, nullable: true })
+    @Column({ name: 'weight_at_selection', type: 'decimal', precision: 6, scale: 2, nullable: true })
     weightAtSelection?: number;
 
     @Column({ name: 'body_condition', type: 'smallint', nullable: true })

@@ -53,7 +53,7 @@ export class RanchAnimal extends BaseCreatedUpdated {
     @Column({
         name: 'weight',
         type: 'numeric',
-        precision: 12,
+        precision: 6,
         scale: 2,
         nullable: true
     })

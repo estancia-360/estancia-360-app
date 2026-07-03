@@ -8,6 +8,6 @@ export enum AnimalClassEnum {
     VAQUILLA = 7,
     VACA = 8,
     HEMBRA_ESTERILIZADA = 9,
-    TORO = 10,
+    TORILLO = 10,
     NOVILLO = 11,
 }

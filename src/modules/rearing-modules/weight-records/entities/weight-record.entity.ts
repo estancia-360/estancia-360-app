@@ -22,7 +22,7 @@ export class WeightRecord extends BaseCreatedUpdated {
     @Column({ name: 'local_id', type: 'varchar', length: 100, nullable: true, unique: true })
     localId?: string;
 
-    @Column({ name: 'weight', type: 'decimal', precision: 8, scale: 2, nullable: false })
+    @Column({ name: 'weight', type: 'decimal', precision: 6, scale: 2, nullable: false })
     weight: number;
 
     @Column({ name: 'weight_type', type: 'varchar', length: 20, nullable: false })
