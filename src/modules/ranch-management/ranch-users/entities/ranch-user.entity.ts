@@ -15,15 +15,6 @@ export class RanchUser extends BaseEntitySoftDelete {
     @Column({ name: 'id_role', type: 'int' })
     idRole: number;
 
-    @Column({
-        name: 'salary',
-        type: 'decimal',
-        precision: 12,
-        scale: 2,
-        nullable: true,
-    })
-    salary?: number;
-
     @ManyToOne(() => User,(user) => user.ranchUsers)
     @JoinColumn({ name: 'id_user' })
     user: User;

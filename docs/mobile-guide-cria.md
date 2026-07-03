@@ -226,7 +226,7 @@ Para operaciones sin conexión. Ver [mobile-guide-sync.md] o documentación Swag
 | 7 | Vaquilla | F |
 | 8 | Vaca | F |
 | 9 | Hembra Esterilizada | F |
-| 10 | Toro | M |
+| 10 | Torillo | M |
 | 11 | Novillo | M |
 
 ### Lot Types (para idLotDest en weaning)

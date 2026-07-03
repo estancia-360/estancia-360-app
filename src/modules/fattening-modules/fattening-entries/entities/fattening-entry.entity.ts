@@ -15,7 +15,7 @@ export class FatteningEntry extends BaseCreatedUpdated {
     @Column({ name: 'id_event', type: 'bigint', nullable: false })
     idEvent: number;
 
-    @Column({ name: 'initial_weight', type: 'decimal', precision: 8, scale: 2, nullable: true })
+    @Column({ name: 'initial_weight', type: 'decimal', precision: 6, scale: 2, nullable: true })
     initialWeight?: number;
 
     @Column({ name: 'system_type', type: 'varchar', length: 20, nullable: false })

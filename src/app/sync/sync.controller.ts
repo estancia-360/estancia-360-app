@@ -182,7 +182,7 @@ y las procesa en el servidor. Devuelve los IDs asignados a cada registro para ma
 7  → Vaquilla
 8  → Vaca
 9  → Hembra esterilizada
-10 → Toro
+10 → Torillo
 11 → Novillo
 \`\`\`
 

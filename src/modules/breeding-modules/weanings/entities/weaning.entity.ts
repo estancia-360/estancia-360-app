@@ -27,7 +27,7 @@ export class Weaning extends BaseCreatedUpdated {
     @Column({
         name: 'weaning_weight',
         type: 'decimal',
-        precision: 10,
+        precision: 6,
         scale: 2,
         nullable: true,
     })
