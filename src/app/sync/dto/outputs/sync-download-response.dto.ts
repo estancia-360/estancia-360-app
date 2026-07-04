@@ -13,6 +13,9 @@ import {
     RearingSelectionSyncDto,
     FatteningEntrySyncDto,
     FeedRecordSyncDto,
+    VaccinationSyncDto,
+    TreatmentSyncDto,
+    HealthIncidentSyncDto,
 } from './sync-download-entities.dto';
 
 export class SyncDownloadEntitiesDto {
@@ -29,6 +32,9 @@ export class SyncDownloadEntitiesDto {
     @ApiProperty({ type: [RearingSelectionSyncDto] }) rearingSelections: RearingSelectionSyncDto[];
     @ApiProperty({ type: [FatteningEntrySyncDto] }) fatteningEntries: FatteningEntrySyncDto[];
     @ApiProperty({ type: [FeedRecordSyncDto] }) feedRecords: FeedRecordSyncDto[];
+    @ApiProperty({ type: [VaccinationSyncDto] }) vaccinations: VaccinationSyncDto[];
+    @ApiProperty({ type: [TreatmentSyncDto] }) treatments: TreatmentSyncDto[];
+    @ApiProperty({ type: [HealthIncidentSyncDto] }) healthIncidents: HealthIncidentSyncDto[];
 }
 
 export class SyncDeletionGroupDto {

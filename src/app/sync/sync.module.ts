@@ -14,6 +14,9 @@ import { WeightRecord } from 'src/modules/rearing-modules/weight-records/entitie
 import { RearingSelection } from 'src/modules/rearing-modules/rearing-selections/entities/rearing-selection.entity';
 import { FatteningEntry } from 'src/modules/fattening-modules/fattening-entries/entities/fattening-entry.entity';
 import { FeedRecord } from 'src/modules/fattening-modules/feed-records/entities/feed-record.entity';
+import { Vaccination } from 'src/modules/health-modules/vaccinations/entities/vaccination.entity';
+import { Treatment } from 'src/modules/health-modules/treatments/entities/treatment.entity';
+import { HealthIncident } from 'src/modules/health-modules/health-incidents/entities/health-incident.entity';
 import { AnimalClass } from 'src/modules/core/animal-classes/entities/animal-class.entity';
 import { AnimalBreed } from 'src/modules/ranch-management/animal-breeds/entities/animal-breed.entity';
 import { AnimalStatus } from 'src/modules/ranch-management/animal-statuses/entities/animal-status.entity';
@@ -34,6 +37,9 @@ import { WeightRecordsModule } from 'src/modules/rearing-modules/weight-records/
 import { RearingSelectionsModule } from 'src/modules/rearing-modules/rearing-selections/rearing-selections.module';
 import { FatteningEntriesModule } from 'src/modules/fattening-modules/fattening-entries/fattening-entries.module';
 import { FeedRecordsModule } from 'src/modules/fattening-modules/feed-records/feed-records.module';
+import { VaccinationsModule } from 'src/modules/health-modules/vaccinations/vaccinations.module';
+import { TreatmentsModule } from 'src/modules/health-modules/treatments/treatments.module';
+import { HealthIncidentsModule } from 'src/modules/health-modules/health-incidents/health-incidents.module';
 import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deletions.module';
 import { RanchUsersModule } from 'src/modules/ranch-management/ranch-users/ranch-users.module';
 
@@ -64,12 +70,23 @@ import { RegisterFeedRecordUseCase } from 'src/app/fattening/use-cases/register-
 import { UpdateFeedRecordUseCase } from 'src/app/fattening/use-cases/update-feed-record.use-case';
 import { DeleteFeedRecordUseCase } from 'src/app/fattening/use-cases/delete-feed-record.use-case';
 
+import { RegisterVaccinationUseCase } from 'src/app/health/use-cases/register-vaccination.use-case';
+import { UpdateVaccinationUseCase } from 'src/app/health/use-cases/update-vaccination.use-case';
+import { DeleteVaccinationUseCase } from 'src/app/health/use-cases/delete-vaccination.use-case';
+import { RegisterTreatmentUseCase } from 'src/app/health/use-cases/register-treatment.use-case';
+import { UpdateTreatmentUseCase } from 'src/app/health/use-cases/update-treatment.use-case';
+import { DeleteTreatmentUseCase } from 'src/app/health/use-cases/delete-treatment.use-case';
+import { RegisterHealthIncidentUseCase } from 'src/app/health/use-cases/register-health-incident.use-case';
+import { UpdateHealthIncidentUseCase } from 'src/app/health/use-cases/update-health-incident.use-case';
+import { DeleteHealthIncidentUseCase } from 'src/app/health/use-cases/delete-health-incident.use-case';
+
 import { SyncService } from './sync.service';
 import { SyncDownloadService } from './services/sync-download.service';
 import { SyncController } from './sync.controller';
 import { SyncCriaBatchUseCase } from './use-cases/sync-cria-batch.use-case';
 import { SyncRecriaBatchUseCase } from './use-cases/sync-recria-batch.use-case';
 import { SyncEngordeBatchUseCase } from './use-cases/sync-engorde-batch.use-case';
+import { SyncSanidadBatchUseCase } from './use-cases/sync-sanidad-batch.use-case';
 
 @Module({
     imports: [
@@ -87,6 +104,9 @@ import { SyncEngordeBatchUseCase } from './use-cases/sync-engorde-batch.use-case
             RearingSelection,
             FatteningEntry,
             FeedRecord,
+            Vaccination,
+            Treatment,
+            HealthIncident,
             AnimalClass,
             AnimalBreed,
             AnimalStatus,
@@ -107,6 +127,9 @@ import { SyncEngordeBatchUseCase } from './use-cases/sync-engorde-batch.use-case
         RearingSelectionsModule,
         FatteningEntriesModule,
         FeedRecordsModule,
+        VaccinationsModule,
+        TreatmentsModule,
+        HealthIncidentsModule,
         SyncDeletionsModule,
         RanchUsersModule,
     ],
@@ -117,6 +140,7 @@ import { SyncEngordeBatchUseCase } from './use-cases/sync-engorde-batch.use-case
         SyncCriaBatchUseCase,
         SyncRecriaBatchUseCase,
         SyncEngordeBatchUseCase,
+        SyncSanidadBatchUseCase,
 
         // Use-cases RECRÍA
         RegisterWeightRecordUseCase,
@@ -130,6 +154,17 @@ import { SyncEngordeBatchUseCase } from './use-cases/sync-engorde-batch.use-case
         RegisterFeedRecordUseCase,
         UpdateFeedRecordUseCase,
         DeleteFeedRecordUseCase,
+
+        // Use-cases SANIDAD
+        RegisterVaccinationUseCase,
+        UpdateVaccinationUseCase,
+        DeleteVaccinationUseCase,
+        RegisterTreatmentUseCase,
+        UpdateTreatmentUseCase,
+        DeleteTreatmentUseCase,
+        RegisterHealthIncidentUseCase,
+        UpdateHealthIncidentUseCase,
+        DeleteHealthIncidentUseCase,
 
         // Use-cases CRÍA
         RegisterBreedingServiceUseCase,

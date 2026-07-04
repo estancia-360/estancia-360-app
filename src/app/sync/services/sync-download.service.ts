@@ -16,6 +16,9 @@ import { WeightRecord } from 'src/modules/rearing-modules/weight-records/entitie
 import { RearingSelection } from 'src/modules/rearing-modules/rearing-selections/entities/rearing-selection.entity';
 import { FatteningEntry } from 'src/modules/fattening-modules/fattening-entries/entities/fattening-entry.entity';
 import { FeedRecord } from 'src/modules/fattening-modules/feed-records/entities/feed-record.entity';
+import { Vaccination } from 'src/modules/health-modules/vaccinations/entities/vaccination.entity';
+import { Treatment } from 'src/modules/health-modules/treatments/entities/treatment.entity';
+import { HealthIncident } from 'src/modules/health-modules/health-incidents/entities/health-incident.entity';
 
 import { AnimalClass } from 'src/modules/core/animal-classes/entities/animal-class.entity';
 import { AnimalBreed } from 'src/modules/ranch-management/animal-breeds/entities/animal-breed.entity';
@@ -42,6 +45,9 @@ import {
     RearingSelectionSyncDto,
     FatteningEntrySyncDto,
     FeedRecordSyncDto,
+    VaccinationSyncDto,
+    TreatmentSyncDto,
+    HealthIncidentSyncDto,
 } from '../dto/outputs/sync-download-entities.dto';
 import {
     AnimalClassCatalogDto,
@@ -84,6 +90,9 @@ export class SyncDownloadService {
         @InjectRepository(RearingSelection) private readonly rearingSelectionsRepo: Repository<RearingSelection>,
         @InjectRepository(FatteningEntry) private readonly fatteningEntriesRepo: Repository<FatteningEntry>,
         @InjectRepository(FeedRecord) private readonly feedRecordsRepo: Repository<FeedRecord>,
+        @InjectRepository(Vaccination) private readonly vaccinationsRepo: Repository<Vaccination>,
+        @InjectRepository(Treatment) private readonly treatmentsRepo: Repository<Treatment>,
+        @InjectRepository(HealthIncident) private readonly healthIncidentsRepo: Repository<HealthIncident>,
 
         @InjectRepository(AnimalClass) private readonly animalClassesRepo: Repository<AnimalClass>,
         @InjectRepository(AnimalBreed) private readonly animalBreedsRepo: Repository<AnimalBreed>,
@@ -329,6 +338,42 @@ export class SyncDownloadService {
                     qb
                         .innerJoin(RanchLot, 'rl', 'rl.id = fr.idLot')
                         .where('rl.idRanch = :idRanch', { idRanch }),
+            },
+            {
+                key: 'vaccinations',
+                table: 'vaccinations',
+                alias: 'v',
+                repo: this.vaccinationsRepo,
+                dto: VaccinationSyncDto,
+                applyRanchFilter: (qb, idRanch) =>
+                    qb
+                        .innerJoin(AnimalEvent, 'ae', 'ae.id = v.idEvent')
+                        .innerJoin(RanchAnimal, 'ra', 'ra.id = ae.idRanchAnimal')
+                        .where('ra.idRanch = :idRanch', { idRanch }),
+            },
+            {
+                key: 'treatments',
+                table: 'treatments',
+                alias: 't',
+                repo: this.treatmentsRepo,
+                dto: TreatmentSyncDto,
+                applyRanchFilter: (qb, idRanch) =>
+                    qb
+                        .innerJoin(AnimalEvent, 'ae', 'ae.id = t.idEvent')
+                        .innerJoin(RanchAnimal, 'ra', 'ra.id = ae.idRanchAnimal')
+                        .where('ra.idRanch = :idRanch', { idRanch }),
+            },
+            {
+                key: 'healthIncidents',
+                table: 'health_incidents',
+                alias: 'hi',
+                repo: this.healthIncidentsRepo,
+                dto: HealthIncidentSyncDto,
+                applyRanchFilter: (qb, idRanch) =>
+                    qb
+                        .innerJoin(AnimalEvent, 'ae', 'ae.id = hi.idEvent')
+                        .innerJoin(RanchAnimal, 'ra', 'ra.id = ae.idRanchAnimal')
+                        .where('ra.idRanch = :idRanch', { idRanch }),
             },
         ];
     }

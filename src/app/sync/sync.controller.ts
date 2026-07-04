@@ -18,6 +18,8 @@ import { SyncRecriaDto } from './dto/inputs/sync-recria.dto';
 import { SyncRecriaResponseDto } from './dto/outputs/sync-recria-response.dto';
 import { SyncEngordeDto } from './dto/inputs/sync-engorde.dto';
 import { SyncEngordeResponseDto } from './dto/outputs/sync-engorde-response.dto';
+import { SyncSanidadDto } from './dto/inputs/sync-sanidad.dto';
+import { SyncSanidadResponseDto } from './dto/outputs/sync-sanidad-response.dto';
 import { SyncDownloadQueryDto } from './dto/inputs/sync-download-query.dto';
 import { SyncRanchDto } from './dto/outputs/sync-ranches-response.dto';
 import { SyncCatalogsResponseDto } from './dto/outputs/sync-catalogs-response.dto';
@@ -645,6 +647,45 @@ Recibe un batch de operaciones registradas sin conexión (pesajes y selecciones 
         @Res() res: express.Response,
     ) {
         const result = await this.syncService.syncEngorde(dto);
+        return OkRes(res, result);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  POST /sync/sanidad
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Post('sanidad')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Sincronizar datos offline del módulo de SANIDAD [REACT NATIVE]',
+        description: `Recibe un batch de operaciones registradas sin conexión (vacunaciones, tratamientos, incidentes sanitarios) y las procesa en orden.
+
+## Orden de procesamiento
+1. **vaccinations** — Vacunaciones y antiparasitarios sin retiro
+2. **treatments** — Tratamientos médicos (calcula withdrawalEndDate automáticamente)
+3. **healthIncidents** — Detección de enfermedad o cuarentena
+
+## Comportamiento por operación
+- **create**: Crea el registro. Retorna serverId.
+- **update**: Actualiza campos editables. Retorna serverId.
+- **delete**: Elimina el registro.
+
+## Notas importantes
+- Aplica en cualquier etapa productiva (Cría, Recría, Engorde) — no depende del rubro habilitado en la estancia.
+- **treatments**: si se envía \`withdrawalDays\`, el backend calcula \`withdrawalEndDate\`.
+- **healthIncidents**: \`incidentType='quarantine'\` pone al animal en \`id_status=2\`; resolverlo (\`resolvedAt\`) lo revierte a \`id_status=1\`. La mortalidad NO se registra acá, va en \`animal_exits\` (Movimientos).
+- Usar \`localRef_<campo>\` para referencias cruzadas dentro del mismo batch (ej. \`localRef_idRanchAnimal\`).`,
+    })
+    @ApiOkResponse({
+        description: 'Batch procesado. Revisar vaccinations, treatments y healthIncidents para ver resultados individuales.',
+        type: SyncSanidadResponseDto,
+    })
+    @ApiBadRequestResponse(SwaggerBadRequestCommon())
+    async syncSanidad(
+        @Body() dto: SyncSanidadDto,
+        @Res() res: express.Response,
+    ) {
+        const result = await this.syncService.syncSanidad(dto);
         return OkRes(res, result);
     }
 }

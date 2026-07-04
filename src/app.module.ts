@@ -37,6 +37,10 @@ import { FeedRecordsModule } from './modules/fattening-modules/feed-records/feed
 import { RearingModule } from './app/rearing/rearing.module';
 import { FatteningModule } from './app/fattening/fattening.module';
 import { SyncDeletionsModule } from './modules/core/sync-deletions/sync-deletions.module';
+import { VaccinationsModule } from './modules/health-modules/vaccinations/vaccinations.module';
+import { TreatmentsModule } from './modules/health-modules/treatments/treatments.module';
+import { HealthIncidentsModule } from './modules/health-modules/health-incidents/health-incidents.module';
+import { HealthModule } from './app/health/health.module';
 
 @Module({
 	imports: [
@@ -78,6 +82,10 @@ import { SyncDeletionsModule } from './modules/core/sync-deletions/sync-deletion
 		RearingModule,
 		FatteningModule,
 		SyncDeletionsModule,
+		VaccinationsModule,
+		TreatmentsModule,
+		HealthIncidentsModule,
+		HealthModule,
 	],
 })
 export class AppModule { }

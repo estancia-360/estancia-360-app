@@ -173,3 +173,40 @@ export class FeedRecordSyncDto {
     @ApiProperty() @Expose() createdAt: Date;
     @ApiProperty() @Expose() updatedAt: Date;
 }
+
+export class VaccinationSyncDto {
+    @ApiProperty() @Expose() @Type(() => Number) id: number;
+    @ApiProperty() @Expose() @Type(() => Number) idEvent: number;
+    @ApiProperty() @Expose() vaccineName: string;
+    @ApiProperty({ required: false }) @Expose() dose?: string;
+    @ApiProperty({ required: false }) @Expose() responsible?: string;
+    @ApiProperty({ required: false }) @Expose() notes?: string;
+    @ApiProperty() @Expose() createdAt: Date;
+    @ApiProperty() @Expose() updatedAt: Date;
+}
+
+export class TreatmentSyncDto {
+    @ApiProperty() @Expose() @Type(() => Number) id: number;
+    @ApiProperty() @Expose() @Type(() => Number) idEvent: number;
+    @ApiProperty({ required: false }) @Expose() illness?: string;
+    @ApiProperty() @Expose() medication: string;
+    @ApiProperty({ required: false }) @Expose() dose?: string;
+    @ApiProperty({ required: false }) @Expose() @Type(() => Number) durationDays?: number;
+    @ApiProperty({ required: false }) @Expose() @Type(() => Number) withdrawalDays?: number;
+    @ApiProperty({ required: false, nullable: true }) @Expose() withdrawalEndDate?: Date;
+    @ApiProperty({ required: false }) @Expose() responsible?: string;
+    @ApiProperty({ required: false }) @Expose() notes?: string;
+    @ApiProperty() @Expose() createdAt: Date;
+    @ApiProperty() @Expose() updatedAt: Date;
+}
+
+export class HealthIncidentSyncDto {
+    @ApiProperty() @Expose() @Type(() => Number) id: number;
+    @ApiProperty() @Expose() @Type(() => Number) idEvent: number;
+    @ApiProperty() @Expose() incidentType: string;
+    @ApiProperty({ required: false }) @Expose() description?: string;
+    @ApiProperty({ required: false, nullable: true }) @Expose() resolvedAt?: Date;
+    @ApiProperty({ required: false }) @Expose() notes?: string;
+    @ApiProperty() @Expose() createdAt: Date;
+    @ApiProperty() @Expose() updatedAt: Date;
+}
