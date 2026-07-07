@@ -20,6 +20,8 @@ import { SyncEngordeDto } from './dto/inputs/sync-engorde.dto';
 import { SyncEngordeResponseDto } from './dto/outputs/sync-engorde-response.dto';
 import { SyncSanidadDto } from './dto/inputs/sync-sanidad.dto';
 import { SyncSanidadResponseDto } from './dto/outputs/sync-sanidad-response.dto';
+import { SyncMovimientosDto } from './dto/inputs/sync-movimientos.dto';
+import { SyncMovimientosResponseDto } from './dto/outputs/sync-movimientos-response.dto';
 import { SyncDownloadQueryDto } from './dto/inputs/sync-download-query.dto';
 import { SyncRanchDto } from './dto/outputs/sync-ranches-response.dto';
 import { SyncCatalogsResponseDto } from './dto/outputs/sync-catalogs-response.dto';
@@ -686,6 +688,42 @@ Recibe un batch de operaciones registradas sin conexión (pesajes y selecciones 
         @Res() res: express.Response,
     ) {
         const result = await this.syncService.syncSanidad(dto);
+        return OkRes(res, result);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  POST /sync/movimientos
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Post('movimientos')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Sincronizar datos offline del módulo de MOVIMIENTOS [REACT NATIVE]',
+        description: `Recibe un batch de operaciones registradas sin conexión (bajas, movimientos y confirmaciones de venta) y las procesa en orden.
+
+## Orden de procesamiento
+1. **animalExits** — Bajas por muerte/descarte/pérdida (create, update solo corrección de datos; SIN delete: irreversible)
+2. **movements** — Movimientos: create (con animales anidados, cada uno con su propio localId) y update solo para cancelar (\`{ status: 'cancelled' }\`)
+3. **movementAnimals** — Confirmaciones/rechazos por animal de ventas pendientes (\`{ status: 'accepted' | 'rejected' }\`)
+
+## Máquina de estados (validada en el servidor, idempotente)
+- Repetir una decisión ya aplicada → éxito sin efecto (seguro ante reintentos de red).
+- Transición inválida (ej. accepted sobre uno rejected) → falla SOLO esa operación con INVALID_STATUS_TRANSITION; el resto del batch continúa.
+- \`prev_id_status\` SIEMPRE lo calcula el servidor — el cliente nunca lo envía.
+
+## Respuesta
+La sección \`movementAnimals\` de la respuesta incluye el mapeo localId→serverId de los animales anidados en cada movimiento creado + los resultados de las confirmaciones. Guardar esos serverIds: son necesarios para confirmar/rechazar en syncs posteriores.`,
+    })
+    @ApiOkResponse({
+        description: 'Batch procesado. Revisar animalExits, movements y movementAnimals para ver resultados individuales.',
+        type: SyncMovimientosResponseDto,
+    })
+    @ApiBadRequestResponse(SwaggerBadRequestCommon())
+    async syncMovimientos(
+        @Body() dto: SyncMovimientosDto,
+        @Res() res: express.Response,
+    ) {
+        const result = await this.syncService.syncMovimientos(dto);
         return OkRes(res, result);
     }
 }

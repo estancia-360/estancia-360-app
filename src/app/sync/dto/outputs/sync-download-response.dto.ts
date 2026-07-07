@@ -16,6 +16,9 @@ import {
     VaccinationSyncDto,
     TreatmentSyncDto,
     HealthIncidentSyncDto,
+    MovementSyncDto,
+    MovementAnimalSyncDto,
+    AnimalExitSyncDto,
 } from './sync-download-entities.dto';
 
 export class SyncDownloadEntitiesDto {
@@ -35,6 +38,9 @@ export class SyncDownloadEntitiesDto {
     @ApiProperty({ type: [VaccinationSyncDto] }) vaccinations: VaccinationSyncDto[];
     @ApiProperty({ type: [TreatmentSyncDto] }) treatments: TreatmentSyncDto[];
     @ApiProperty({ type: [HealthIncidentSyncDto] }) healthIncidents: HealthIncidentSyncDto[];
+    @ApiProperty({ type: [MovementSyncDto] }) movements: MovementSyncDto[];
+    @ApiProperty({ type: [MovementAnimalSyncDto] }) movementAnimals: MovementAnimalSyncDto[];
+    @ApiProperty({ type: [AnimalExitSyncDto] }) animalExits: AnimalExitSyncDto[];
 }
 
 export class SyncDeletionGroupDto {

@@ -19,6 +19,9 @@ import { FeedRecord } from 'src/modules/fattening-modules/feed-records/entities/
 import { Vaccination } from 'src/modules/health-modules/vaccinations/entities/vaccination.entity';
 import { Treatment } from 'src/modules/health-modules/treatments/entities/treatment.entity';
 import { HealthIncident } from 'src/modules/health-modules/health-incidents/entities/health-incident.entity';
+import { Movement } from 'src/modules/movement-modules/movements/entities/movement.entity';
+import { MovementAnimal } from 'src/modules/movement-modules/movement-animals/entities/movement-animal.entity';
+import { AnimalExit } from 'src/modules/movement-modules/animal-exits/entities/animal-exit.entity';
 
 import { AnimalClass } from 'src/modules/core/animal-classes/entities/animal-class.entity';
 import { AnimalBreed } from 'src/modules/ranch-management/animal-breeds/entities/animal-breed.entity';
@@ -48,6 +51,9 @@ import {
     VaccinationSyncDto,
     TreatmentSyncDto,
     HealthIncidentSyncDto,
+    MovementSyncDto,
+    MovementAnimalSyncDto,
+    AnimalExitSyncDto,
 } from '../dto/outputs/sync-download-entities.dto';
 import {
     AnimalClassCatalogDto,
@@ -93,6 +99,9 @@ export class SyncDownloadService {
         @InjectRepository(Vaccination) private readonly vaccinationsRepo: Repository<Vaccination>,
         @InjectRepository(Treatment) private readonly treatmentsRepo: Repository<Treatment>,
         @InjectRepository(HealthIncident) private readonly healthIncidentsRepo: Repository<HealthIncident>,
+        @InjectRepository(Movement) private readonly movementsRepo: Repository<Movement>,
+        @InjectRepository(MovementAnimal) private readonly movementAnimalsRepo: Repository<MovementAnimal>,
+        @InjectRepository(AnimalExit) private readonly animalExitsRepo: Repository<AnimalExit>,
 
         @InjectRepository(AnimalClass) private readonly animalClassesRepo: Repository<AnimalClass>,
         @InjectRepository(AnimalBreed) private readonly animalBreedsRepo: Repository<AnimalBreed>,
@@ -372,6 +381,37 @@ export class SyncDownloadService {
                 applyRanchFilter: (qb, idRanch) =>
                     qb
                         .innerJoin(AnimalEvent, 'ae', 'ae.id = hi.idEvent')
+                        .innerJoin(RanchAnimal, 'ra', 'ra.id = ae.idRanchAnimal')
+                        .where('ra.idRanch = :idRanch', { idRanch }),
+            },
+            {
+                key: 'movements',
+                table: 'movements',
+                alias: 'mv',
+                repo: this.movementsRepo,
+                dto: MovementSyncDto,
+                applyRanchFilter: (qb, idRanch) => qb.where('mv.idRanch = :idRanch', { idRanch }),
+            },
+            {
+                key: 'movementAnimals',
+                table: 'movement_animals',
+                alias: 'ma',
+                repo: this.movementAnimalsRepo,
+                dto: MovementAnimalSyncDto,
+                applyRanchFilter: (qb, idRanch) =>
+                    qb
+                        .innerJoin(Movement, 'mv', 'mv.id = ma.idMovement')
+                        .where('mv.idRanch = :idRanch', { idRanch }),
+            },
+            {
+                key: 'animalExits',
+                table: 'animal_exits',
+                alias: 'aex',
+                repo: this.animalExitsRepo,
+                dto: AnimalExitSyncDto,
+                applyRanchFilter: (qb, idRanch) =>
+                    qb
+                        .innerJoin(AnimalEvent, 'ae', 'ae.id = aex.idEvent')
                         .innerJoin(RanchAnimal, 'ra', 'ra.id = ae.idRanchAnimal')
                         .where('ra.idRanch = :idRanch', { idRanch }),
             },

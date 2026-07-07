@@ -17,6 +17,9 @@ import { FeedRecord } from 'src/modules/fattening-modules/feed-records/entities/
 import { Vaccination } from 'src/modules/health-modules/vaccinations/entities/vaccination.entity';
 import { Treatment } from 'src/modules/health-modules/treatments/entities/treatment.entity';
 import { HealthIncident } from 'src/modules/health-modules/health-incidents/entities/health-incident.entity';
+import { Movement } from 'src/modules/movement-modules/movements/entities/movement.entity';
+import { MovementAnimal } from 'src/modules/movement-modules/movement-animals/entities/movement-animal.entity';
+import { AnimalExit } from 'src/modules/movement-modules/animal-exits/entities/animal-exit.entity';
 import { AnimalClass } from 'src/modules/core/animal-classes/entities/animal-class.entity';
 import { AnimalBreed } from 'src/modules/ranch-management/animal-breeds/entities/animal-breed.entity';
 import { AnimalStatus } from 'src/modules/ranch-management/animal-statuses/entities/animal-status.entity';
@@ -80,6 +83,8 @@ import { RegisterHealthIncidentUseCase } from 'src/app/health/use-cases/register
 import { UpdateHealthIncidentUseCase } from 'src/app/health/use-cases/update-health-incident.use-case';
 import { DeleteHealthIncidentUseCase } from 'src/app/health/use-cases/delete-health-incident.use-case';
 
+import { MovementsAppModule } from 'src/app/movements/movements-app.module';
+
 import { SyncService } from './sync.service';
 import { SyncDownloadService } from './services/sync-download.service';
 import { SyncController } from './sync.controller';
@@ -87,6 +92,7 @@ import { SyncCriaBatchUseCase } from './use-cases/sync-cria-batch.use-case';
 import { SyncRecriaBatchUseCase } from './use-cases/sync-recria-batch.use-case';
 import { SyncEngordeBatchUseCase } from './use-cases/sync-engorde-batch.use-case';
 import { SyncSanidadBatchUseCase } from './use-cases/sync-sanidad-batch.use-case';
+import { SyncMovimientosBatchUseCase } from './use-cases/sync-movimientos-batch.use-case';
 
 @Module({
     imports: [
@@ -107,6 +113,9 @@ import { SyncSanidadBatchUseCase } from './use-cases/sync-sanidad-batch.use-case
             Vaccination,
             Treatment,
             HealthIncident,
+            Movement,
+            MovementAnimal,
+            AnimalExit,
             AnimalClass,
             AnimalBreed,
             AnimalStatus,
@@ -132,6 +141,7 @@ import { SyncSanidadBatchUseCase } from './use-cases/sync-sanidad-batch.use-case
         HealthIncidentsModule,
         SyncDeletionsModule,
         RanchUsersModule,
+        MovementsAppModule,
     ],
     controllers: [SyncController],
     providers: [
@@ -141,6 +151,7 @@ import { SyncSanidadBatchUseCase } from './use-cases/sync-sanidad-batch.use-case
         SyncRecriaBatchUseCase,
         SyncEngordeBatchUseCase,
         SyncSanidadBatchUseCase,
+        SyncMovimientosBatchUseCase,
 
         // Use-cases RECRÍA
         RegisterWeightRecordUseCase,

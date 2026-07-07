@@ -41,6 +41,10 @@ import { VaccinationsModule } from './modules/health-modules/vaccinations/vaccin
 import { TreatmentsModule } from './modules/health-modules/treatments/treatments.module';
 import { HealthIncidentsModule } from './modules/health-modules/health-incidents/health-incidents.module';
 import { HealthModule } from './app/health/health.module';
+import { MovementsModule } from './modules/movement-modules/movements/movements.module';
+import { MovementAnimalsModule } from './modules/movement-modules/movement-animals/movement-animals.module';
+import { AnimalExitsModule } from './modules/movement-modules/animal-exits/animal-exits.module';
+import { MovementsAppModule } from './app/movements/movements-app.module';
 
 @Module({
 	imports: [
@@ -86,6 +90,10 @@ import { HealthModule } from './app/health/health.module';
 		TreatmentsModule,
 		HealthIncidentsModule,
 		HealthModule,
+		MovementsModule,
+		MovementAnimalsModule,
+		AnimalExitsModule,
+		MovementsAppModule,
 	],
 })
 export class AppModule { }

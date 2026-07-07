@@ -11,6 +11,9 @@ import { SyncEngordeBatchUseCase } from './use-cases/sync-engorde-batch.use-case
 import { SyncSanidadDto } from './dto/inputs/sync-sanidad.dto';
 import { SyncSanidadResponseDto } from './dto/outputs/sync-sanidad-response.dto';
 import { SyncSanidadBatchUseCase } from './use-cases/sync-sanidad-batch.use-case';
+import { SyncMovimientosDto } from './dto/inputs/sync-movimientos.dto';
+import { SyncMovimientosResponseDto } from './dto/outputs/sync-movimientos-response.dto';
+import { SyncMovimientosBatchUseCase } from './use-cases/sync-movimientos-batch.use-case';
 
 @Injectable()
 export class SyncService {
@@ -19,6 +22,7 @@ export class SyncService {
         private readonly syncRecriaBatchUseCase: SyncRecriaBatchUseCase,
         private readonly syncEngordeBatchUseCase: SyncEngordeBatchUseCase,
         private readonly syncSanidadBatchUseCase: SyncSanidadBatchUseCase,
+        private readonly syncMovimientosBatchUseCase: SyncMovimientosBatchUseCase,
     ) {}
 
     async syncCria(dto: SyncCriaDto): Promise<SyncCriaResponseDto> {
@@ -35,5 +39,9 @@ export class SyncService {
 
     async syncSanidad(dto: SyncSanidadDto): Promise<SyncSanidadResponseDto> {
         return this.syncSanidadBatchUseCase.execute(dto);
+    }
+
+    async syncMovimientos(dto: SyncMovimientosDto): Promise<SyncMovimientosResponseDto> {
+        return this.syncMovimientosBatchUseCase.execute(dto);
     }
 }

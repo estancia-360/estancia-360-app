@@ -210,3 +210,47 @@ export class HealthIncidentSyncDto {
     @ApiProperty() @Expose() createdAt: Date;
     @ApiProperty() @Expose() updatedAt: Date;
 }
+
+export class MovementSyncDto {
+    @ApiProperty() @Expose() @Type(() => Number) id: number;
+    @ApiProperty() @Expose() @Type(() => Number) idRanch: number;
+    @ApiProperty({ required: false, nullable: true }) @Expose() @Type(() => Number) idUser?: number;
+    @ApiProperty() @Expose() movementType: string;
+    @ApiProperty() @Expose() movementDate: Date;
+    @ApiProperty() @Expose() status: string;
+    @ApiProperty({ required: false }) @Expose() counterpartName?: string;
+    @ApiProperty({ required: false }) @Expose() originName?: string;
+    @ApiProperty({ required: false }) @Expose() @Type(() => Number) totalPrice?: number;
+    @ApiProperty({ required: false }) @Expose() @Type(() => Number) pricePerKg?: number;
+    @ApiProperty({ required: false }) @Expose() notes?: string;
+    @ApiProperty({ required: false }) @Expose() localId?: string;
+    @ApiProperty() @Expose() isSynced: boolean;
+    @ApiProperty() @Expose() createdAt: Date;
+    @ApiProperty() @Expose() updatedAt: Date;
+}
+
+export class MovementAnimalSyncDto {
+    @ApiProperty() @Expose() @Type(() => Number) id: number;
+    @ApiProperty() @Expose() @Type(() => Number) idMovement: number;
+    @ApiProperty() @Expose() @Type(() => Number) idRanchAnimal: number;
+    @ApiProperty({ required: false, nullable: true }) @Expose() @Type(() => Number) idLotOrigin?: number;
+    @ApiProperty({ required: false, nullable: true }) @Expose() @Type(() => Number) idLotDest?: number;
+    @ApiProperty() @Expose() @Type(() => Number) prevIdStatus: number;
+    @ApiProperty() @Expose() status: string;
+    @ApiProperty({ required: false, nullable: true }) @Expose() @Type(() => Number) idEvent?: number;
+    @ApiProperty({ required: false }) @Expose() notes?: string;
+    @ApiProperty({ required: false }) @Expose() localId?: string;
+    @ApiProperty() @Expose() isSynced: boolean;
+    @ApiProperty() @Expose() createdAt: Date;
+    @ApiProperty() @Expose() updatedAt: Date;
+}
+
+export class AnimalExitSyncDto {
+    @ApiProperty() @Expose() @Type(() => Number) id: number;
+    @ApiProperty() @Expose() @Type(() => Number) idEvent: number;
+    @ApiProperty() @Expose() reason: string;
+    @ApiProperty({ required: false }) @Expose() notes?: string;
+    @ApiProperty({ required: false }) @Expose() localId?: string;
+    @ApiProperty() @Expose() createdAt: Date;
+    @ApiProperty() @Expose() updatedAt: Date;
+}

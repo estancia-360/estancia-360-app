@@ -85,6 +85,16 @@ export class TreatmentsService {
         await repo.delete({ id });
     }
 
+    async findActiveWithdrawal(idRanchAnimal: number, manager?: EntityManager): Promise<Treatment | null> {
+        const repo = manager?.getRepository(Treatment) ?? this.treatmentsRepository;
+        return await repo
+            .createQueryBuilder('t')
+            .innerJoin('t.event', 'ae')
+            .where('ae.idRanchAnimal = :idRanchAnimal', { idRanchAnimal })
+            .andWhere('t.withdrawalEndDate >= CURRENT_DATE')
+            .getOne() ?? null;
+    }
+
     async findAllByAnimal<T>(
         idRanchAnimal: number,
         paginationData: PaginationParamsDto,
