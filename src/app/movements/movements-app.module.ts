@@ -13,6 +13,7 @@ import { RanchAnimalsModule } from 'src/modules/ranch-management/ranch-animals/r
 import { AnimalEventsModule } from 'src/modules/ranch-management/animal-events/animal-events.module';
 import { RanchUsersModule } from 'src/modules/ranch-management/ranch-users/ranch-users.module';
 import { TreatmentsModule } from 'src/modules/health-modules/treatments/treatments.module';
+import { RanchSubscriptionsModule } from 'src/modules/payment-modules/ranch-subscriptions/ranch-subscriptions.module';
 
 @Module({
     imports: [
@@ -23,6 +24,7 @@ import { TreatmentsModule } from 'src/modules/health-modules/treatments/treatmen
         AnimalEventsModule,
         RanchUsersModule,
         TreatmentsModule,
+        RanchSubscriptionsModule,
     ],
     controllers: [MovementsAppController],
     providers: [

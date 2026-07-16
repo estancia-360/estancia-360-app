@@ -23,6 +23,7 @@ import { MyConflictException, MyNotFoundException } from 'src/shared/exceptions'
 import { AnimalClassesService } from 'src/modules/core/animal-classes/services/animal-classes.service';
 import { AnimalClassDto } from 'src/modules/core/animal-classes/dto/animal-class.dto';
 import { PRODUCTIVE_STATUS_IDS } from 'src/app/breeding/constants/productive-status-ids.constant';
+import { RanchSubscriptionsService } from 'src/modules/payment-modules/ranch-subscriptions/services/ranch-subscriptions.service';
 
 @Injectable()
 export class RanchAnimalsService {
@@ -33,6 +34,7 @@ export class RanchAnimalsService {
 		private readonly animalStatusesService: AnimalStatusesService,
 		private readonly animalBreedsService: AnimalBreedsService,
 		private readonly animalClassesService: AnimalClassesService,
+		private readonly ranchSubscriptionsService: RanchSubscriptionsService,
 	) { }
 
 	async update<T>(id: number,data: UpdateRanchAnimalDto, cls: new () => T): Promise<T> {
@@ -151,6 +153,9 @@ export class RanchAnimalsService {
 			throw new MyConflictException('El padre y la madre no pueden tenrer el mismo codigo.');
 		}
 
+		const currentActiveCount = await this.countActiveByRanch(data.idRanch);
+		await this.ranchSubscriptionsService.assertCapacityAvailable(data.idRanch, currentActiveCount, 1);
+
 		const ranchAnimal = new RanchAnimal();
 		if (data.codeMother){
 			ranchAnimal.idMother = (await this.findOneByCode(data.codeMother,{
@@ -249,6 +254,16 @@ export class RanchAnimalsService {
 		if (data.weight) cria.weight = data.weight;
 		if (data.idMother) cria.idMother = data.idMother;
 		return await repo.save(cria);
+	}
+
+	async countActiveByRanch(idRanch: number, manager?: EntityManager): Promise<number> {
+		const repo = manager?.getRepository(RanchAnimal) ?? this.ranchAnimalRepository;
+		return await repo.createQueryBuilder('animal')
+			.where('animal.idRanch = :idRanch', { idRanch })
+			.andWhere('(animal.idProductiveStatus IS NULL OR animal.idProductiveStatus != :baja)', {
+				baja: PRODUCTIVE_STATUS_IDS.BAJA,
+			})
+			.getCount();
 	}
 
 	async findAll<T>(idRanch: number, data: FindAllRanchAnimalsParamsDto, optionsData: OptionsFindDto<T>): Promise<PaginationResponseDto<T>> {

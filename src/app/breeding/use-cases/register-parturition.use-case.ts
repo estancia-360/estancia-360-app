@@ -12,6 +12,7 @@ import { EVENT_TYPE_IDS } from '../constants/event-type-ids.constant';
 import { MyConflictException, MyNotFoundException, MyBadRequestException } from 'src/shared/exceptions';
 import { CriaStatusEnum } from 'src/modules/breeding-modules/parturitions/entities/parturition.entity';
 import { GestationResultEnum } from 'src/modules/breeding-modules/gestation-diagnoses/entities/gestation-diagnosis.entity';
+import { RanchSubscriptionsService } from 'src/modules/payment-modules/ranch-subscriptions/services/ranch-subscriptions.service';
 
 @Injectable()
 export class RegisterParturitionUseCase {
@@ -21,6 +22,7 @@ export class RegisterParturitionUseCase {
         private readonly animalEventsService: AnimalEventsService,
         private readonly gestationDiagnosesService: GestationDiagnosesService,
         private readonly parturitionsService: ParturitionsService,
+        private readonly ranchSubscriptionsService: RanchSubscriptionsService,
     ) {}
 
     /**
@@ -72,6 +74,11 @@ export class RegisterParturitionUseCase {
             throw new MyConflictException(
                 `Ya existe un parto registrado para el diagnóstico ID=${dto.idDiagnosis}.`,
             );
+        }
+
+        if (dto.criaStatus === CriaStatusEnum.ALIVE && dto.criaData) {
+            const currentActiveCount = await this.ranchAnimalsService.countActiveByRanch(mother!.idRanch);
+            await this.ranchSubscriptionsService.assertCapacityAvailable(mother!.idRanch, currentActiveCount, 1);
         }
 
         return await this.dataSource.transaction(async (manager) => {

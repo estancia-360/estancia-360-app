@@ -16,6 +16,7 @@ import { PRODUCTIVE_STATUS_IDS } from 'src/app/breeding/constants/productive-sta
 import { ANIMAL_STATUS_IDS } from 'src/app/breeding/constants/animal-status-ids.constant';
 import { RanchRolesEnum } from 'src/shared/enums';
 import { MyBadRequestException, MyConflictException, MyForbiddenException } from 'src/shared/exceptions';
+import { RanchSubscriptionsService } from 'src/modules/payment-modules/ranch-subscriptions/services/ranch-subscriptions.service';
 
 const OWNER_ONLY_TYPES = [MovementTypeEnum.SALE, MovementTypeEnum.PURCHASE, MovementTypeEnum.RANCH_EXIT];
 
@@ -29,6 +30,7 @@ export class RegisterMovementUseCase {
         private readonly ranchAnimalsService: RanchAnimalsService,
         private readonly ranchUsersService: RanchUsersService,
         private readonly treatmentsService: TreatmentsService,
+        private readonly ranchSubscriptionsService: RanchSubscriptionsService,
     ) {}
 
     async execute(dto: RegisterMovementDto): Promise<MovementDto> {
@@ -52,6 +54,11 @@ export class RegisterMovementUseCase {
 
         if (dto.movementType === MovementTypeEnum.SALE) {
             await this.assertNoActiveWithdrawals(loadedAnimals);
+        }
+
+        if (dto.movementType === MovementTypeEnum.PURCHASE) {
+            const currentActiveCount = await this.ranchAnimalsService.countActiveByRanch(dto.idRanch);
+            await this.ranchSubscriptionsService.assertCapacityAvailable(dto.idRanch, currentActiveCount, dto.animals.length);
         }
 
         return await this.dataSource.transaction(async (manager) => {

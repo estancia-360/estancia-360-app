@@ -18,6 +18,7 @@ import { RanchUsersService } from '../../ranch-users/services/ranch-users.servic
 import { UserDto } from 'src/modules/user-management/users/dto/user.dto';
 import { RanchRolesEnum } from 'src/shared/enums';
 import { RanchProductionType } from '../../ranch-production-types/entities/ranch-production-type.entity';
+import { RanchSubscriptionsService } from 'src/modules/payment-modules/ranch-subscriptions/services/ranch-subscriptions.service';
 
 @Injectable()
 export class RanchesService {
@@ -30,6 +31,7 @@ export class RanchesService {
 		private readonly productionTypesService: ProductionTypesService,
 		private readonly usersService: UsersService,
 		private readonly ranchUsersService: RanchUsersService,
+		private readonly ranchSubscriptionsService: RanchSubscriptionsService,
 	) { }
 
 	async create<T>(data: CreateRanchDto, cls: new () => T) {
@@ -71,6 +73,7 @@ export class RanchesService {
 			idRanch: ranchSaved.id,
 			idRanchRole: RanchRolesEnum.OWNER
 		});
+		await this.ranchSubscriptionsService.createFreeSubscription(ranchSaved.id);
 		return await this.findOneById<T>(ranchSaved.id, {
 			template: cls
 		});

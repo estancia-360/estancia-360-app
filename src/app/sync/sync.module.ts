@@ -45,6 +45,7 @@ import { TreatmentsModule } from 'src/modules/health-modules/treatments/treatmen
 import { HealthIncidentsModule } from 'src/modules/health-modules/health-incidents/health-incidents.module';
 import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deletions.module';
 import { RanchUsersModule } from 'src/modules/ranch-management/ranch-users/ranch-users.module';
+import { RanchSubscriptionsModule } from 'src/modules/payment-modules/ranch-subscriptions/ranch-subscriptions.module';
 
 import { RegisterBreedingServiceUseCase } from 'src/app/breeding/use-cases/register-breeding-service.use-case';
 import { RegisterGestationDiagnosisUseCase } from 'src/app/breeding/use-cases/register-gestation-diagnosis.use-case';
@@ -142,6 +143,7 @@ import { SyncMovimientosBatchUseCase } from './use-cases/sync-movimientos-batch.
         SyncDeletionsModule,
         RanchUsersModule,
         MovementsAppModule,
+        RanchSubscriptionsModule,
     ],
     controllers: [SyncController],
     providers: [

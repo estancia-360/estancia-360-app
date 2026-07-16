@@ -45,6 +45,10 @@ import { MovementsModule } from './modules/movement-modules/movements/movements.
 import { MovementAnimalsModule } from './modules/movement-modules/movement-animals/movement-animals.module';
 import { AnimalExitsModule } from './modules/movement-modules/animal-exits/animal-exits.module';
 import { MovementsAppModule } from './app/movements/movements-app.module';
+import { SubscriptionPlansModule } from './modules/payment-modules/subscription-plans/subscription-plans.module';
+import { RanchSubscriptionsModule } from './modules/payment-modules/ranch-subscriptions/ranch-subscriptions.module';
+import { SubscriptionPaymentsModule } from './modules/payment-modules/subscription-payments/subscription-payments.module';
+import { SubscriptionsModule } from './app/subscriptions/subscriptions.module';
 
 @Module({
 	imports: [
@@ -94,6 +98,10 @@ import { MovementsAppModule } from './app/movements/movements-app.module';
 		MovementAnimalsModule,
 		AnimalExitsModule,
 		MovementsAppModule,
+		SubscriptionPlansModule,
+		RanchSubscriptionsModule,
+		SubscriptionPaymentsModule,
+		SubscriptionsModule,
 	],
 })
 export class AppModule { }

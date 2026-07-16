@@ -34,6 +34,7 @@ import { ParturitionsModule } from 'src/modules/breeding-modules/parturitions/pa
 import { WeaningsModule } from 'src/modules/breeding-modules/weanings/weanings.module';
 import { AnimalDeclaredHistoryModule } from 'src/modules/breeding-modules/animal-declared-history/animal-declared-history.module';
 import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deletions.module';
+import { RanchSubscriptionsModule } from 'src/modules/payment-modules/ranch-subscriptions/ranch-subscriptions.module';
 
 @Module({
     imports: [
@@ -46,6 +47,7 @@ import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deleti
         WeaningsModule,
         AnimalDeclaredHistoryModule,
         SyncDeletionsModule,
+        RanchSubscriptionsModule,
     ],
     controllers: [BreedingController],
     providers: [

@@ -8,6 +8,7 @@ import { ProductionTypesModule } from 'src/modules/core/production-types/product
 import { RanchUsersModule } from '../ranch-users/ranch-users.module';
 import { UsersModule } from 'src/modules/user-management/users/users.module';
 import { RanchProductionType } from '../ranch-production-types/entities/ranch-production-type.entity';
+import { RanchSubscriptionsModule } from 'src/modules/payment-modules/ranch-subscriptions/ranch-subscriptions.module';
 
 @Module({
 	imports: [
@@ -16,6 +17,7 @@ import { RanchProductionType } from '../ranch-production-types/entities/ranch-pr
 		ProductionTypesModule,
 		RanchUsersModule,
 		UsersModule,
+		RanchSubscriptionsModule,
 	],
 	controllers: [RanchesController],
 	providers: [RanchesService],
