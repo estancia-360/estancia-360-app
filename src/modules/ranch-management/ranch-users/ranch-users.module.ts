@@ -1,0 +1,13 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { RanchUser } from './entities/ranch-user.entity';
+import { RanchUsersService } from './services/ranch-users.service';
+import { RanchUsersController } from './controllers/ranch-users.controller';
+
+@Module({
+    imports:     [TypeOrmModule.forFeature([RanchUser])],
+    controllers: [RanchUsersController],
+    providers:   [RanchUsersService],
+    exports:     [RanchUsersService],
+})
+export class RanchUsersModule {}
