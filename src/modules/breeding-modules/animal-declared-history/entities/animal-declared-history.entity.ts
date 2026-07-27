@@ -1,0 +1,31 @@
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseCreatedUpdated } from 'src/database/entities/base.entity';
+import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
+
+@Entity('animal_declared_history')
+export class AnimalDeclaredHistory extends BaseCreatedUpdated {
+    @PrimaryGeneratedColumn({ name: 'id_history', type: 'bigint' })
+    id: number;
+
+    @Column({ name: 'local_id', type: 'varchar', length: 100, nullable: true, unique: true })
+    localId?: string;
+
+    @Column({ name: 'id_ranch_animal', type: 'bigint' })
+    idRanchAnimal: number;
+
+    @Column({ name: 'prev_births_count', type: 'int', nullable: true })
+    prevBirthsCount?: number;
+
+    @Column({ name: 'prev_last_birth_year', type: 'int', nullable: true })
+    prevLastBirthYear?: number;
+
+    @Column({ name: 'prev_avg_weaning_weight', type: 'decimal', precision: 6, scale: 2, nullable: true })
+    prevAvgWeaningWeight?: number;
+
+    @Column({ name: 'notes', type: 'text', nullable: true })
+    notes?: string;
+
+    @OneToOne(() => RanchAnimal)
+    @JoinColumn({ name: 'id_ranch_animal' })
+    animal?: RanchAnimal;
+}
