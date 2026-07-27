@@ -54,4 +54,9 @@ export class RegisterGestationDiagnosisDto {
     @ApiProperty({ required: false })
     @IsOptional()
     isSynced?: boolean;
+
+    @ApiProperty({ description: 'Client-generated idempotency key for offline sync retries', required: false })
+    @IsOptional()
+    @IsString()
+    localId?: string;
 }

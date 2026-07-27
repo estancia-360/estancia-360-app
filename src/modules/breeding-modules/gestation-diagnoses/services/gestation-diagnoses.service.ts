@@ -27,10 +27,15 @@ export class GestationDiagnosesService {
             gestationDays?: number;
             estimatedBirth?: Date;
             veterinarian?: string;
+            localId?: string;
         },
         manager?: EntityManager,
     ): Promise<GestationDiagnosis> {
         const repo = manager?.getRepository(GestationDiagnosis) ?? this.rawRepo;
+        if (data.localId) {
+            const existing = await repo.findOne({ where: { localId: data.localId } });
+            if (existing) return existing;
+        }
         const gd = repo.create();
         gd.idEvent = data.idEvent;
         gd.idService = data.idService;
@@ -39,6 +44,7 @@ export class GestationDiagnosesService {
         if (data.gestationDays) gd.gestationDays = data.gestationDays;
         if (data.estimatedBirth) gd.estimatedBirth = data.estimatedBirth;
         if (data.veterinarian) gd.veterinarian = data.veterinarian;
+        if (data.localId) gd.localId = data.localId;
         return await repo.save(gd);
     }
 

@@ -11,6 +11,8 @@ import { ProductionTypesModule } from './modules/core/production-types/productio
 import { RanchRolesModule } from './modules/core/ranch-roles/ranch-roles.module';
 import { AnimalClassesModule } from './modules/core/animal-classes/animal-classes.module';
 import { SyncDeletionsModule } from './modules/core/sync-deletions/sync-deletions.module';
+import { EventTypesModule } from './modules/core/event-types/event-types.module';
+import { ProductiveStatusesModule } from './modules/core/productive-statuses/productive-statuses.module';
 import { SubscriptionPlansModule } from './modules/payment-modules/subscription-plans/subscription-plans.module';
 import { RanchSubscriptionsModule } from './modules/payment-modules/ranch-subscriptions/ranch-subscriptions.module';
 import { SubscriptionPaymentsModule } from './modules/payment-modules/subscription-payments/subscription-payments.module';
@@ -44,6 +46,7 @@ import { FatteningModule } from './app/fattening/fattening.module';
 import { AnimalHealthModule } from './app/animal-health/animal-health.module';
 import { MovementsAppModule } from './app/movements/movements-app.module';
 import { SubscriptionsModule } from './app/subscriptions/subscriptions.module';
+import { SyncModule } from './app/sync/sync.module';
 import { MailerModule } from './plugins/mailer/mailer.module';
 
 @Module({
@@ -61,6 +64,8 @@ import { MailerModule } from './plugins/mailer/mailer.module';
         RanchRolesModule,
         AnimalClassesModule,
         SyncDeletionsModule,
+        EventTypesModule,
+        ProductiveStatusesModule,
         // payment-modules
         SubscriptionPlansModule,
         RanchSubscriptionsModule,
@@ -101,6 +106,7 @@ import { MailerModule } from './plugins/mailer/mailer.module';
         AnimalHealthModule,
         MovementsAppModule,
         SubscriptionsModule,
+        SyncModule,
         MailerModule.register(),
     ],
 })

@@ -36,6 +36,11 @@ export class RanchUsersService {
         return this.repo.find({ dto, where: { idUser } });
     }
 
+    /** Used by /sync/ranches — needs ranch.name and role.name, not covered by a DTO template. */
+    async findEntitiesByUser(idUser: number): Promise<RanchUser[]> {
+        return await this.rawRepo.find({ where: { idUser }, relations: { ranch: true, role: true } });
+    }
+
     async findOne(idUser: number, idRanch: number): Promise<RanchUser | null> {
         return this.rawRepo.findOne({ where: { idUser, idRanch } });
     }

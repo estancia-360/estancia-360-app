@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsInt, IsNumber, IsOptional, IsPositive, Max, Min } from 'class-validator';
+import { IsBoolean, IsDateString, IsInt, IsNumber, IsOptional, IsPositive, IsString, Max, Min } from 'class-validator';
 
 export class RegisterWeaningDto {
     @ApiProperty({ description: 'ID of the calf to be weaned', example: 20 })
@@ -40,4 +40,9 @@ export class RegisterWeaningDto {
     @IsOptional()
     @IsBoolean()
     isSynced?: boolean;
+
+    @ApiProperty({ description: 'Client-generated idempotency key for offline sync retries', required: false })
+    @IsOptional()
+    @IsString()
+    localId?: string;
 }

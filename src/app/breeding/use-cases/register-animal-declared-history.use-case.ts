@@ -34,6 +34,7 @@ export class RegisterAnimalDeclaredHistoryUseCase {
             prevLastBirthYear: dto.prevLastBirthYear,
             prevAvgWeaningWeight: dto.prevAvgWeaningWeight,
             notes: dto.notes,
+            localId: dto.localId,
         });
 
         return (await this.animalDeclaredHistoryService.findOneById(AnimalDeclaredHistoryDto, history.id, { throwException: true }))!;

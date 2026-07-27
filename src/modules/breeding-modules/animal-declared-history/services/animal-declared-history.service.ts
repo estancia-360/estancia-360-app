@@ -19,16 +19,28 @@ export class AnimalDeclaredHistoryService {
     }
 
     async create(
-        data: { idRanchAnimal: number; prevBirthsCount?: number; prevLastBirthYear?: number; prevAvgWeaningWeight?: number; notes?: string },
+        data: {
+            idRanchAnimal: number;
+            prevBirthsCount?: number;
+            prevLastBirthYear?: number;
+            prevAvgWeaningWeight?: number;
+            notes?: string;
+            localId?: string;
+        },
         manager?: EntityManager,
     ): Promise<AnimalDeclaredHistory> {
         const repo = manager?.getRepository(AnimalDeclaredHistory) ?? this.rawRepo;
+        if (data.localId) {
+            const existing = await repo.findOne({ where: { localId: data.localId } });
+            if (existing) return existing;
+        }
         const history = repo.create();
         history.idRanchAnimal = data.idRanchAnimal;
         if (data.prevBirthsCount !== undefined) history.prevBirthsCount = data.prevBirthsCount;
         if (data.prevLastBirthYear !== undefined) history.prevLastBirthYear = data.prevLastBirthYear;
         if (data.prevAvgWeaningWeight !== undefined) history.prevAvgWeaningWeight = data.prevAvgWeaningWeight;
         if (data.notes) history.notes = data.notes;
+        if (data.localId) history.localId = data.localId;
         return await repo.save(history);
     }
 

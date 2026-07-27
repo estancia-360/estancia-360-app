@@ -57,4 +57,9 @@ export class RegisterBreedingServiceDto {
     @IsOptional()
     @IsBoolean()
     isSynced?: boolean;
+
+    @ApiProperty({ description: 'Client-generated idempotency key for offline sync retries', required: false })
+    @IsOptional()
+    @IsString()
+    localId?: string;
 }

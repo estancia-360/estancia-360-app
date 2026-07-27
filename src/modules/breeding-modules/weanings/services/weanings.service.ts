@@ -19,16 +19,21 @@ export class WeaningsService {
     }
 
     async create(
-        data: { idEvent: number; idCria: number; idLotDest: number; weaningWeight?: number; weaningAge?: number },
+        data: { idEvent: number; idCria: number; idLotDest: number; weaningWeight?: number; weaningAge?: number; localId?: string },
         manager?: EntityManager,
     ): Promise<Weaning> {
         const repo = manager?.getRepository(Weaning) ?? this.rawRepo;
+        if (data.localId) {
+            const existing = await repo.findOne({ where: { localId: data.localId } });
+            if (existing) return existing;
+        }
         const weaning = repo.create();
         weaning.idEvent = data.idEvent;
         weaning.idCria = data.idCria;
         weaning.idLotDest = data.idLotDest;
         if (data.weaningWeight) weaning.weaningWeight = data.weaningWeight;
         if (data.weaningAge) weaning.weaningAge = data.weaningAge;
+        if (data.localId) weaning.localId = data.localId;
         return await repo.save(weaning);
     }
 

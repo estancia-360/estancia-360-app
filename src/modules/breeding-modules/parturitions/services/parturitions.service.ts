@@ -27,10 +27,15 @@ export class ParturitionsService {
             criaWeight?: number;
             criaStatus: string;
             motherCondition?: string;
+            localId?: string;
         },
         manager?: EntityManager,
     ): Promise<Parturition> {
         const repo = manager?.getRepository(Parturition) ?? this.rawRepo;
+        if (data.localId) {
+            const existing = await repo.findOne({ where: { localId: data.localId } });
+            if (existing) return existing;
+        }
         const parturition = repo.create();
         parturition.idEvent = data.idEvent;
         parturition.idDiagnosis = data.idDiagnosis;
@@ -39,6 +44,7 @@ export class ParturitionsService {
         if (data.criaWeight) parturition.criaWeight = data.criaWeight;
         parturition.criaStatus = data.criaStatus as any;
         if (data.motherCondition) parturition.motherCondition = data.motherCondition as any;
+        if (data.localId) parturition.localId = data.localId;
         return await repo.save(parturition);
     }
 

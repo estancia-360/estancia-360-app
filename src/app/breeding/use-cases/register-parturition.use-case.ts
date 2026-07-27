@@ -97,6 +97,7 @@ export class RegisterParturitionUseCase {
                     criaWeight: dto.criaWeight,
                     criaStatus: dto.criaStatus,
                     motherCondition: dto.motherCondition,
+                    localId: dto.localId,
                 },
                 manager,
             );

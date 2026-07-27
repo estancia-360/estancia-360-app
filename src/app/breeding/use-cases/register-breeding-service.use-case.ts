@@ -48,6 +48,7 @@ export class RegisterBreedingServiceUseCase {
                     semenBreed: dto.semenBreed,
                     technician: dto.technician,
                     reproductiveLot: dto.reproductiveLot,
+                    localId: dto.localId,
                 },
                 manager,
             );

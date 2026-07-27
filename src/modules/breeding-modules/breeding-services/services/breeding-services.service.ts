@@ -26,10 +26,15 @@ export class BreedingServicesService {
             semenBreed?: string;
             technician?: string;
             reproductiveLot?: string;
+            localId?: string;
         },
         manager?: EntityManager,
     ): Promise<BreedingService> {
         const repo = manager?.getRepository(BreedingService) ?? this.rawRepo;
+        if (data.localId) {
+            const existing = await repo.findOne({ where: { localId: data.localId } });
+            if (existing) return existing;
+        }
         const bs = repo.create();
         bs.idEvent = data.idEvent;
         if (data.idAnimalMale) bs.idAnimalMale = data.idAnimalMale;
@@ -37,6 +42,7 @@ export class BreedingServicesService {
         if (data.semenBreed) bs.semenBreed = data.semenBreed;
         if (data.technician) bs.technician = data.technician;
         if (data.reproductiveLot) bs.reproductiveLot = data.reproductiveLot;
+        if (data.localId) bs.localId = data.localId;
         return await repo.save(bs);
     }
 

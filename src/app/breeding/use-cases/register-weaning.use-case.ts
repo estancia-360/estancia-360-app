@@ -53,6 +53,7 @@ export class RegisterWeaningUseCase {
                     idLotDest: dto.idLotDest,
                     weaningWeight: dto.weaningWeight,
                     weaningAge: dto.weaningAge,
+                    localId: dto.localId,
                 },
                 manager,
             );

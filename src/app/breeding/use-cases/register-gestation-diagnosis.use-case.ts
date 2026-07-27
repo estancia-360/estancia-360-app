@@ -62,6 +62,7 @@ export class RegisterGestationDiagnosisUseCase {
                     gestationDays: dto.gestationDays,
                     estimatedBirth: dto.estimatedBirth,
                     veterinarian: dto.veterinarian,
+                    localId: dto.localId,
                 },
                 manager,
             );

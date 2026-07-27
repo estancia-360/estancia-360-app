@@ -37,4 +37,9 @@ export class RegisterAnimalDeclaredHistoryDto {
     @IsNotEmpty()
     @MaxLength(500)
     notes?: string;
+
+    @ApiProperty({ description: 'Client-generated idempotency key for offline sync retries', required: false })
+    @IsOptional()
+    @IsString()
+    localId?: string;
 }
