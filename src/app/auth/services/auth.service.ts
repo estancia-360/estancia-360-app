@@ -33,15 +33,16 @@ export class AuthService {
         const payload: JwtPayload = { sub: user.id, email: user.email, roleId: user.role.id };
         const accessToken = this.jwtService.sign(payload);
 
-        // idRanch = estancia donde el usuario es Owner, null si no es dueño de ninguna.
-        const idRanch = await this.usersService.findRanchIdWhereUserIsOwner(user.id);
+        // Un usuario puede ser Owner de varias estancias — el cliente elige con cuál
+        // entrar (cada una puede tener un plan de suscripción distinto).
+        const ranches = await this.usersService.findRanchesWhereUserIsOwner(user.id);
 
         return {
             message: 'Ingreso exitoso',
             accessToken,
             idUser: user.id,
             idRole: user.role.id,
-            idRanch,
+            ranches,
         };
     }
 

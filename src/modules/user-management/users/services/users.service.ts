@@ -54,16 +54,19 @@ export class UsersService {
     }
 
     /**
-     * ID de la estancia donde el usuario es OWNER (o null si no es dueño de ninguna).
-     * Query cruda contra ranch_users porque ese módulo todavía no está migrado —
-     * reemplazar por RanchUsersService cuando se migre ranch-management.
+     * Estancias donde el usuario es OWNER (puede ser dueño de varias). Query cruda
+     * contra ranch_users/ranches para evitar que user-management importe
+     * ranch-management horizontalmente (módulos atómicos).
      */
-    async findRanchIdWhereUserIsOwner(idUser: number): Promise<number | null> {
+    async findRanchesWhereUserIsOwner(idUser: number): Promise<{ id: number; name: string }[]> {
         const result = await this.dataSource.query(
-            `SELECT id_ranch FROM ranch_users WHERE id_user = $1 AND id_role = $2 LIMIT 1`,
+            `SELECT r.id_ranch AS id, r.name FROM ranch_users ru
+             INNER JOIN ranches r ON r.id_ranch = ru.id_ranch
+             WHERE ru.id_user = $1 AND ru.id_role = $2
+             ORDER BY r.name ASC`,
             [idUser, RanchRolesEnum.OWNER],
         );
-        return result[0]?.id_ranch ?? null;
+        return result.map((row: { id: string; name: string }) => ({ id: Number(row.id), name: row.name }));
     }
 
     // ── Mutations ─────────────────────────────────────────────────────────────
