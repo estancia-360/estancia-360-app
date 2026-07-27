@@ -33,11 +33,15 @@ import { FeedRecordsModule } from './modules/fattening-modules/feed-records/feed
 import { VaccinationsModule } from './modules/health-modules/vaccinations/vaccinations.module';
 import { TreatmentsModule } from './modules/health-modules/treatments/treatments.module';
 import { HealthIncidentsModule } from './modules/health-modules/health-incidents/health-incidents.module';
+import { MovementsModule } from './modules/movement-modules/movements/movements.module';
+import { MovementAnimalsModule } from './modules/movement-modules/movement-animals/movement-animals.module';
+import { AnimalExitsModule } from './modules/movement-modules/animal-exits/animal-exits.module';
 import { AuthModule } from './app/auth/auth.module';
 import { BreedingModule } from './app/breeding/breeding.module';
 import { RearingModule } from './app/rearing/rearing.module';
 import { FatteningModule } from './app/fattening/fattening.module';
 import { AnimalHealthModule } from './app/animal-health/animal-health.module';
+import { MovementsAppModule } from './app/movements/movements-app.module';
 import { MailerModule } from './plugins/mailer/mailer.module';
 
 @Module({
@@ -82,12 +86,17 @@ import { MailerModule } from './plugins/mailer/mailer.module';
         VaccinationsModule,
         TreatmentsModule,
         HealthIncidentsModule,
+        // movement-modules
+        MovementsModule,
+        MovementAnimalsModule,
+        AnimalExitsModule,
         AuthModule,
         // app/ (orquestación)
         BreedingModule,
         RearingModule,
         FatteningModule,
         AnimalHealthModule,
+        MovementsAppModule,
         MailerModule.register(),
     ],
 })
