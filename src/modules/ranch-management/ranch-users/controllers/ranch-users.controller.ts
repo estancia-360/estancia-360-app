@@ -1,8 +1,10 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, ForbiddenException, Get, Param, ParseIntPipe, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { RanchUsersService } from '../services/ranch-users.service';
 import { CreateRanchUserWorkerDto } from '../dto/create-ranch-user-worker.dto';
+import { RanchUserWithUserDto } from '../dto/ranch-user-with-user.dto';
 import { UserUp } from 'src/app/auth/decorators';
+import { CurrentUser } from 'src/shared/decorators';
 import { RanchRolesEnum } from 'src/shared/enums';
 
 /**
@@ -31,5 +33,19 @@ export class RanchUsersController {
             idRanchRole: RanchRolesEnum.WORKER,
         });
         return { message: 'El usuario fue agregado como trabajador' };
+    }
+
+    @Get('ranch/:idRanch')
+    @UserUp()
+    @ApiOperation({ summary: 'List the members of a ranch (Owner, Workers, Administrators) [OWNER ONLY]' })
+    @ApiOkResponse({ type: [RanchUserWithUserDto] })
+    async findAllByRanch(
+        @Param('idRanch', ParseIntPipe) idRanch: number,
+        @CurrentUser('id') idUser: number,
+    ): Promise<{ members: RanchUserWithUserDto[] }> {
+        if (!(await this.ranchUsersService.isOwner(idUser, idRanch))) {
+            throw new ForbiddenException({ message: 'Solo el dueño de la estancia puede ver su equipo.', error: 'RANCH_OWNER_ONLY' });
+        }
+        return { members: await this.ranchUsersService.findAllByRanch(RanchUserWithUserDto, idRanch) };
     }
 }

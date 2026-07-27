@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { RanchUser } from '../entities/ranch-user.entity';
 import { DtoRepository } from 'src/shared/orm';
+import { RanchRolesEnum } from 'src/shared/enums';
 
 export interface CreateRanchUserData {
     idUser: number;
@@ -43,5 +44,14 @@ export class RanchUsersService {
 
     async findOne(idUser: number, idRanch: number): Promise<RanchUser | null> {
         return this.rawRepo.findOne({ where: { idUser, idRanch } });
+    }
+
+    async findAllByRanch<T>(dto: new () => T, idRanch: number): Promise<T[]> {
+        return this.repo.find({ dto, where: { idRanch }, order: { createdAt: 'ASC' } });
+    }
+
+    async isOwner(idUser: number, idRanch: number): Promise<boolean> {
+        const membership = await this.findOne(idUser, idRanch);
+        return membership?.idRole === RanchRolesEnum.OWNER;
     }
 }

@@ -47,6 +47,7 @@ import { AnimalHealthModule } from './app/animal-health/animal-health.module';
 import { MovementsAppModule } from './app/movements/movements-app.module';
 import { SubscriptionsModule } from './app/subscriptions/subscriptions.module';
 import { SyncModule } from './app/sync/sync.module';
+import { RanchMembersModule } from './app/ranch-members/ranch-members.module';
 import { MailerModule } from './plugins/mailer/mailer.module';
 
 @Module({
@@ -107,6 +108,7 @@ import { MailerModule } from './plugins/mailer/mailer.module';
         MovementsAppModule,
         SubscriptionsModule,
         SyncModule,
+        RanchMembersModule,
         MailerModule.register(),
     ],
 })
