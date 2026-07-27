@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
 import { SubscriptionPlan } from '../entities/subscription-plan.entity';
+import { SubscriptionPlanDto } from '../dto/subscription-plan.dto';
 
 @Injectable()
 export class SubscriptionPlansService {
@@ -9,6 +11,11 @@ export class SubscriptionPlansService {
         @InjectRepository(SubscriptionPlan)
         private readonly rawRepo: Repository<SubscriptionPlan>,
     ) {}
+
+    async findAllActive(): Promise<SubscriptionPlanDto[]> {
+        const plans = await this.rawRepo.find({ where: { isActive: true }, order: { capacityMin: 'ASC' } });
+        return plainToInstance(SubscriptionPlanDto, plans, { excludeExtraneousValues: true });
+    }
 
     async findFreePlan(manager?: EntityManager): Promise<SubscriptionPlan> {
         const repo = manager?.getRepository(SubscriptionPlan) ?? this.rawRepo;

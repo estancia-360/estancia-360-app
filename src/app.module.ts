@@ -13,6 +13,7 @@ import { AnimalClassesModule } from './modules/core/animal-classes/animal-classe
 import { SyncDeletionsModule } from './modules/core/sync-deletions/sync-deletions.module';
 import { SubscriptionPlansModule } from './modules/payment-modules/subscription-plans/subscription-plans.module';
 import { RanchSubscriptionsModule } from './modules/payment-modules/ranch-subscriptions/ranch-subscriptions.module';
+import { SubscriptionPaymentsModule } from './modules/payment-modules/subscription-payments/subscription-payments.module';
 import { RanchUsersModule } from './modules/ranch-management/ranch-users/ranch-users.module';
 import { RanchesModule } from './modules/ranch-management/ranches/ranches.module';
 import { RanchPasturesModule } from './modules/ranch-management/ranch-pastures/ranch-pastures.module';
@@ -42,6 +43,7 @@ import { RearingModule } from './app/rearing/rearing.module';
 import { FatteningModule } from './app/fattening/fattening.module';
 import { AnimalHealthModule } from './app/animal-health/animal-health.module';
 import { MovementsAppModule } from './app/movements/movements-app.module';
+import { SubscriptionsModule } from './app/subscriptions/subscriptions.module';
 import { MailerModule } from './plugins/mailer/mailer.module';
 
 @Module({
@@ -59,9 +61,10 @@ import { MailerModule } from './plugins/mailer/mailer.module';
         RanchRolesModule,
         AnimalClassesModule,
         SyncDeletionsModule,
-        // payment-modules (slice mínimo — ver nota en ranch-subscriptions)
+        // payment-modules
         SubscriptionPlansModule,
         RanchSubscriptionsModule,
+        SubscriptionPaymentsModule,
         // ranch-management
         RanchUsersModule,
         RanchesModule,
@@ -97,6 +100,7 @@ import { MailerModule } from './plugins/mailer/mailer.module';
         FatteningModule,
         AnimalHealthModule,
         MovementsAppModule,
+        SubscriptionsModule,
         MailerModule.register(),
     ],
 })

@@ -1,17 +1,12 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseCreatedUpdated } from 'src/database/entities/base.entity';
 
-/**
- * Slice mínimo del módulo de Pagos — solo lo que necesita
- * RanchSubscriptionsService.createFreeSubscription() al crear una estancia.
- * El resto del módulo (planes de pago, panel admin, historial de pagos) es
- * una migración aparte, todavía no hecha acá.
- */
 @Entity('subscription_plans')
-export class SubscriptionPlan {
+export class SubscriptionPlan extends BaseCreatedUpdated {
     @PrimaryGeneratedColumn({ name: 'id_plan' })
     id: number;
 
-    @Column({ name: 'name', type: 'varchar', length: 50 })
+    @Column({ name: 'name', type: 'varchar', length: 30 })
     name: string;
 
     @Column({ name: 'capacity_min', type: 'int' })
@@ -19,4 +14,16 @@ export class SubscriptionPlan {
 
     @Column({ name: 'capacity_max', type: 'int', nullable: true })
     capacityMax: number | null;
+
+    @Column({ name: 'price_monthly', type: 'decimal', precision: 8, scale: 2 })
+    priceMonthly: number;
+
+    @Column({ name: 'price_annual', type: 'decimal', precision: 8, scale: 2 })
+    priceAnnual: number;
+
+    @Column({ name: 'trial_days', type: 'int', default: 0 })
+    trialDays: number;
+
+    @Column({ name: 'is_active', type: 'boolean', default: true })
+    isActive: boolean;
 }
