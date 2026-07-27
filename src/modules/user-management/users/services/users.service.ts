@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
+import { DataSource, FindOptionsWhere, LessThanOrEqual, Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { UserDto } from '../dto/user.dto';
 import { CreateUserDto } from '../dto/create-user.dto';
@@ -9,6 +9,7 @@ import { DtoRepository } from 'src/shared/orm';
 import { FindOptions, MutationOptions } from 'src/shared/dto';
 import { hashPassword } from 'src/shared/utils/crypto.util';
 import { RanchRolesEnum } from 'src/shared/enums/ranch-roles.enum';
+import { RoleEnum } from 'src/shared/enums/role.enum';
 
 @Injectable()
 export class UsersService {
@@ -41,6 +42,15 @@ export class UsersService {
     findOneByCi<T>(dto: new () => T, ci: string, options?: FindOptions): Promise<T>;
     async findOneByCi<T>(dto: new () => T, ci: string, { throwException = true }: FindOptions = {}): Promise<T | null> {
         return this._findOne(dto, { ci, isDeleted: false }, throwException);
+    }
+
+    /** Root + Admin users, for the admin panel's user-management screen. */
+    async findAllAdmins<T>(dto: new () => T): Promise<T[]> {
+        return this.repo.find({
+            dto,
+            where: { roleId: LessThanOrEqual(RoleEnum.ADMIN), isDeleted: false },
+            order: { createdAt: 'DESC' },
+        });
     }
 
     /**
