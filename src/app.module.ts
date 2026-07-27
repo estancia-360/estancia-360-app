@@ -26,8 +26,14 @@ import { GestationDiagnosesModule } from './modules/breeding-modules/gestation-d
 import { ParturitionsModule } from './modules/breeding-modules/parturitions/parturitions.module';
 import { WeaningsModule } from './modules/breeding-modules/weanings/weanings.module';
 import { AnimalDeclaredHistoryModule } from './modules/breeding-modules/animal-declared-history/animal-declared-history.module';
+import { WeightRecordsModule } from './modules/rearing-modules/weight-records/weight-records.module';
+import { RearingSelectionsModule } from './modules/rearing-modules/rearing-selections/rearing-selections.module';
+import { FatteningEntriesModule } from './modules/fattening-modules/fattening-entries/fattening-entries.module';
+import { FeedRecordsModule } from './modules/fattening-modules/feed-records/feed-records.module';
 import { AuthModule } from './app/auth/auth.module';
 import { BreedingModule } from './app/breeding/breeding.module';
+import { RearingModule } from './app/rearing/rearing.module';
+import { FatteningModule } from './app/fattening/fattening.module';
 import { MailerModule } from './plugins/mailer/mailer.module';
 
 @Module({
@@ -63,9 +69,16 @@ import { MailerModule } from './plugins/mailer/mailer.module';
         ParturitionsModule,
         WeaningsModule,
         AnimalDeclaredHistoryModule,
+        // rearing-modules / fattening-modules
+        WeightRecordsModule,
+        RearingSelectionsModule,
+        FatteningEntriesModule,
+        FeedRecordsModule,
         AuthModule,
         // app/ (orquestación)
         BreedingModule,
+        RearingModule,
+        FatteningModule,
         MailerModule.register(),
     ],
 })
