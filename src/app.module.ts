@@ -30,10 +30,14 @@ import { WeightRecordsModule } from './modules/rearing-modules/weight-records/we
 import { RearingSelectionsModule } from './modules/rearing-modules/rearing-selections/rearing-selections.module';
 import { FatteningEntriesModule } from './modules/fattening-modules/fattening-entries/fattening-entries.module';
 import { FeedRecordsModule } from './modules/fattening-modules/feed-records/feed-records.module';
+import { VaccinationsModule } from './modules/health-modules/vaccinations/vaccinations.module';
+import { TreatmentsModule } from './modules/health-modules/treatments/treatments.module';
+import { HealthIncidentsModule } from './modules/health-modules/health-incidents/health-incidents.module';
 import { AuthModule } from './app/auth/auth.module';
 import { BreedingModule } from './app/breeding/breeding.module';
 import { RearingModule } from './app/rearing/rearing.module';
 import { FatteningModule } from './app/fattening/fattening.module';
+import { AnimalHealthModule } from './app/animal-health/animal-health.module';
 import { MailerModule } from './plugins/mailer/mailer.module';
 
 @Module({
@@ -74,11 +78,16 @@ import { MailerModule } from './plugins/mailer/mailer.module';
         RearingSelectionsModule,
         FatteningEntriesModule,
         FeedRecordsModule,
+        // health-modules
+        VaccinationsModule,
+        TreatmentsModule,
+        HealthIncidentsModule,
         AuthModule,
         // app/ (orquestación)
         BreedingModule,
         RearingModule,
         FatteningModule,
+        AnimalHealthModule,
         MailerModule.register(),
     ],
 })
