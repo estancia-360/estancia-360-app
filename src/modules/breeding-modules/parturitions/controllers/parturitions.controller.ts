@@ -39,7 +39,7 @@ export class ParturitionsController {
     @ApiOperation({ summary: 'Get a parturition by ID' })
     @ApiOkResponse({ type: ParturitionDto })
     @ApiNotFound({ code: 'PARTURITION_NOT_FOUND', message: 'Parturition not found.' })
-    async findOneById(@Param('idParturition', ParseIntPipe) idParturition: number): Promise<ParturitionDto> {
-        return await this.parturitionsService.findOneById(ParturitionDto, idParturition);
+    async findOneById(@Param('idParturition', ParseIntPipe) idParturition: number): Promise<{ parturition: ParturitionDto }> {
+        return { parturition: await this.parturitionsService.findOneById(ParturitionDto, idParturition) };
     }
 }

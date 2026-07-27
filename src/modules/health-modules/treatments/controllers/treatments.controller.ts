@@ -28,7 +28,7 @@ export class TreatmentsController {
     @ApiOperation({ summary: 'Get a treatment by ID' })
     @ApiOkResponse({ type: TreatmentDto })
     @ApiNotFound({ code: 'TREATMENT_NOT_FOUND', message: 'Treatment not found.' })
-    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<TreatmentDto> {
-        return await this.treatmentsService.findOneById(TreatmentDto, id);
+    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<{ treatment: TreatmentDto }> {
+        return { treatment: await this.treatmentsService.findOneById(TreatmentDto, id) };
     }
 }

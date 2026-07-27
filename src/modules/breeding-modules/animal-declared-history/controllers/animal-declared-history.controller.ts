@@ -16,8 +16,8 @@ export class AnimalDeclaredHistoryController {
     @ApiOperation({ summary: "Get an animal's declared history by animal ID" })
     @ApiOkResponse({ type: AnimalDeclaredHistoryDto })
     @ApiNotFound({ code: 'ANIMAL_DECLARED_HISTORY_NOT_FOUND', message: 'Declared history not found.' })
-    async findOneByAnimalId(@Param('idRanchAnimal', ParseIntPipe) idRanchAnimal: number): Promise<AnimalDeclaredHistoryDto> {
-        return await this.animalDeclaredHistoryService.findOneByAnimalId(AnimalDeclaredHistoryDto, idRanchAnimal);
+    async findOneByAnimalId(@Param('idRanchAnimal', ParseIntPipe) idRanchAnimal: number): Promise<{ history: AnimalDeclaredHistoryDto }> {
+        return { history: await this.animalDeclaredHistoryService.findOneByAnimalId(AnimalDeclaredHistoryDto, idRanchAnimal) };
     }
 
     @Get(':idHistory')
@@ -25,7 +25,7 @@ export class AnimalDeclaredHistoryController {
     @ApiOperation({ summary: 'Get a declared history by its own ID' })
     @ApiOkResponse({ type: AnimalDeclaredHistoryDto })
     @ApiNotFound({ code: 'ANIMAL_DECLARED_HISTORY_NOT_FOUND', message: 'Declared history not found.' })
-    async findOneById(@Param('idHistory', ParseIntPipe) idHistory: number): Promise<AnimalDeclaredHistoryDto> {
-        return await this.animalDeclaredHistoryService.findOneById(AnimalDeclaredHistoryDto, idHistory);
+    async findOneById(@Param('idHistory', ParseIntPipe) idHistory: number): Promise<{ history: AnimalDeclaredHistoryDto }> {
+        return { history: await this.animalDeclaredHistoryService.findOneById(AnimalDeclaredHistoryDto, idHistory) };
     }
 }

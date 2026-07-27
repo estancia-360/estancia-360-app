@@ -39,7 +39,7 @@ export class GestationDiagnosesController {
     @ApiOperation({ summary: 'Get a gestation diagnosis by ID' })
     @ApiOkResponse({ type: GestationDiagnosisDto })
     @ApiNotFound({ code: 'GESTATION_DIAGNOSIS_NOT_FOUND', message: 'Gestation diagnosis not found.' })
-    async findOneById(@Param('idDiagnosis', ParseIntPipe) idDiagnosis: number): Promise<GestationDiagnosisDto> {
-        return await this.gestationDiagnosesService.findOneById(GestationDiagnosisDto, idDiagnosis);
+    async findOneById(@Param('idDiagnosis', ParseIntPipe) idDiagnosis: number): Promise<{ gestationDiagnosis: GestationDiagnosisDto }> {
+        return { gestationDiagnosis: await this.gestationDiagnosesService.findOneById(GestationDiagnosisDto, idDiagnosis) };
     }
 }

@@ -39,7 +39,7 @@ export class BreedingServicesController {
     @ApiOperation({ summary: 'Get a breeding service by ID' })
     @ApiOkResponse({ type: BreedingServiceDto })
     @ApiNotFound({ code: 'BREEDING_SERVICE_NOT_FOUND', message: 'Breeding service not found.' })
-    async findOneById(@Param('idService', ParseIntPipe) idService: number): Promise<BreedingServiceDto> {
-        return await this.breedingServicesService.findOneById(BreedingServiceDto, idService);
+    async findOneById(@Param('idService', ParseIntPipe) idService: number): Promise<{ breedingService: BreedingServiceDto }> {
+        return { breedingService: await this.breedingServicesService.findOneById(BreedingServiceDto, idService) };
     }
 }

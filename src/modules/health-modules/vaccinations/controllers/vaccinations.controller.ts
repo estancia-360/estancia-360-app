@@ -28,7 +28,7 @@ export class VaccinationsController {
     @ApiOperation({ summary: 'Get a vaccination by ID' })
     @ApiOkResponse({ type: VaccinationDto })
     @ApiNotFound({ code: 'VACCINATION_NOT_FOUND', message: 'Vaccination not found.' })
-    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<VaccinationDto> {
-        return await this.vaccinationsService.findOneById(VaccinationDto, id);
+    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<{ vaccination: VaccinationDto }> {
+        return { vaccination: await this.vaccinationsService.findOneById(VaccinationDto, id) };
     }
 }

@@ -28,7 +28,7 @@ export class FatteningEntriesController {
     @ApiOperation({ summary: 'Get a fattening entry by ID' })
     @ApiOkResponse({ type: FatteningEntryDto })
     @ApiNotFound({ code: 'FATTENING_ENTRY_NOT_FOUND', message: 'Fattening entry not found.' })
-    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<FatteningEntryDto> {
-        return await this.fatteningEntriesService.findOneById(FatteningEntryDto, id);
+    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<{ fatteningEntry: FatteningEntryDto }> {
+        return { fatteningEntry: await this.fatteningEntriesService.findOneById(FatteningEntryDto, id) };
     }
 }

@@ -39,7 +39,7 @@ export class WeightRecordsController {
     @ApiOperation({ summary: 'Get a weight record by ID' })
     @ApiOkResponse({ type: WeightRecordDto })
     @ApiNotFound({ code: 'WEIGHT_RECORD_NOT_FOUND', message: 'Weight record not found.' })
-    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<WeightRecordDto> {
-        return await this.weightRecordsService.findOneById(WeightRecordDto, id);
+    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<{ weightRecord: WeightRecordDto }> {
+        return { weightRecord: await this.weightRecordsService.findOneById(WeightRecordDto, id) };
     }
 }

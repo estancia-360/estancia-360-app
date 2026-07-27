@@ -28,7 +28,7 @@ export class AnimalEventsController {
     @ApiOperation({ summary: 'Get an animal event by ID' })
     @ApiOkResponse({ type: AnimalEventDto })
     @ApiNotFound({ code: 'ANIMAL_EVENT_NOT_FOUND', message: 'Animal event not found.' })
-    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<AnimalEventDto> {
-        return await this.animalEventsService.findOneById(AnimalEventDto, id);
+    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<{ animalEvent: AnimalEventDto }> {
+        return { animalEvent: await this.animalEventsService.findOneById(AnimalEventDto, id) };
     }
 }

@@ -28,7 +28,7 @@ export class HealthIncidentsController {
     @ApiOperation({ summary: 'Get a health incident by ID' })
     @ApiOkResponse({ type: HealthIncidentDto })
     @ApiNotFound({ code: 'HEALTH_INCIDENT_NOT_FOUND', message: 'Health incident not found.' })
-    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<HealthIncidentDto> {
-        return await this.healthIncidentsService.findOneById(HealthIncidentDto, id);
+    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<{ healthIncident: HealthIncidentDto }> {
+        return { healthIncident: await this.healthIncidentsService.findOneById(HealthIncidentDto, id) };
     }
 }

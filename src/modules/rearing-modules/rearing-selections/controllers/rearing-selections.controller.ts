@@ -28,7 +28,7 @@ export class RearingSelectionsController {
     @ApiOperation({ summary: 'Get a rearing selection by ID' })
     @ApiOkResponse({ type: RearingSelectionDto })
     @ApiNotFound({ code: 'REARING_SELECTION_NOT_FOUND', message: 'Rearing selection not found.' })
-    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<RearingSelectionDto> {
-        return await this.rearingSelectionsService.findOneById(RearingSelectionDto, id);
+    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<{ rearingSelection: RearingSelectionDto }> {
+        return { rearingSelection: await this.rearingSelectionsService.findOneById(RearingSelectionDto, id) };
     }
 }

@@ -28,7 +28,7 @@ export class FeedRecordsController {
     @ApiOperation({ summary: 'Get a feed record by ID' })
     @ApiOkResponse({ type: FeedRecordDto })
     @ApiNotFound({ code: 'FEED_RECORD_NOT_FOUND', message: 'Feed record not found.' })
-    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<FeedRecordDto> {
-        return await this.feedRecordsService.findOneById(FeedRecordDto, id);
+    async findOneById(@Param('id', ParseIntPipe) id: number): Promise<{ feedRecord: FeedRecordDto }> {
+        return { feedRecord: await this.feedRecordsService.findOneById(FeedRecordDto, id) };
     }
 }

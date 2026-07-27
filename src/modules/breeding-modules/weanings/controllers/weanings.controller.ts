@@ -42,7 +42,7 @@ export class WeaningsController {
     @ApiOperation({ summary: 'Get a weaning by ID' })
     @ApiOkResponse({ type: WeaningDto })
     @ApiNotFound({ code: 'WEANING_NOT_FOUND', message: 'Weaning not found.' })
-    async findOneById(@Param('idWeaning', ParseIntPipe) idWeaning: number): Promise<WeaningDto> {
-        return await this.weaningsService.findOneById(WeaningDto, idWeaning);
+    async findOneById(@Param('idWeaning', ParseIntPipe) idWeaning: number): Promise<{ weaning: WeaningDto }> {
+        return { weaning: await this.weaningsService.findOneById(WeaningDto, idWeaning) };
     }
 }
