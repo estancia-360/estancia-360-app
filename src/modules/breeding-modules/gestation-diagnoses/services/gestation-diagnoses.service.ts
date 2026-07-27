@@ -89,6 +89,26 @@ export class GestationDiagnosesService {
         return (await repo.findOne({ where: { idService } })) ?? null;
     }
 
+    /**
+     * RN-13: a female with an active "pregnant" diagnosis (no parturition
+     * registered for it yet — the reproductive cycle hasn't closed) cannot
+     * receive a new breeding service. Used by RegisterBreedingServiceUseCase.
+     */
+    async findActivePregnancy(idRanchAnimal: number, manager?: EntityManager): Promise<GestationDiagnosis | null> {
+        const repo = manager?.getRepository(GestationDiagnosis) ?? this.rawRepo;
+        return (
+            (await repo
+                .createQueryBuilder('gd')
+                .innerJoin('gd.service', 'bs')
+                .innerJoin('bs.event', 'ae')
+                .leftJoin('parturitions', 'p', 'p.id_diagnosis = gd.id_diagnosis')
+                .where('ae.idRanchAnimal = :idRanchAnimal', { idRanchAnimal })
+                .andWhere('gd.result = :result', { result: 'pregnant' })
+                .andWhere('p.id_parturition IS NULL')
+                .getOne()) ?? null
+        );
+    }
+
     async findAllByAnimal(idRanchAnimal: number, pagination: PaginationParamsDto): Promise<PaginationResponseDto<GestationDiagnosisDto>> {
         return await this.repo.findPaginated({
             dto: GestationDiagnosisDto,
