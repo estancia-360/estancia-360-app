@@ -7,6 +7,7 @@ import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { LoginResponseDto } from '../dto/login-response.dto';
+import { LoginWebResponseDto } from '../dto/login-web-response.dto';
 import { RegisterResponseDto } from '../dto/register-response.dto';
 import { JwtPayload } from '../strategies/jwt.strategy';
 import { InvalidCredentialsException } from '../exceptions';
@@ -23,18 +24,28 @@ export class AuthService {
         private readonly mailer:       MailerPort,
     ) {}
 
+    // Login de mobile: idRanch único (la primera estancia donde es Owner, o null).
+    // Mismo contrato que el proyecto viejo — mobile asume una sola estancia por
+    // usuario, no tocar sin coordinar con mobile primero. Para el panel web, que sí
+    // necesita elegir entre varias, ver loginWeb().
     async login(dto: LoginDto): Promise<LoginResponseDto> {
-        const user = await this.usersService.findOneByEmail(UserForAuthDto, dto.email, { throwException: false });
-        if (!user) throw new InvalidCredentialsException();
+        const { user, accessToken } = await this.authenticate(dto);
+        const ranches = await this.usersService.findRanchesWhereUserIsOwner(user.id);
 
-        const passwordMatch = await comparePassword(dto.password, user.password);
-        if (!passwordMatch) throw new InvalidCredentialsException();
+        return {
+            message: 'Ingreso exitoso',
+            accessToken,
+            idUser: user.id,
+            idRole: user.role.id,
+            idRanch: ranches[0]?.id ?? null,
+        };
+    }
 
-        const payload: JwtPayload = { sub: user.id, email: user.email, roleId: user.role.id };
-        const accessToken = this.jwtService.sign(payload);
-
-        // Un usuario puede ser Owner de varias estancias — el cliente elige con cuál
-        // entrar (cada una puede tener un plan de suscripción distinto).
+    // Login del panel web: un usuario puede ser Owner de varias estancias, cada
+    // una con un plan de suscripción distinto — el panel deja elegir con cuál
+    // entrar antes de aplicar esa restricción, así que necesita la lista completa.
+    async loginWeb(dto: LoginDto): Promise<LoginWebResponseDto> {
+        const { user, accessToken } = await this.authenticate(dto);
         const ranches = await this.usersService.findRanchesWhereUserIsOwner(user.id);
 
         return {
@@ -44,6 +55,19 @@ export class AuthService {
             idRole: user.role.id,
             ranches,
         };
+    }
+
+    private async authenticate(dto: LoginDto): Promise<{ user: UserForAuthDto; accessToken: string }> {
+        const user = await this.usersService.findOneByEmail(UserForAuthDto, dto.email, { throwException: false });
+        if (!user) throw new InvalidCredentialsException();
+
+        const passwordMatch = await comparePassword(dto.password, user.password);
+        if (!passwordMatch) throw new InvalidCredentialsException();
+
+        const payload: JwtPayload = { sub: user.id, email: user.email, roleId: user.role.id };
+        const accessToken = this.jwtService.sign(payload);
+
+        return { user, accessToken };
     }
 
     // DEUDA TÉCNICA (a propósito — ver respuesta de Jaime, coordinar con mobile antes

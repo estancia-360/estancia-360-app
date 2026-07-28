@@ -9,6 +9,7 @@ import { RegisterDto } from '../dto/register.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { TwoFactorCodeDto } from '../dto/two-factor-code.dto';
 import { LoginResponseDto } from '../dto/login-response.dto';
+import { LoginWebResponseDto } from '../dto/login-web-response.dto';
 import { RegisterResponseDto } from '../dto/register-response.dto';
 import { TwoFactorCodeResponseDto } from '../dto/two-factor-code-response.dto';
 import { Public } from '../decorators';
@@ -35,6 +36,19 @@ export class AuthController {
     @ApiValidationError()
     async login(@Body() dto: LoginDto): Promise<LoginResponseDto> {
         return await this.authService.login(dto);
+    }
+
+    @Public()
+    @Post('login/web')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Login (panel web)',
+        description: 'Igual que /auth/login, pero devuelve todas las estancias donde el usuario es Owner en vez de una sola.',
+    })
+    @ApiOkResponse({ type: LoginWebResponseDto })
+    @ApiValidationError()
+    async loginWeb(@Body() dto: LoginDto): Promise<LoginWebResponseDto> {
+        return await this.authService.loginWeb(dto);
     }
 
     @Public()

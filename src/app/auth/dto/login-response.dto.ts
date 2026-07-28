@@ -1,12 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
-
-export class OwnedRanchDto {
-    @ApiProperty({ example: 5 })
-    id: number;
-
-    @ApiProperty({ example: 'Estancia La Esperanza' })
-    name: string;
-}
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LoginResponseDto {
     @ApiProperty({ example: 'Ingreso exitoso' })
@@ -21,9 +13,10 @@ export class LoginResponseDto {
     @ApiProperty({ example: 3 })
     idRole: number;
 
-    @ApiProperty({
-        description: 'Estancias donde el usuario es Owner. Array vacío si no es dueño de ninguna — puede ser dueño de varias.',
-        type: [OwnedRanchDto],
+    @ApiPropertyOptional({
+        description: 'ID de la estancia donde el usuario es Owner. null si no es dueño de ninguna.',
+        example: 5,
+        nullable: true,
     })
-    ranches: OwnedRanchDto[];
+    idRanch: number | null;
 }
