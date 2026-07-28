@@ -7,7 +7,8 @@ import { FatteningEntriesService } from 'src/modules/fattening-modules/fattening
 import { FatteningEntryDto } from 'src/modules/fattening-modules/fattening-entries/dto/fattening-entry.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
-import { EVENT_TYPE_IDS, PRODUCTIVE_STATUS_IDS } from 'src/shared/constants';
+import { RanchesService } from 'src/modules/ranch-management/ranches/services/ranches.service';
+import { EVENT_TYPE_IDS, PRODUCTIVE_STATUS_IDS, PRODUCTION_TYPE_IDS } from 'src/shared/constants';
 
 @Injectable()
 export class RegisterFatteningEntryUseCase {
@@ -16,6 +17,7 @@ export class RegisterFatteningEntryUseCase {
         private readonly ranchAnimalsService: RanchAnimalsService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly fatteningEntriesService: FatteningEntriesService,
+        private readonly ranchesService: RanchesService,
     ) {}
 
     async execute(dto: RegisterFatteningEntryDto, idUser?: number): Promise<FatteningEntryDto> {
@@ -25,6 +27,15 @@ export class RegisterFatteningEntryUseCase {
             throw new BadRequestException({
                 message: `Animal ID=${dto.idRanchAnimal} is not in Recría (ps=2). Current status: ps=${animal.idProductiveStatus}.`,
                 error: 'ANIMAL_NOT_IN_REARING',
+            });
+        }
+
+        // RN-09: Engorde solo desde Recría Y estancia con Engorde habilitado.
+        const hasEngorde = await this.ranchesService.hasProductionTypeEnabled(animal.idRanch, PRODUCTION_TYPE_IDS.ENGORDE);
+        if (!hasEngorde) {
+            throw new BadRequestException({
+                message: `Ranch ID=${animal.idRanch} does not have Engorde enabled as a rubro.`,
+                error: 'RANCH_PRODUCTION_TYPE_NOT_ENABLED',
             });
         }
 

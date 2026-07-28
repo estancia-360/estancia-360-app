@@ -7,9 +7,10 @@ import { RearingSelectionsService } from 'src/modules/rearing-modules/rearing-se
 import { FatteningEntriesService } from 'src/modules/fattening-modules/fattening-entries/services/fattening-entries.service';
 import { RearingSelectionDto } from 'src/modules/rearing-modules/rearing-selections/dto/rearing-selection.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
-import { EVENT_TYPE_IDS, PRODUCTIVE_STATUS_IDS, ANIMAL_STATUS_IDS } from 'src/shared/constants';
+import { EVENT_TYPE_IDS, PRODUCTIVE_STATUS_IDS, ANIMAL_STATUS_IDS, PRODUCTION_TYPE_IDS } from 'src/shared/constants';
 import { RearingDestinationEnum } from 'src/modules/rearing-modules/rearing-selections/entities/rearing-selection.entity';
 import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
+import { RanchesService } from 'src/modules/ranch-management/ranches/services/ranches.service';
 
 @Injectable()
 export class RegisterRearingSelectionUseCase {
@@ -19,6 +20,7 @@ export class RegisterRearingSelectionUseCase {
         private readonly animalEventsService: AnimalEventsService,
         private readonly rearingSelectionsService: RearingSelectionsService,
         private readonly fatteningEntriesService: FatteningEntriesService,
+        private readonly ranchesService: RanchesService,
     ) {}
 
     /**
@@ -34,6 +36,17 @@ export class RegisterRearingSelectionUseCase {
                 message: `Animal ID=${dto.idRanchAnimal} is not in Recría (ps=2). Current status: ps=${animal.idProductiveStatus}.`,
                 error: 'ANIMAL_NOT_IN_REARING',
             });
+        }
+
+        // RN-09: Engorde solo desde Recría Y estancia con Engorde habilitado.
+        if (dto.destination === RearingDestinationEnum.FATTENING) {
+            const hasEngorde = await this.ranchesService.hasProductionTypeEnabled(animal.idRanch, PRODUCTION_TYPE_IDS.ENGORDE);
+            if (!hasEngorde) {
+                throw new BadRequestException({
+                    message: `Ranch ID=${animal.idRanch} does not have Engorde enabled as a rubro.`,
+                    error: 'RANCH_PRODUCTION_TYPE_NOT_ENABLED',
+                });
+            }
         }
 
         return await this.dataSource.transaction(async (manager) => {

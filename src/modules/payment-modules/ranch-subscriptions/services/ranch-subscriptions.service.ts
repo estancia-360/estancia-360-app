@@ -32,19 +32,32 @@ export class RanchSubscriptionsService {
 
     async findEntityByRanch(idRanch: number, manager?: EntityManager): Promise<RanchSubscription> {
         const repo = manager?.getRepository(RanchSubscription) ?? this.rawRepo;
-        const subscription = await repo.findOne({ where: { idRanch }, relations: { plan: true, ranch: true } });
+        const subscription = await repo.findOne({
+            where: { idRanch },
+            relations: { plan: true, ranch: { productionTypes: { productionType: true } } },
+        });
         if (!subscription) throw new RanchSubscriptionNotFoundException(idRanch);
         return subscription;
     }
 
     async findEntityById(id: number, manager?: EntityManager): Promise<RanchSubscription | null> {
         const repo = manager?.getRepository(RanchSubscription) ?? this.rawRepo;
-        return await repo.findOne({ where: { id }, relations: { plan: true, ranch: true } });
+        return await repo.findOne({
+            where: { id },
+            relations: { plan: true, ranch: { productionTypes: { productionType: true } } },
+        });
     }
 
+    // Los rubros no se mapean solos vía plainToInstance porque RanchProductionType
+    // no tiene id/name propios (idProductionType + relación anidada productionType.name)
+    // — se arman a mano acá para que SubscriptionRanchDto.productionTypes quede plano.
     toDto(subscription: RanchSubscription): RanchSubscriptionDto {
         const dto = plainToInstance(RanchSubscriptionDto, subscription, { excludeExtraneousValues: true });
         dto.effectiveStatus = this.getEffectiveStatus(subscription);
+        dto.ranch.productionTypes = (subscription.ranch.productionTypes ?? []).map((rpt) => ({
+            id: rpt.idProductionType,
+            name: rpt.productionType!.name,
+        }));
         return dto;
     }
 

@@ -7,6 +7,7 @@ import { WeightRecordsModule } from 'src/modules/rearing-modules/weight-records/
 import { RearingSelectionsModule } from 'src/modules/rearing-modules/rearing-selections/rearing-selections.module';
 import { FatteningEntriesModule } from 'src/modules/fattening-modules/fattening-entries/fattening-entries.module';
 import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deletions.module';
+import { RanchesModule } from 'src/modules/ranch-management/ranches/ranches.module';
 
 import { RegisterWeightRecordUseCase } from './use-cases/register-weight-record.use-case';
 import { UpdateWeightRecordUseCase } from './use-cases/update-weight-record.use-case';
@@ -23,6 +24,7 @@ import { DeleteRearingSelectionUseCase } from './use-cases/delete-rearing-select
         RearingSelectionsModule,
         FatteningEntriesModule,
         SyncDeletionsModule,
+        RanchesModule,
     ],
     controllers: [RearingController],
     providers: [

@@ -4,7 +4,8 @@ import { DataSource, Repository } from 'typeorm';
 import { Ranch } from '../entities/ranch.entity';
 import { RanchProductionType } from 'src/modules/ranch-management/ranch-production-types/entities/ranch-production-type.entity';
 import { CreateRanchDto } from '../dto/create-ranch.dto';
-import { RanchNotFoundException } from '../exceptions';
+import { RanchNotFoundException, InvalidProductionTypesCombinationException } from '../exceptions';
+import { PRODUCTION_TYPE_IDS } from 'src/shared/constants';
 import { DtoRepository } from 'src/shared/orm';
 import { FindOptions } from 'src/shared/dto';
 import { CitiesService } from 'src/modules/core/cities/services/cities.service';
@@ -35,6 +36,11 @@ export class RanchesService {
         this.repo = new DtoRepository(rawRepo);
     }
 
+    /** Usado por otros módulos (ej. fattening/rearing) para reforzar RN-09 del lado de la estancia. */
+    async hasProductionTypeEnabled(idRanch: number, idProductionType: number): Promise<boolean> {
+        return await this.dataSource.getRepository(RanchProductionType).existsBy({ idRanch, idProductionType });
+    }
+
     findOneById<T>(dto: new () => T, id: number, options: { throwException: false }): Promise<T | null>;
     findOneById<T>(dto: new () => T, id: number, options?: FindOptions): Promise<T>;
     async findOneById<T>(dto: new () => T, id: number, { throwException = true }: FindOptions = {}): Promise<T | null> {
@@ -61,6 +67,7 @@ export class RanchesService {
                 this.productionTypesService.findOneById(ProductionTypeDto, idProductionType),
             ),
         );
+        this.validateProductionTypesCombination(dto.idProductionTypes);
 
         const ranchId = await this.dataSource.transaction(async (manager) => {
             const ranchRepo = manager.getRepository(Ranch);
@@ -90,5 +97,22 @@ export class RanchesService {
         });
 
         return (await this.findOneById(returnDto, ranchId))!;
+    }
+
+    /**
+     * Los rubros siguen un único orden fijo (Cría → Recría → Engorde) porque un
+     * animal no puede llegar a Engorde sin pasar por Recría (RN-09) — una estancia
+     * no puede habilitar Engorde sin Recría, ni Recría sin Cría. Combinaciones
+     * válidas: [Cría], [Cría, Recría], [Cría, Recría, Engorde]. Sanidad y
+     * Movimientos no son rubros — aplican siempre, sin importar esta combinación.
+     */
+    private validateProductionTypesCombination(idProductionTypes: number[]): void {
+        const set = new Set(idProductionTypes);
+        const hasCria = set.has(PRODUCTION_TYPE_IDS.CRIA);
+        const hasRecria = set.has(PRODUCTION_TYPE_IDS.RECRIA);
+        const hasEngorde = set.has(PRODUCTION_TYPE_IDS.ENGORDE);
+
+        if ((hasRecria || hasEngorde) && !hasCria) throw new InvalidProductionTypesCombinationException();
+        if (hasEngorde && !hasRecria) throw new InvalidProductionTypesCombinationException();
     }
 }
