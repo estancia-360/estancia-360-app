@@ -6,11 +6,12 @@ import { CreateRanchPastureDto } from '../dto/create-ranch-pasture.dto';
 import { UpdateRanchPastureDto } from '../dto/update-ranch-pasture.dto';
 import { RanchPastureDto } from '../dto/ranch-pasture.dto';
 import { RanchPastureDetailedDto } from '../dto/ranch-pasture-detailed.dto';
-import { RanchPastureNotFoundException } from '../exceptions';
+import { RanchPastureNotFoundException, RanchPastureHasLotsException } from '../exceptions';
 import { DtoRepository } from 'src/shared/orm';
 import { FindOptions } from 'src/shared/dto';
 import { RanchesService } from 'src/modules/ranch-management/ranches/services/ranches.service';
 import { RanchDto } from 'src/modules/ranch-management/ranches/dto/ranch.dto';
+import { RanchLot } from 'src/modules/ranch-management/ranch-lots/entities/ranch-lot.entity';
 
 @Injectable()
 export class RanchPasturesService {
@@ -70,6 +71,12 @@ export class RanchPasturesService {
     async remove(id: number): Promise<void> {
         const pasture = await this.rawRepo.findOne({ where: { id } });
         if (!pasture) throw new RanchPastureNotFoundException(id);
+
+        // ranch_lots.id_ranch_pasture → ranch_pastures(id_ranch_pasture) sin ON DELETE
+        // — sin este chequeo, el DELETE explota con un error crudo de FK.
+        const hasLots = await this.rawRepo.manager.getRepository(RanchLot).existsBy({ idRanchPasture: id });
+        if (hasLots) throw new RanchPastureHasLotsException(id);
+
         await this.rawRepo.remove(pasture);
     }
 }

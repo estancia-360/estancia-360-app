@@ -6,11 +6,12 @@ import { UpdateRanchPastureDto } from '../dto/update-ranch-pasture.dto';
 import { RanchPastureDto } from '../dto/ranch-pasture.dto';
 import { RanchPastureDetailedDto } from '../dto/ranch-pasture-detailed.dto';
 import { UserUp } from 'src/app/auth/decorators';
-import { ApiNotFound } from 'src/shared/utils/swagger';
+import { ApiNotFound, ApiConflict } from 'src/shared/utils/swagger';
 
 /**
  * Error dictionary for this module:
  *   RANCH_PASTURE_NOT_FOUND   404
+ *   RANCH_PASTURE_HAS_LOTS    409
  */
 @ApiTags('Ranch Pastures')
 @ApiBearerAuth('access-token')
@@ -57,6 +58,7 @@ export class RanchPasturesController {
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a ranch pasture' })
     @ApiNotFound({ code: 'RANCH_PASTURE_NOT_FOUND', message: 'Ranch pasture not found.' })
+    @ApiConflict({ code: 'RANCH_PASTURE_HAS_LOTS', message: 'Ranch pasture still has lots assigned to it.' })
     async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
         await this.ranchPasturesService.remove(id);
     }

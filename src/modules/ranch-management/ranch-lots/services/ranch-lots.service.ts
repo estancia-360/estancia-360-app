@@ -6,13 +6,14 @@ import { CreateRanchLotDto } from '../dto/create-ranch-lot.dto';
 import { UpdateRanchLotDto } from '../dto/update-ranch-lot.dto';
 import { RanchLotDto } from '../dto/ranch-lot.dto';
 import { RanchLotDetailedDto } from '../dto/ranch-lot-detailed.dto';
-import { RanchLotNotFoundException } from '../exceptions';
+import { RanchLotNotFoundException, RanchLotHasAnimalsException } from '../exceptions';
 import { DtoRepository } from 'src/shared/orm';
 import { FindOptions } from 'src/shared/dto';
 import { RanchesService } from 'src/modules/ranch-management/ranches/services/ranches.service';
 import { RanchDto } from 'src/modules/ranch-management/ranches/dto/ranch.dto';
 import { RanchPasturesService } from 'src/modules/ranch-management/ranch-pastures/services/ranch-pastures.service';
 import { RanchPastureDto } from 'src/modules/ranch-management/ranch-pastures/dto/ranch-pasture.dto';
+import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
 
 @Injectable()
 export class RanchLotsService {
@@ -47,7 +48,21 @@ export class RanchLotsService {
     }
 
     async findAllByRanch(idRanch: number): Promise<RanchLotDto[]> {
-        return await this.repo.find({ dto: RanchLotDto, where: { idRanch }, order: { id: 'DESC' } });
+        const lots = await this.repo.find({ dto: RanchLotDto, where: { idRanch }, order: { id: 'DESC' } });
+
+        const counts = await this.rawRepo.manager
+            .getRepository(RanchAnimal)
+            .createQueryBuilder('a')
+            .select('a.idLot', 'idLot')
+            .addSelect('COUNT(*)', 'count')
+            .where('a.idRanch = :idRanch', { idRanch })
+            .andWhere('a.idLot IS NOT NULL')
+            .groupBy('a.idLot')
+            .getRawMany<{ idLot: string; count: string }>();
+        const countByLot = new Map(counts.map((c) => [Number(c.idLot), Number(c.count)]));
+
+        for (const lot of lots) lot.animalsCount = countByLot.get(lot.id) ?? 0;
+        return lots;
     }
 
     findOneById<T>(dto: new () => T, id: number, options: { throwException: false }): Promise<T | null>;
@@ -74,6 +89,12 @@ export class RanchLotsService {
     async remove(id: number): Promise<void> {
         const lot = await this.rawRepo.findOne({ where: { id } });
         if (!lot) throw new RanchLotNotFoundException(id);
+
+        // ranch_animals.id_lot → ranch_lots(id_lot) sin ON DELETE — sin este chequeo,
+        // el DELETE explota con un error crudo de FK en vez de un 409 entendible.
+        const hasAnimals = await this.rawRepo.manager.getRepository(RanchAnimal).existsBy({ idLot: id });
+        if (hasAnimals) throw new RanchLotHasAnimalsException(id);
+
         await this.rawRepo.remove(lot);
     }
 }

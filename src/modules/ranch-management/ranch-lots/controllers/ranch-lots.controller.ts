@@ -6,11 +6,12 @@ import { UpdateRanchLotDto } from '../dto/update-ranch-lot.dto';
 import { RanchLotDto } from '../dto/ranch-lot.dto';
 import { RanchLotDetailedDto } from '../dto/ranch-lot-detailed.dto';
 import { UserUp } from 'src/app/auth/decorators';
-import { ApiNotFound } from 'src/shared/utils/swagger';
+import { ApiNotFound, ApiConflict } from 'src/shared/utils/swagger';
 
 /**
  * Error dictionary for this module:
- *   RANCH_LOT_NOT_FOUND   404
+ *   RANCH_LOT_NOT_FOUND    404
+ *   RANCH_LOT_HAS_ANIMALS  409
  */
 @ApiTags('Ranch Lots')
 @ApiBearerAuth('access-token')
@@ -57,6 +58,7 @@ export class RanchLotsController {
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a ranch lot' })
     @ApiNotFound({ code: 'RANCH_LOT_NOT_FOUND', message: 'Ranch lot not found.' })
+    @ApiConflict({ code: 'RANCH_LOT_HAS_ANIMALS', message: 'Ranch lot still has animals assigned to it.' })
     async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
         await this.ranchLotsService.remove(id);
     }
