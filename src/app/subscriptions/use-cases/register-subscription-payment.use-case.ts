@@ -30,7 +30,10 @@ export class RegisterSubscriptionPaymentUseCase {
                 {
                     idRanchSubscription: subscriptionBefore.id,
                     amount: dto.amount,
-                    paymentDate: new Date(dto.paymentDate),
+                    // dto.paymentDate es date-only (YYYY-MM-DD) — no envolver en
+                    // new Date(), corre la fecha un día para atrás al serializar
+                    // en columnas `date` (mismo bug que feed_records.feedDate).
+                    paymentDate: dto.paymentDate,
                     paymentMethod: dto.paymentMethod,
                     paymentSource: PaymentSourceEnum.MANUAL,
                     externalReference: dto.externalReference,

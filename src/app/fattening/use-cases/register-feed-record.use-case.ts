@@ -13,7 +13,12 @@ export class RegisterFeedRecordUseCase {
             idLot: dto.idLot,
             idUser: dto.idUser ?? idUser,
             localId: dto.localId,
-            feedDate: new Date(dto.feedDate),
+            // dto.feedDate es un string YYYY-MM-DD (fecha sin hora) — pasarlo por
+            // new Date() lo interpreta como medianoche UTC, y el driver de pg
+            // serializa columnas `date` con los componentes LOCALES del Date,
+            // corriendo el valor un día para atrás en cualquier timezone detrás
+            // de UTC. Igual que ranch_animals.birthdate: pasar el string tal cual.
+            feedDate: dto.feedDate,
             feedType: dto.feedType,
             quantity: dto.quantity,
             unit: dto.unit,
