@@ -7,6 +7,7 @@ import { TreatmentsService } from 'src/modules/health-modules/treatments/service
 import { TreatmentDto } from 'src/modules/health-modules/treatments/dto/treatment.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 import { EVENT_TYPE_IDS, PRODUCTIVE_STATUS_IDS } from 'src/shared/constants';
+import { addDaysToDateOnlyString } from 'src/shared/utils';
 
 @Injectable()
 export class RegisterTreatmentUseCase {
@@ -32,8 +33,7 @@ export class RegisterTreatmentUseCase {
         // RN-18: withdrawal_end_date = event_date + withdrawal_days (computed by the backend).
         let withdrawalEndDate: Date | undefined;
         if (dto.withdrawalDays) {
-            withdrawalEndDate = new Date(eventDate);
-            withdrawalEndDate.setDate(withdrawalEndDate.getDate() + dto.withdrawalDays);
+            withdrawalEndDate = addDaysToDateOnlyString(dto.eventDate, dto.withdrawalDays);
         }
 
         return await this.dataSource.transaction(async (manager) => {

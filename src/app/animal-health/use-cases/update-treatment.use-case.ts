@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { UpdateTreatmentDto } from '../dto/inputs/update-treatment.dto';
 import { TreatmentsService } from 'src/modules/health-modules/treatments/services/treatments.service';
 import { TreatmentDto } from 'src/modules/health-modules/treatments/dto/treatment.dto';
+import { addDaysToDateOnlyString } from 'src/shared/utils';
 
 @Injectable()
 export class UpdateTreatmentUseCase {
@@ -18,9 +19,7 @@ export class UpdateTreatmentUseCase {
             let withdrawalEndDate: Date | undefined;
             if (dto.withdrawalDays !== undefined) {
                 const existing = await this.treatmentsService.findOneById(TreatmentDto, id, { throwException: true }, manager);
-                const eventDate = new Date(existing.event.eventDate);
-                withdrawalEndDate = new Date(eventDate);
-                withdrawalEndDate.setDate(withdrawalEndDate.getDate() + dto.withdrawalDays);
+                withdrawalEndDate = addDaysToDateOnlyString(existing.event.eventDate, dto.withdrawalDays);
             }
 
             await this.treatmentsService.update(
