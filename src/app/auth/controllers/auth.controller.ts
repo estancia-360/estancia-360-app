@@ -1,18 +1,19 @@
 import { Body, Controller, Post, Put, HttpCode, HttpStatus } from '@nestjs/common';
 import {
-    ApiTags, ApiOperation,
+    ApiTags, ApiOperation, ApiBearerAuth,
     ApiCreatedResponse, ApiOkResponse,
 } from '@nestjs/swagger';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
-import { TwoFactorCodeDto } from '../dto/two-factor-code.dto';
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { LoginResponseDto } from '../dto/login-response.dto';
 import { LoginWebResponseDto } from '../dto/login-web-response.dto';
 import { RegisterResponseDto } from '../dto/register-response.dto';
-import { TwoFactorCodeResponseDto } from '../dto/two-factor-code-response.dto';
-import { Public } from '../decorators';
+import { Public, UserUp } from '../decorators';
+import { CurrentUser } from 'src/shared/decorators';
 import { ApiValidationError, ApiUnauthorized, ApiConflict } from 'src/shared/utils/swagger';
 
 /**
@@ -20,6 +21,7 @@ import { ApiValidationError, ApiUnauthorized, ApiConflict } from 'src/shared/uti
  *   INVALID_CREDENTIALS 401 — Email not found or password does not match.
  *   INVALID_TOKEN        401 — Access JWT is missing, malformed, expired, or the user no longer exists.
  *   USER_ALREADY_EXISTS 409 — A user with the given email or CI already exists.
+ *   INVALID_RESET_CODE  400 — Recovery code is missing, wrong, or expired.
  *
  * Sin refresh token — un único access token (JWT_TIME_EXPIRE, default 15m).
  */
@@ -62,21 +64,40 @@ export class AuthController {
         return await this.authService.register(dto);
     }
 
-    @Public()
+    @UserUp()
+    @ApiBearerAuth('access-token')
     @Put('change-password')
-    @ApiOperation({ summary: 'Change password' })
+    @ApiOperation({ summary: 'Change password', description: 'Requiere JWT — opera sobre el usuario autenticado, verificando su contraseña actual.' })
     @ApiOkResponse({ schema: { example: { message: 'La contraseña se cambió exitosamente' } } })
     @ApiValidationError()
-    async changePassword(@Body() dto: ChangePasswordDto): Promise<{ message: string }> {
-        return await this.authService.changePassword(dto);
+    @ApiUnauthorized({ code: 'INVALID_CREDENTIALS', message: 'Current password does not match.' })
+    async changePassword(@CurrentUser('id') idUser: number, @Body() dto: ChangePasswordDto): Promise<{ message: string }> {
+        return await this.authService.changePassword(idUser, dto);
     }
 
     @Public()
-    @Post('2AF')
+    @Post('forgot-password')
     @HttpCode(HttpStatus.OK)
-    @ApiOperation({ summary: 'Send two-factor verification code' })
-    @ApiOkResponse({ type: TwoFactorCodeResponseDto })
-    async twoFactorCode(@Body() dto: TwoFactorCodeDto): Promise<TwoFactorCodeResponseDto> {
-        return { code: await this.authService.auth2af(dto.email) };
+    @ApiOperation({
+        summary: 'Forgot password — step 1',
+        description: 'Envía un código de 6 dígitos por email si el correo está registrado. Responde siempre el mismo mensaje genérico, exista o no el correo.',
+    })
+    @ApiOkResponse({ schema: { example: { message: 'Si el correo está registrado, enviamos un código de recuperación.' } } })
+    @ApiValidationError()
+    async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+        return await this.authService.forgotPassword(dto);
+    }
+
+    @Public()
+    @Post('reset-password')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Forgot password — step 2',
+        description: 'Verifica el código de recuperación contra el hash guardado en el servidor y, si es válido y no venció, aplica la nueva contraseña.',
+    })
+    @ApiOkResponse({ schema: { example: { message: 'Tu contraseña se actualizó exitosamente' } } })
+    @ApiValidationError()
+    async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+        return await this.authService.resetPassword(dto);
     }
 }

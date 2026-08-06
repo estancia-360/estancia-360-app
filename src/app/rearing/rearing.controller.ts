@@ -53,16 +53,17 @@ export class RearingController {
     async updateWeightRecord(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateWeightRecordDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ weightRecord: WeightRecordDto }> {
-        return { weightRecord: await this.updateWeightRecordUseCase.execute(id, dto) };
+        return { weightRecord: await this.updateWeightRecordUseCase.execute(id, dto, idUser) };
     }
 
     @Delete('weight-record/:id')
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a weighing' })
-    async deleteWeightRecord(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteWeightRecordUseCase.execute(id);
+    async deleteWeightRecord(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteWeightRecordUseCase.execute(id, idUser);
     }
 
     // ── Rearing selection ───────────────────────────────────────
@@ -84,15 +85,16 @@ export class RearingController {
     async updateRearingSelection(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateRearingSelectionDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ rearingSelection: RearingSelectionDto }> {
-        return { rearingSelection: await this.updateRearingSelectionUseCase.execute(id, dto) };
+        return { rearingSelection: await this.updateRearingSelectionUseCase.execute(id, dto, idUser) };
     }
 
     @Delete('rearing-selection/:id')
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a rearing selection and revert the animal state if applicable' })
-    async deleteRearingSelection(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteRearingSelectionUseCase.execute(id);
+    async deleteRearingSelection(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteRearingSelectionUseCase.execute(id, idUser);
     }
 }

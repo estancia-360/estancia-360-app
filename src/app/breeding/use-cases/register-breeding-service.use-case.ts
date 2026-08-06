@@ -5,6 +5,7 @@ import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/
 import { BreedingServicesService } from 'src/modules/breeding-modules/breeding-services/services/breeding-services.service';
 import { GestationDiagnosesService } from 'src/modules/breeding-modules/gestation-diagnoses/services/gestation-diagnoses.service';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { BreedingServiceDto } from 'src/modules/breeding-modules/breeding-services/dto/breeding-service.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 import { EVENT_TYPE_IDS } from 'src/shared/constants';
@@ -15,14 +16,16 @@ export class RegisterBreedingServiceUseCase {
     constructor(
         private readonly dataSource: DataSource,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly breedingServicesService: BreedingServicesService,
         private readonly gestationDiagnosesService: GestationDiagnosesService,
     ) {}
 
-    async execute(dto: RegisterBreedingServiceDto, idUser?: number): Promise<BreedingServiceDto> {
+    async execute(dto: RegisterBreedingServiceDto, idUser: number): Promise<BreedingServiceDto> {
         const female = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
         if (female.sex !== 'F') throw new RanchAnimalNotFoundException(dto.idRanchAnimal);
+        await this.ranchUsersService.assertMember(idUser, female.idRanch);
 
         if (dto.idAnimalMale !== undefined && dto.idAnimalMale !== null) {
             const male = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idAnimalMale);

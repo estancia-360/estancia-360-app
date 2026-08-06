@@ -29,13 +29,13 @@ export class SyncMovimientosBatchUseCase {
         private readonly updateAnimalExitUseCase: UpdateAnimalExitUseCase,
     ) {}
 
-    async execute(dto: SyncMovimientosDto): Promise<SyncMovimientosResponseDto> {
+    async execute(dto: SyncMovimientosDto, idUser: number): Promise<SyncMovimientosResponseDto> {
         const localIdToServerId = new Map<string, number>();
         const movementAnimalResults: SyncOperationResultDto[] = [];
 
-        const animalExits = await this.processAnimalExits(dto.animalExits ?? [], localIdToServerId);
-        const movements = await this.processMovements(dto.movements ?? [], dto.idRanch, localIdToServerId, movementAnimalResults);
-        await this.processMovementAnimals(dto.movementAnimals ?? [], localIdToServerId, movementAnimalResults);
+        const animalExits = await this.processAnimalExits(dto.animalExits ?? [], idUser, localIdToServerId);
+        const movements = await this.processMovements(dto.movements ?? [], dto.idRanch, idUser, localIdToServerId, movementAnimalResults);
+        await this.processMovementAnimals(dto.movementAnimals ?? [], idUser, localIdToServerId, movementAnimalResults);
 
         const movementAnimals = this.buildSection(movementAnimalResults);
 
@@ -50,6 +50,7 @@ export class SyncMovimientosBatchUseCase {
 
     private async processAnimalExits(
         operations: SyncAnimalExitOperationDto[],
+        idUser: number,
         localIdToServerId: Map<string, number>,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
@@ -63,7 +64,7 @@ export class SyncMovimientosBatchUseCase {
                     case 'create': {
                         const result = await this.registerAnimalExitUseCase.execute(
                             { ...data, eventDate: op.happenedAt as unknown as Date, isSynced: true, localId: op.localId } as RegisterAnimalExitDto,
-                            data.idUser,
+                            idUser,
                         );
                         serverId = result.id;
                         break;
@@ -93,6 +94,7 @@ export class SyncMovimientosBatchUseCase {
     private async processMovements(
         operations: SyncMovementOperationDto[],
         idRanch: number,
+        idUser: number,
         localIdToServerId: Map<string, number>,
         movementAnimalResults: SyncOperationResultDto[],
     ): Promise<SyncSectionDto> {
@@ -106,13 +108,16 @@ export class SyncMovimientosBatchUseCase {
                 switch (op.operation) {
                     case 'create': {
                         const animals = ((data.animals ?? []) as Record<string, any>[]).map((a) => this.resolveLocalRefs(a, localIdToServerId));
-                        const result = await this.registerMovementUseCase.execute({
-                            ...data,
-                            idRanch,
-                            animals,
-                            isSynced: true,
-                            localId: op.localId,
-                        } as RegisterMovementDto);
+                        const result = await this.registerMovementUseCase.execute(
+                            {
+                                ...data,
+                                idRanch,
+                                animals,
+                                isSynced: true,
+                                localId: op.localId,
+                            } as RegisterMovementDto,
+                            idUser,
+                        );
                         serverId = result.id;
 
                         for (const ma of result.animals) {
@@ -150,6 +155,7 @@ export class SyncMovimientosBatchUseCase {
 
     private async processMovementAnimals(
         operations: SyncMovementAnimalOperationDto[],
+        idUser: number,
         localIdToServerId: Map<string, number>,
         movementAnimalResults: SyncOperationResultDto[],
     ): Promise<void> {
@@ -170,7 +176,7 @@ export class SyncMovimientosBatchUseCase {
                 await this.confirmMovementAnimalUseCase.execute(
                     targetId,
                     { status: data.status, notes: data.notes, isSynced: true } as ConfirmMovementAnimalDto,
-                    data.idUser,
+                    idUser,
                 );
 
                 movementAnimalResults.push({ localId: op.localId, status: 'success', serverId: targetId });

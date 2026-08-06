@@ -68,6 +68,12 @@ export class RegisterRearingSelectionDto {
     @Max(10)
     geneticScore?: number;
 
+    @ApiProperty({ description: 'Edad del animal en días al momento de la selección', required: false, example: 210 })
+    @IsOptional()
+    @IsInt()
+    @IsPositive()
+    ageDays?: number;
+
     @ApiProperty({ required: false })
     @IsOptional()
     @IsString()

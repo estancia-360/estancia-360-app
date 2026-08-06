@@ -114,8 +114,9 @@ export class BreedingController {
     @ApiOperation({ summary: "Register an animal's declared reproductive history (pre-system data)" })
     async registerAnimalDeclaredHistory(
         @Body() dto: RegisterAnimalDeclaredHistoryDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ history: AnimalDeclaredHistoryDto }> {
-        return { history: await this.registerAnimalDeclaredHistoryUseCase.execute(dto) };
+        return { history: await this.registerAnimalDeclaredHistoryUseCase.execute(dto, idUser) };
     }
 
     // ── Update ──────────────────────────────────────────────────
@@ -126,8 +127,9 @@ export class BreedingController {
     async updateBreedingService(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateBreedingServiceDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ breedingService: BreedingServiceDto }> {
-        return { breedingService: await this.updateBreedingServiceUseCase.execute(id, dto) };
+        return { breedingService: await this.updateBreedingServiceUseCase.execute(id, dto, idUser) };
     }
 
     @Patch('gestation-diagnosis/:id')
@@ -136,8 +138,9 @@ export class BreedingController {
     async updateGestationDiagnosis(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateGestationDiagnosisDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ gestationDiagnosis: GestationDiagnosisDto }> {
-        return { gestationDiagnosis: await this.updateGestationDiagnosisUseCase.execute(id, dto) };
+        return { gestationDiagnosis: await this.updateGestationDiagnosisUseCase.execute(id, dto, idUser) };
     }
 
     @Patch('parturition/:id')
@@ -146,8 +149,9 @@ export class BreedingController {
     async updateParturition(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateParturitionDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ parturition: ParturitionDto }> {
-        return { parturition: await this.updateParturitionUseCase.execute(id, dto) };
+        return { parturition: await this.updateParturitionUseCase.execute(id, dto, idUser) };
     }
 
     @Patch('weaning/:id')
@@ -156,8 +160,9 @@ export class BreedingController {
     async updateWeaning(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateWeaningDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ weaning: WeaningDto }> {
-        return { weaning: await this.updateWeaningUseCase.execute(id, dto) };
+        return { weaning: await this.updateWeaningUseCase.execute(id, dto, idUser) };
     }
 
     @Patch('animal-declared-history/:id')
@@ -166,8 +171,9 @@ export class BreedingController {
     async updateAnimalDeclaredHistory(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateAnimalDeclaredHistoryDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ history: AnimalDeclaredHistoryDto }> {
-        return { history: await this.updateAnimalDeclaredHistoryUseCase.execute(id, dto) };
+        return { history: await this.updateAnimalDeclaredHistoryUseCase.execute(id, dto, idUser) };
     }
 
     // ── Delete ──────────────────────────────────────────────────
@@ -176,39 +182,39 @@ export class BreedingController {
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a breeding service (cascades to diagnosis → parturition)' })
-    async deleteBreedingService(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteBreedingServiceUseCase.execute(id);
+    async deleteBreedingService(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteBreedingServiceUseCase.execute(id, idUser);
     }
 
     @Delete('gestation-diagnosis/:id')
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a gestation diagnosis (cascades to its parturition, if any)' })
-    async deleteGestationDiagnosis(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteGestationDiagnosisUseCase.execute(id);
+    async deleteGestationDiagnosis(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteGestationDiagnosisUseCase.execute(id, idUser);
     }
 
     @Delete('parturition/:id')
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a parturition' })
-    async deleteParturition(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteParturitionUseCase.execute(id);
+    async deleteParturition(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteParturitionUseCase.execute(id, idUser);
     }
 
     @Delete('weaning/:id')
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a weaning (reverts the calf to ps=Cría, clears its lot)' })
-    async deleteWeaning(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteWeaningUseCase.execute(id);
+    async deleteWeaning(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteWeaningUseCase.execute(id, idUser);
     }
 
     @Delete('animal-declared-history/:id')
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: "Delete an animal's declared reproductive history" })
-    async deleteAnimalDeclaredHistory(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteAnimalDeclaredHistoryUseCase.execute(id);
+    async deleteAnimalDeclaredHistory(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteAnimalDeclaredHistoryUseCase.execute(id, idUser);
     }
 }

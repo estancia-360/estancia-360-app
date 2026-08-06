@@ -26,11 +26,11 @@ export class SyncRecriaBatchUseCase {
         private readonly deleteRearingSelectionUseCase: DeleteRearingSelectionUseCase,
     ) {}
 
-    async execute(dto: SyncRecriaDto): Promise<SyncRecriaResponseDto> {
+    async execute(dto: SyncRecriaDto, idUser: number): Promise<SyncRecriaResponseDto> {
         const localIdToServerId = new Map<string, number>();
 
-        const weightRecords = await this.processWeightRecords(dto.weightRecords ?? [], localIdToServerId);
-        const rearingSelections = await this.processRearingSelections(dto.rearingSelections ?? [], localIdToServerId);
+        const weightRecords = await this.processWeightRecords(dto.weightRecords ?? [], localIdToServerId, idUser);
+        const rearingSelections = await this.processRearingSelections(dto.rearingSelections ?? [], localIdToServerId, idUser);
 
         return {
             totalSucceeded: weightRecords.succeeded + rearingSelections.succeeded,
@@ -43,6 +43,7 @@ export class SyncRecriaBatchUseCase {
     private async processWeightRecords(
         operations: SyncWeightRecordOperationDto[],
         localIdToServerId: Map<string, number>,
+        idUser: number,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
 
@@ -56,19 +57,20 @@ export class SyncRecriaBatchUseCase {
                     case 'create': {
                         const result = await this.registerWeightRecordUseCase.execute(
                             { ...data, ...baseFields, localId: op.localId } as RegisterWeightRecordDto,
+                            idUser,
                         );
                         serverId = result.id;
                         break;
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
-                        await this.updateWeightRecordUseCase.execute(op.serverId, data as UpdateWeightRecordDto);
+                        await this.updateWeightRecordUseCase.execute(op.serverId, data as UpdateWeightRecordDto, idUser);
                         serverId = op.serverId;
                         break;
                     }
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for delete');
-                        await this.deleteWeightRecordUseCase.execute(op.serverId);
+                        await this.deleteWeightRecordUseCase.execute(op.serverId, idUser);
                         serverId = op.serverId;
                         break;
                     }
@@ -88,6 +90,7 @@ export class SyncRecriaBatchUseCase {
     private async processRearingSelections(
         operations: SyncRearingSelectionOperationDto[],
         localIdToServerId: Map<string, number>,
+        idUser: number,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
 
@@ -101,19 +104,20 @@ export class SyncRecriaBatchUseCase {
                     case 'create': {
                         const result = await this.registerRearingSelectionUseCase.execute(
                             { ...data, ...baseFields, localId: op.localId } as RegisterRearingSelectionDto,
+                            idUser,
                         );
                         serverId = result.id;
                         break;
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
-                        await this.updateRearingSelectionUseCase.execute(op.serverId, data as UpdateRearingSelectionDto);
+                        await this.updateRearingSelectionUseCase.execute(op.serverId, data as UpdateRearingSelectionDto, idUser);
                         serverId = op.serverId;
                         break;
                     }
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for delete');
-                        await this.deleteRearingSelectionUseCase.execute(op.serverId);
+                        await this.deleteRearingSelectionUseCase.execute(op.serverId, idUser);
                         serverId = op.serverId;
                         break;
                     }

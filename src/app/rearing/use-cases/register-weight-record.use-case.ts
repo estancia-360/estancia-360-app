@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { RegisterWeightRecordDto } from '../dto/inputs/register-weight-record.dto';
 import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/services/animal-events.service';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { WeightRecordsService } from 'src/modules/rearing-modules/weight-records/services/weight-records.service';
 import { WeightRecordDto } from 'src/modules/rearing-modules/weight-records/dto/weight-record.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
@@ -14,12 +15,14 @@ export class RegisterWeightRecordUseCase {
     constructor(
         private readonly dataSource: DataSource,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly weightRecordsService: WeightRecordsService,
     ) {}
 
-    async execute(dto: RegisterWeightRecordDto, idUser?: number): Promise<WeightRecordDto> {
+    async execute(dto: RegisterWeightRecordDto, idUser: number): Promise<WeightRecordDto> {
         const animal = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
+        await this.ranchUsersService.assertMember(idUser, animal.idRanch);
 
         // RN-02: an animal discharged (ps=Baja) cannot receive new events.
         if (animal.idProductiveStatus === PRODUCTIVE_STATUS_IDS.BAJA) {

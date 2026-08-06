@@ -22,6 +22,9 @@ export class Vaccination extends BaseCreatedUpdated {
     @Column({ name: 'notes', type: 'text', nullable: true })
     notes?: string;
 
+    @Column({ name: 'local_id', type: 'varchar', length: 100, nullable: true, unique: true })
+    localId?: string;
+
     @ManyToOne(() => AnimalEvent)
     @JoinColumn({ name: 'id_event' })
     event?: AnimalEvent;

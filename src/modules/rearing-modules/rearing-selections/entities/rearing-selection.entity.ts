@@ -35,6 +35,9 @@ export class RearingSelection extends BaseCreatedUpdated {
     @Column({ name: 'genetic_score', type: 'decimal', precision: 5, scale: 2, nullable: true })
     geneticScore?: number;
 
+    @Column({ name: 'age_days', type: 'int', nullable: true })
+    ageDays?: number;
+
     @Column({ name: 'notes', type: 'text', nullable: true })
     notes?: string;
 

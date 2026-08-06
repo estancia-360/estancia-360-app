@@ -23,12 +23,6 @@ import { UpdateTreatmentDto } from 'src/app/animal-health/dto/inputs/update-trea
 import { RegisterHealthIncidentDto } from 'src/app/animal-health/dto/inputs/register-health-incident.dto';
 import { UpdateHealthIncidentDto } from 'src/app/animal-health/dto/inputs/update-health-incident.dto';
 
-/**
- * vaccinations/treatments/health_incidents have no local_id column in the
- * real schema, so — unlike every other sync-eligible entity in the system —
- * retrying the same "create" here is NOT idempotent. Matches the live
- * behavior; fixing it would require a schema migration, out of scope here.
- */
 @Injectable()
 export class SyncSanidadBatchUseCase {
     private readonly logger = new Logger(SyncSanidadBatchUseCase.name);
@@ -45,12 +39,12 @@ export class SyncSanidadBatchUseCase {
         private readonly deleteHealthIncidentUseCase: DeleteHealthIncidentUseCase,
     ) {}
 
-    async execute(dto: SyncSanidadDto): Promise<SyncSanidadResponseDto> {
+    async execute(dto: SyncSanidadDto, idUser: number): Promise<SyncSanidadResponseDto> {
         const localIdToServerId = new Map<string, number>();
 
-        const vaccinations = await this.processVaccinations(dto.vaccinations ?? [], localIdToServerId);
-        const treatments = await this.processTreatments(dto.treatments ?? [], localIdToServerId);
-        const healthIncidents = await this.processHealthIncidents(dto.healthIncidents ?? [], localIdToServerId);
+        const vaccinations = await this.processVaccinations(dto.vaccinations ?? [], localIdToServerId, idUser);
+        const treatments = await this.processTreatments(dto.treatments ?? [], localIdToServerId, idUser);
+        const healthIncidents = await this.processHealthIncidents(dto.healthIncidents ?? [], localIdToServerId, idUser);
 
         return {
             totalSucceeded: vaccinations.succeeded + treatments.succeeded + healthIncidents.succeeded,
@@ -64,6 +58,7 @@ export class SyncSanidadBatchUseCase {
     private async processVaccinations(
         operations: SyncVaccinationOperationDto[],
         localIdToServerId: Map<string, number>,
+        idUser: number,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
 
@@ -75,20 +70,21 @@ export class SyncSanidadBatchUseCase {
                 switch (op.operation) {
                     case 'create': {
                         const result = await this.registerVaccinationUseCase.execute(
-                            { ...data, eventDate: op.happenedAt as unknown as Date, isSynced: true } as RegisterVaccinationDto,
+                            { ...data, eventDate: op.happenedAt as unknown as Date, isSynced: true, localId: op.localId } as RegisterVaccinationDto,
+                            idUser,
                         );
                         serverId = result.id;
                         break;
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
-                        await this.updateVaccinationUseCase.execute(op.serverId, data as UpdateVaccinationDto);
+                        await this.updateVaccinationUseCase.execute(op.serverId, data as UpdateVaccinationDto, idUser);
                         serverId = op.serverId;
                         break;
                     }
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for delete');
-                        await this.deleteVaccinationUseCase.execute(op.serverId);
+                        await this.deleteVaccinationUseCase.execute(op.serverId, idUser);
                         serverId = op.serverId;
                         break;
                     }
@@ -108,6 +104,7 @@ export class SyncSanidadBatchUseCase {
     private async processTreatments(
         operations: SyncTreatmentOperationDto[],
         localIdToServerId: Map<string, number>,
+        idUser: number,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
 
@@ -119,20 +116,21 @@ export class SyncSanidadBatchUseCase {
                 switch (op.operation) {
                     case 'create': {
                         const result = await this.registerTreatmentUseCase.execute(
-                            { ...data, eventDate: op.happenedAt as unknown as Date, isSynced: true } as RegisterTreatmentDto,
+                            { ...data, eventDate: op.happenedAt as unknown as Date, isSynced: true, localId: op.localId } as RegisterTreatmentDto,
+                            idUser,
                         );
                         serverId = result.id;
                         break;
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
-                        await this.updateTreatmentUseCase.execute(op.serverId, data as UpdateTreatmentDto);
+                        await this.updateTreatmentUseCase.execute(op.serverId, data as UpdateTreatmentDto, idUser);
                         serverId = op.serverId;
                         break;
                     }
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for delete');
-                        await this.deleteTreatmentUseCase.execute(op.serverId);
+                        await this.deleteTreatmentUseCase.execute(op.serverId, idUser);
                         serverId = op.serverId;
                         break;
                     }
@@ -152,6 +150,7 @@ export class SyncSanidadBatchUseCase {
     private async processHealthIncidents(
         operations: SyncHealthIncidentOperationDto[],
         localIdToServerId: Map<string, number>,
+        idUser: number,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
 
@@ -163,20 +162,21 @@ export class SyncSanidadBatchUseCase {
                 switch (op.operation) {
                     case 'create': {
                         const result = await this.registerHealthIncidentUseCase.execute(
-                            { ...data, eventDate: op.happenedAt as unknown as Date, isSynced: true } as RegisterHealthIncidentDto,
+                            { ...data, eventDate: op.happenedAt as unknown as Date, isSynced: true, localId: op.localId } as RegisterHealthIncidentDto,
+                            idUser,
                         );
                         serverId = result.id;
                         break;
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
-                        await this.updateHealthIncidentUseCase.execute(op.serverId, data as UpdateHealthIncidentDto);
+                        await this.updateHealthIncidentUseCase.execute(op.serverId, data as UpdateHealthIncidentDto, idUser);
                         serverId = op.serverId;
                         break;
                     }
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for delete');
-                        await this.deleteHealthIncidentUseCase.execute(op.serverId);
+                        await this.deleteHealthIncidentUseCase.execute(op.serverId, idUser);
                         serverId = op.serverId;
                         break;
                     }

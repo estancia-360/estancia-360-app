@@ -109,6 +109,39 @@ export class GestationDiagnosesService {
         );
     }
 
+    /** Used by app/dashboard — same "pregnant without a linked parturition" rule as findActivePregnancy, ranch-scoped. */
+    async countActivePregnanciesByRanch(idRanch: number, manager?: EntityManager): Promise<number> {
+        const repo = manager?.getRepository(GestationDiagnosis) ?? this.rawRepo;
+        return await repo
+            .createQueryBuilder('gd')
+            .innerJoin('gd.service', 'bs')
+            .innerJoin('bs.event', 'ae')
+            .innerJoin('ae.animal', 'ra')
+            .leftJoin('parturitions', 'p', 'p.id_diagnosis = gd.id_diagnosis')
+            .where('ra.idRanch = :idRanch', { idRanch })
+            .andWhere('gd.result = :result', { result: 'pregnant' })
+            .andWhere('p.id_parturition IS NULL')
+            .getCount();
+    }
+
+    /** Used by app/dashboard for the diagnosis-results chart (pregnant vs empty, recent window). */
+    async countResultsByRanch(idRanch: number, since: Date, manager?: EntityManager): Promise<{ pregnant: number; empty: number }> {
+        const repo = manager?.getRepository(GestationDiagnosis) ?? this.rawRepo;
+        const rows = await repo
+            .createQueryBuilder('gd')
+            .innerJoin('gd.event', 'ae')
+            .innerJoin('ae.animal', 'ra')
+            .select('gd.result', 'result')
+            .addSelect('COUNT(*)', 'count')
+            .where('ra.idRanch = :idRanch', { idRanch })
+            .andWhere('ae.eventDate >= :since', { since })
+            .groupBy('gd.result')
+            .getRawMany<{ result: string; count: string }>();
+        const pregnant = rows.find((r) => r.result === 'pregnant');
+        const empty = rows.find((r) => r.result === 'empty');
+        return { pregnant: pregnant ? Number(pregnant.count) : 0, empty: empty ? Number(empty.count) : 0 };
+    }
+
     async findAllByAnimal(idRanchAnimal: number, pagination: PaginationParamsDto): Promise<PaginationResponseDto<GestationDiagnosisDto>> {
         return await this.repo.findPaginated({
             dto: GestationDiagnosisDto,

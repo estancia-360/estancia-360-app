@@ -5,6 +5,7 @@ import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/
 import { GestationDiagnosesService } from 'src/modules/breeding-modules/gestation-diagnoses/services/gestation-diagnoses.service';
 import { BreedingServicesService } from 'src/modules/breeding-modules/breeding-services/services/breeding-services.service';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { GestationDiagnosisDto } from 'src/modules/breeding-modules/gestation-diagnoses/dto/gestation-diagnosis.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 import { BreedingServiceDto } from 'src/modules/breeding-modules/breeding-services/dto/breeding-service.dto';
@@ -17,6 +18,7 @@ export class RegisterGestationDiagnosisUseCase {
     constructor(
         private readonly dataSource: DataSource,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly breedingServicesService: BreedingServicesService,
         private readonly gestationDiagnosesService: GestationDiagnosesService,
@@ -28,9 +30,10 @@ export class RegisterGestationDiagnosisUseCase {
      * diagnósticos por servicio están permitidos a propósito (el veterinario repite
      * en campo).
      */
-    async execute(dto: RegisterGestationDiagnosisDto, idUser?: number): Promise<GestationDiagnosisDto> {
+    async execute(dto: RegisterGestationDiagnosisDto, idUser: number): Promise<GestationDiagnosisDto> {
         const female = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
         if (female.sex !== 'F') throw new RanchAnimalNotFoundException(dto.idRanchAnimal);
+        await this.ranchUsersService.assertMember(idUser, female.idRanch);
 
         const service = await this.breedingServicesService.findOneById(BreedingServiceDto, dto.idService);
         if (service.event.idRanchAnimal !== dto.idRanchAnimal) {

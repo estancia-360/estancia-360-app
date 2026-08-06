@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { RegisterVaccinationDto } from '../dto/inputs/register-vaccination.dto';
 import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/services/animal-events.service';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { VaccinationsService } from 'src/modules/health-modules/vaccinations/services/vaccinations.service';
 import { VaccinationDto } from 'src/modules/health-modules/vaccinations/dto/vaccination.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
@@ -13,12 +14,14 @@ export class RegisterVaccinationUseCase {
     constructor(
         private readonly dataSource: DataSource,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly vaccinationsService: VaccinationsService,
     ) {}
 
-    async execute(dto: RegisterVaccinationDto, idUser?: number): Promise<VaccinationDto> {
+    async execute(dto: RegisterVaccinationDto, idUser: number): Promise<VaccinationDto> {
         const animal = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
+        await this.ranchUsersService.assertMember(idUser, animal.idRanch);
 
         // RN-02: a discharged animal cannot receive new events.
         if (animal.idProductiveStatus === PRODUCTIVE_STATUS_IDS.BAJA) {
@@ -42,7 +45,14 @@ export class RegisterVaccinationUseCase {
             );
 
             const vaccination = await this.vaccinationsService.create(
-                { idEvent: event.id, vaccineName: dto.vaccineName, dose: dto.dose, responsible: dto.responsible, notes: dto.notes },
+                {
+                    idEvent: event.id,
+                    vaccineName: dto.vaccineName,
+                    dose: dto.dose,
+                    responsible: dto.responsible,
+                    notes: dto.notes,
+                    localId: dto.localId,
+                },
                 manager,
             );
 

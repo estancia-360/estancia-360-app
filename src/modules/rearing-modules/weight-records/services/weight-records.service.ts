@@ -97,6 +97,34 @@ export class WeightRecordsService {
         );
     }
 
+    /**
+     * Used by app/dashboard for the Recría/Engorde weight+weighings trend charts. Filters by
+     * the animal's CURRENT productive status (same simplification as
+     * RanchAnimalsService.avgWeightByProductiveStatus — weight_records doesn't snapshot the
+     * animal's stage at weighing time).
+     */
+    async monthlyStatsByProductiveStatus(
+        idRanch: number,
+        idProductiveStatus: number,
+        since: Date,
+        manager?: EntityManager,
+    ): Promise<{ month: string; count: number; avgWeight: number | null }[]> {
+        const repo = manager?.getRepository(WeightRecord) ?? this.rawRepo;
+        const rows = await repo
+            .createQueryBuilder('wr')
+            .innerJoin('wr.event', 'ae')
+            .innerJoin('ae.animal', 'ra')
+            .select("to_char(date_trunc('month', ae.eventDate), 'YYYY-MM')", 'month')
+            .addSelect('COUNT(*)', 'count')
+            .addSelect('AVG(wr.weight)', 'avgWeight')
+            .where('ra.idRanch = :idRanch', { idRanch })
+            .andWhere('ra.idProductiveStatus = :idProductiveStatus', { idProductiveStatus })
+            .andWhere('ae.eventDate >= :since', { since })
+            .groupBy("date_trunc('month', ae.eventDate)")
+            .getRawMany<{ month: string; count: string; avgWeight: string | null }>();
+        return rows.map((r) => ({ month: r.month, count: Number(r.count), avgWeight: r.avgWeight ? Number(r.avgWeight) : null }));
+    }
+
     async findAllByAnimal(idRanchAnimal: number, pagination: PaginationParamsDto): Promise<PaginationResponseDto<WeightRecordDto>> {
         return await this.repo.findPaginated({
             dto: WeightRecordDto,

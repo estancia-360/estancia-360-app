@@ -93,11 +93,24 @@ export class UsersService {
         return result!;
     }
 
-    /** Usado únicamente por PUT /auth/change-password — ver nota de deuda técnica en AuthService. */
-    async updatePasswordByEmail(email: string, newPlainPassword: string): Promise<UserDto> {
-        const user = await this._findOne(UserDto, { email, isDeleted: false }, true);
-        await this.rawRepo.update({ id: user!.id }, { password: await hashPassword(newPlainPassword) });
-        return (await this.repo.findOne({ dto: UserDto, where: { id: user!.id } }))!;
+    /** Usado únicamente por PUT /auth/change-password. */
+    async updatePasswordById(id: number, newPlainPassword: string): Promise<UserDto> {
+        await this.rawRepo.update({ id }, { password: await hashPassword(newPlainPassword) });
+        return (await this.repo.findOne({ dto: UserDto, where: { id } }))!;
+    }
+
+    /** Usado únicamente por POST /auth/forgot-password. Sobrescribe cualquier código pendiente anterior. */
+    async setResetCode(id: number, hashedCode: string, expiresAt: Date): Promise<void> {
+        await this.rawRepo.update({ id }, { resetCodeHash: hashedCode, resetCodeExpiresAt: expiresAt });
+    }
+
+    /** Usado únicamente por POST /auth/reset-password. Aplica la nueva contraseña y limpia el código usado. */
+    async resetPasswordWithCode(id: number, newPlainPassword: string): Promise<UserDto> {
+        await this.rawRepo.update(
+            { id },
+            { password: await hashPassword(newPlainPassword), resetCodeHash: null, resetCodeExpiresAt: null },
+        );
+        return (await this.repo.findOne({ dto: UserDto, where: { id } }))!;
     }
 
     // ── Private implementation ────────────────────────────────────────────────

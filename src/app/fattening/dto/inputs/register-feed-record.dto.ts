@@ -7,12 +7,6 @@ export class RegisterFeedRecordDto {
     @IsPositive()
     idLot: number;
 
-    @ApiProperty({ description: 'ID of the user registering (optional, taken from token if omitted)', required: false, example: 1 })
-    @IsOptional()
-    @IsInt()
-    @IsPositive()
-    idUser?: number;
-
     @ApiProperty({ required: false })
     @IsOptional()
     @IsString()

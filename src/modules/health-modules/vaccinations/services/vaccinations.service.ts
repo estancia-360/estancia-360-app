@@ -19,16 +19,21 @@ export class VaccinationsService {
     }
 
     async create(
-        data: { idEvent: number; vaccineName: string; dose?: string; responsible?: string; notes?: string },
+        data: { idEvent: number; vaccineName: string; dose?: string; responsible?: string; notes?: string; localId?: string },
         manager?: EntityManager,
     ): Promise<Vaccination> {
         const repo = manager?.getRepository(Vaccination) ?? this.rawRepo;
+        if (data.localId) {
+            const existing = await repo.findOne({ where: { localId: data.localId } });
+            if (existing) return existing;
+        }
         const vaccination = repo.create();
         vaccination.idEvent = data.idEvent;
         vaccination.vaccineName = data.vaccineName;
         if (data.dose !== undefined) vaccination.dose = data.dose;
         if (data.responsible !== undefined) vaccination.responsible = data.responsible;
         if (data.notes !== undefined) vaccination.notes = data.notes;
+        if (data.localId !== undefined) vaccination.localId = data.localId;
         return await repo.save(vaccination);
     }
 

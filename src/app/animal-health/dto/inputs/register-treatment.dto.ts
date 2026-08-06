@@ -53,6 +53,11 @@ export class RegisterTreatmentDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
+    @IsString()
+    localId?: string;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
     @IsBoolean()
     isSynced?: boolean;
 }

@@ -89,6 +89,22 @@ export class FeedRecordsService {
         await repo.delete({ id });
     }
 
+    /** Used by app/dashboard for the Engorde feed-cost trend chart. feed_records has no id_ranch, join through lot. */
+    async costByMonthByRanch(idRanch: number, since: Date, manager?: EntityManager): Promise<{ month: string; cost: number }[]> {
+        const repo = manager?.getRepository(FeedRecord) ?? this.rawRepo;
+        const rows = await repo
+            .createQueryBuilder('fr')
+            .innerJoin('fr.lot', 'rl')
+            .select("to_char(date_trunc('month', fr.feedDate), 'YYYY-MM')", 'month')
+            .addSelect('COALESCE(SUM(fr.cost), 0)', 'cost')
+            .where('rl.idRanch = :idRanch', { idRanch })
+            .andWhere("rl.lotType = 'engorde'")
+            .andWhere('fr.feedDate >= :since', { since })
+            .groupBy("date_trunc('month', fr.feedDate)")
+            .getRawMany<{ month: string; cost: string }>();
+        return rows.map((r) => ({ month: r.month, cost: Number(r.cost) }));
+    }
+
     async findAllByLot(idLot: number, pagination: PaginationParamsDto): Promise<PaginationResponseDto<FeedRecordDto>> {
         return await this.repo.findPaginated({
             dto: FeedRecordDto,

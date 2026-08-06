@@ -27,6 +27,7 @@ export class RearingSelectionsService {
             weightAtSelection?: number;
             bodyCondition?: number;
             geneticScore?: number;
+            ageDays?: number;
         },
         manager?: EntityManager,
     ): Promise<RearingSelection> {
@@ -43,6 +44,7 @@ export class RearingSelectionsService {
         if (data.weightAtSelection !== undefined) selection.weightAtSelection = data.weightAtSelection;
         if (data.bodyCondition !== undefined) selection.bodyCondition = data.bodyCondition;
         if (data.geneticScore !== undefined) selection.geneticScore = data.geneticScore;
+        if (data.ageDays !== undefined) selection.ageDays = data.ageDays;
         return await repo.save(selection);
     }
 
@@ -62,7 +64,7 @@ export class RearingSelectionsService {
 
     async update(
         id: number,
-        data: { weightAtSelection?: number; bodyCondition?: number; geneticScore?: number },
+        data: { weightAtSelection?: number; bodyCondition?: number; geneticScore?: number; ageDays?: number },
         manager?: EntityManager,
     ): Promise<RearingSelection> {
         const repo = manager?.getRepository(RearingSelection) ?? this.rawRepo;
@@ -71,12 +73,36 @@ export class RearingSelectionsService {
         if (data.weightAtSelection !== undefined) record.weightAtSelection = data.weightAtSelection;
         if (data.bodyCondition !== undefined) record.bodyCondition = data.bodyCondition;
         if (data.geneticScore !== undefined) record.geneticScore = data.geneticScore;
+        if (data.ageDays !== undefined) record.ageDays = data.ageDays;
         return await repo.save(record);
     }
 
     async deleteById(id: number, manager?: EntityManager): Promise<void> {
         const repo = manager?.getRepository(RearingSelection) ?? this.rawRepo;
         await repo.delete({ id });
+    }
+
+    /** Used by app/dashboard for the selection-destination chart. Historical, not windowed — "where they ended up". */
+    async countByDestinationByRanch(
+        idRanch: number,
+        manager?: EntityManager,
+    ): Promise<{ replacement: number; fattening: number; sale: number }> {
+        const repo = manager?.getRepository(RearingSelection) ?? this.rawRepo;
+        const rows = await repo
+            .createQueryBuilder('rs')
+            .innerJoin('rs.event', 'ae')
+            .innerJoin('ae.animal', 'ra')
+            .select('rs.destination', 'destination')
+            .addSelect('COUNT(*)', 'count')
+            .where('ra.idRanch = :idRanch', { idRanch })
+            .groupBy('rs.destination')
+            .getRawMany<{ destination: RearingDestinationEnum; count: string }>();
+        const find = (d: RearingDestinationEnum) => rows.find((r) => r.destination === d);
+        return {
+            replacement: Number(find(RearingDestinationEnum.REPLACEMENT)?.count ?? 0),
+            fattening: Number(find(RearingDestinationEnum.FATTENING)?.count ?? 0),
+            sale: Number(find(RearingDestinationEnum.SALE)?.count ?? 0),
+        };
     }
 
     async findAllByAnimal(idRanchAnimal: number, pagination: PaginationParamsDto): Promise<PaginationResponseDto<RearingSelectionDto>> {

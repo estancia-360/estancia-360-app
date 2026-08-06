@@ -5,6 +5,7 @@ import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/
 import { ParturitionsService } from 'src/modules/breeding-modules/parturitions/services/parturitions.service';
 import { GestationDiagnosesService } from 'src/modules/breeding-modules/gestation-diagnoses/services/gestation-diagnoses.service';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { ParturitionDto } from 'src/modules/breeding-modules/parturitions/dto/parturition.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 import { GestationDiagnosisDto } from 'src/modules/breeding-modules/gestation-diagnoses/dto/gestation-diagnosis.dto';
@@ -19,15 +20,17 @@ export class RegisterParturitionUseCase {
     constructor(
         private readonly dataSource: DataSource,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly gestationDiagnosesService: GestationDiagnosesService,
         private readonly parturitionsService: ParturitionsService,
         private readonly ranchSubscriptionsService: RanchSubscriptionsService,
     ) {}
 
-    async execute(dto: RegisterParturitionDto, idUser?: number): Promise<ParturitionDto> {
+    async execute(dto: RegisterParturitionDto, idUser: number): Promise<ParturitionDto> {
         const mother = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
         if (mother.sex !== 'F') throw new RanchAnimalNotFoundException(dto.idRanchAnimal);
+        await this.ranchUsersService.assertMember(idUser, mother.idRanch);
 
         const diagnosis = await this.gestationDiagnosesService.findOneById(GestationDiagnosisDto, dto.idDiagnosis);
         if (diagnosis.event.idRanchAnimal !== dto.idRanchAnimal) {
@@ -51,7 +54,10 @@ export class RegisterParturitionUseCase {
             });
         }
 
-        if (dto.criaStatus === CriaStatusEnum.ALIVE && dto.criaData) {
+        // Capacidad solo se chequea si ESTE llamado va a crear un animal nuevo. Cuando viene
+        // dto.idCria (caso offline: el mobile ya sincronizó la cría como su propio alta en
+        // ranch_animals antes de que este evento llegue), la capacidad ya se validó ahí.
+        if (dto.criaStatus === CriaStatusEnum.ALIVE && dto.criaData && !dto.idCria) {
             const currentActiveCount = await this.ranchAnimalsService.countActiveByRanch(mother.idRanch);
             await this.ranchSubscriptionsService.assertCapacityAvailable(mother.idRanch, currentActiveCount, 1);
         }
@@ -69,8 +75,8 @@ export class RegisterParturitionUseCase {
                 manager,
             );
 
-            let idCria: number | undefined;
-            if (dto.criaStatus === CriaStatusEnum.ALIVE && dto.criaData) {
+            let idCria: number | undefined = dto.idCria;
+            if (dto.criaStatus === CriaStatusEnum.ALIVE && dto.criaData && !idCria) {
                 const cria = await this.ranchAnimalsService.createCria(
                     {
                         idRanch: mother.idRanch,

@@ -88,6 +88,34 @@ export class ParturitionsService {
         return (await repo.findOne({ where: { idDiagnosis } })) ?? null;
     }
 
+    /** Used by app/dashboard to count recent births (e.g. last 30 days). */
+    async countRecentByRanch(idRanch: number, since: Date, manager?: EntityManager): Promise<number> {
+        const repo = manager?.getRepository(Parturition) ?? this.rawRepo;
+        return await repo
+            .createQueryBuilder('p')
+            .innerJoin('p.event', 'ae')
+            .innerJoin('ae.animal', 'ra')
+            .where('ra.idRanch = :idRanch', { idRanch })
+            .andWhere('ae.eventDate >= :since', { since })
+            .getCount();
+    }
+
+    /** Used by app/dashboard for the births trend chart. Postgres omits empty months — caller backfills zeros. */
+    async countByMonthByRanch(idRanch: number, since: Date, manager?: EntityManager): Promise<{ month: string; count: number }[]> {
+        const repo = manager?.getRepository(Parturition) ?? this.rawRepo;
+        const rows = await repo
+            .createQueryBuilder('p')
+            .innerJoin('p.event', 'ae')
+            .innerJoin('ae.animal', 'ra')
+            .select("to_char(date_trunc('month', ae.eventDate), 'YYYY-MM')", 'month')
+            .addSelect('COUNT(*)', 'count')
+            .where('ra.idRanch = :idRanch', { idRanch })
+            .andWhere('ae.eventDate >= :since', { since })
+            .groupBy("date_trunc('month', ae.eventDate)")
+            .getRawMany<{ month: string; count: string }>();
+        return rows.map((r) => ({ month: r.month, count: Number(r.count) }));
+    }
+
     async findAllByAnimal(idRanchAnimal: number, pagination: PaginationParamsDto): Promise<PaginationResponseDto<ParturitionDto>> {
         return await this.repo.findPaginated({
             dto: ParturitionDto,

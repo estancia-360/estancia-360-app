@@ -19,16 +19,21 @@ export class HealthIncidentsService {
     }
 
     async create(
-        data: { idEvent: number; incidentType: IncidentTypeEnum; description?: string; resolvedAt?: Date; notes?: string },
+        data: { idEvent: number; incidentType: IncidentTypeEnum; description?: string; resolvedAt?: Date; notes?: string; localId?: string },
         manager?: EntityManager,
     ): Promise<HealthIncident> {
         const repo = manager?.getRepository(HealthIncident) ?? this.rawRepo;
+        if (data.localId) {
+            const existing = await repo.findOne({ where: { localId: data.localId } });
+            if (existing) return existing;
+        }
         const incident = repo.create();
         incident.idEvent = data.idEvent;
         incident.incidentType = data.incidentType;
         if (data.description !== undefined) incident.description = data.description;
         if (data.resolvedAt !== undefined) incident.resolvedAt = data.resolvedAt;
         if (data.notes !== undefined) incident.notes = data.notes;
+        if (data.localId !== undefined) incident.localId = data.localId;
         return await repo.save(incident);
     }
 

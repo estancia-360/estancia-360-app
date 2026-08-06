@@ -34,6 +34,11 @@ export class RegisterFatteningEntryDto {
 
     @ApiProperty({ required: false })
     @IsOptional()
+    @IsString()
+    localId?: string;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
     @IsBoolean()
     isSynced?: boolean;
 }

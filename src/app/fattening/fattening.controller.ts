@@ -50,16 +50,17 @@ export class FatteningController {
     async updateFatteningEntry(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateFatteningEntryDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ fatteningEntry: FatteningEntryDto }> {
-        return { fatteningEntry: await this.updateFatteningEntryUseCase.execute(id, dto) };
+        return { fatteningEntry: await this.updateFatteningEntryUseCase.execute(id, dto, idUser) };
     }
 
     @Delete('entry/:id')
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a fattening entry (reverts the animal to ps=2, clears its lot)' })
-    async deleteFatteningEntry(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteFatteningEntryUseCase.execute(id);
+    async deleteFatteningEntry(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteFatteningEntryUseCase.execute(id, idUser);
     }
 
     // ── Feed record ─────────────────────────────────────────────
@@ -81,15 +82,16 @@ export class FatteningController {
     async updateFeedRecord(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateFeedRecordDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ feedRecord: FeedRecordDto }> {
-        return { feedRecord: await this.updateFeedRecordUseCase.execute(id, dto) };
+        return { feedRecord: await this.updateFeedRecordUseCase.execute(id, dto, idUser) };
     }
 
     @Delete('feed-record/:id')
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a feed record' })
-    async deleteFeedRecord(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteFeedRecordUseCase.execute(id);
+    async deleteFeedRecord(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteFeedRecordUseCase.execute(id, idUser);
     }
 }

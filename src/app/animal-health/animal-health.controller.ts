@@ -64,16 +64,17 @@ export class AnimalHealthController {
     async updateVaccination(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateVaccinationDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ vaccination: VaccinationDto }> {
-        return { vaccination: await this.updateVaccinationUseCase.execute(id, dto) };
+        return { vaccination: await this.updateVaccinationUseCase.execute(id, dto, idUser) };
     }
 
     @Delete('vaccination/:id')
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a vaccination' })
-    async deleteVaccination(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteVaccinationUseCase.execute(id);
+    async deleteVaccination(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteVaccinationUseCase.execute(id, idUser);
     }
 
     // ── Treatments ──────────────────────────────────────────────
@@ -99,16 +100,17 @@ export class AnimalHealthController {
     async updateTreatment(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateTreatmentDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ treatment: TreatmentDto }> {
-        return { treatment: await this.updateTreatmentUseCase.execute(id, dto) };
+        return { treatment: await this.updateTreatmentUseCase.execute(id, dto, idUser) };
     }
 
     @Delete('treatment/:id')
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a treatment' })
-    async deleteTreatment(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteTreatmentUseCase.execute(id);
+    async deleteTreatment(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteTreatmentUseCase.execute(id, idUser);
     }
 
     // ── Health incidents ────────────────────────────────────────
@@ -133,15 +135,16 @@ export class AnimalHealthController {
     async updateHealthIncident(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateHealthIncidentDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ healthIncident: HealthIncidentDto }> {
-        return { healthIncident: await this.updateHealthIncidentUseCase.execute(id, dto) };
+        return { healthIncident: await this.updateHealthIncidentUseCase.execute(id, dto, idUser) };
     }
 
     @Delete('health-incident/:id')
     @UserUp()
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete a health incident (reverts an unresolved quarantine to Activo)' })
-    async deleteHealthIncident(@Param('id', ParseIntPipe) id: number): Promise<void> {
-        return this.deleteHealthIncidentUseCase.execute(id);
+    async deleteHealthIncident(@Param('id', ParseIntPipe) id: number, @CurrentUser('id') idUser: number): Promise<void> {
+        return this.deleteHealthIncidentUseCase.execute(id, idUser);
     }
 }

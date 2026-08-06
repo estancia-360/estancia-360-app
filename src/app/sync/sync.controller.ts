@@ -71,8 +71,9 @@ Omit \`since\` for a full bootstrap. Pass \`since=<serverTime from the last down
         description: 'Batch of operations recorded offline. Order: ranchPastures → ranchLots → ranchAnimals → breedingServices → gestationDiagnoses → parturitions → weanings → animalDeclaredHistories. Each operation fails independently — one failure does not abort the batch. Use localRef_<field> to reference records created earlier in the same batch.',
     })
     @ApiOkResponse({ type: SyncCriaResponseDto })
-    async syncCria(@Body() dto: SyncCriaDto): Promise<SyncCriaResponseDto> {
-        return await this.syncService.syncCria(dto);
+    async syncCria(@Body() dto: SyncCriaDto, @CurrentUser('id') idUser: number): Promise<SyncCriaResponseDto> {
+        await this.syncDownloadService.assertRanchAccess(idUser, dto.idRanch);
+        return await this.syncService.syncCria(dto, idUser);
     }
 
     @Post('recria')
@@ -83,8 +84,9 @@ Omit \`since\` for a full bootstrap. Pass \`since=<serverTime from the last down
         description: 'Order: weightRecords → rearingSelections.',
     })
     @ApiOkResponse({ type: SyncRecriaResponseDto })
-    async syncRecria(@Body() dto: SyncRecriaDto): Promise<SyncRecriaResponseDto> {
-        return await this.syncService.syncRecria(dto);
+    async syncRecria(@Body() dto: SyncRecriaDto, @CurrentUser('id') idUser: number): Promise<SyncRecriaResponseDto> {
+        await this.syncDownloadService.assertRanchAccess(idUser, dto.idRanch);
+        return await this.syncService.syncRecria(dto, idUser);
     }
 
     @Post('engorde')
@@ -95,8 +97,9 @@ Omit \`since\` for a full bootstrap. Pass \`since=<serverTime from the last down
         description: 'Order: weightRecords → feedRecords.',
     })
     @ApiOkResponse({ type: SyncEngordeResponseDto })
-    async syncEngorde(@Body() dto: SyncEngordeDto): Promise<SyncEngordeResponseDto> {
-        return await this.syncService.syncEngorde(dto);
+    async syncEngorde(@Body() dto: SyncEngordeDto, @CurrentUser('id') idUser: number): Promise<SyncEngordeResponseDto> {
+        await this.syncDownloadService.assertRanchAccess(idUser, dto.idRanch);
+        return await this.syncService.syncEngorde(dto, idUser);
     }
 
     @Post('sanidad')
@@ -107,8 +110,9 @@ Omit \`since\` for a full bootstrap. Pass \`since=<serverTime from the last down
         description: 'Order: vaccinations → treatments → healthIncidents. Applies at any productive stage, regardless of the ranch\'s enabled rubros.',
     })
     @ApiOkResponse({ type: SyncSanidadResponseDto })
-    async syncSanidad(@Body() dto: SyncSanidadDto): Promise<SyncSanidadResponseDto> {
-        return await this.syncService.syncSanidad(dto);
+    async syncSanidad(@Body() dto: SyncSanidadDto, @CurrentUser('id') idUser: number): Promise<SyncSanidadResponseDto> {
+        await this.syncDownloadService.assertRanchAccess(idUser, dto.idRanch);
+        return await this.syncService.syncSanidad(dto, idUser);
     }
 
     @Post('movimientos')
@@ -119,7 +123,8 @@ Omit \`since\` for a full bootstrap. Pass \`since=<serverTime from the last down
         description: 'Order: animalExits → movements → movementAnimals. The movementAnimals section of the response includes the localId→serverId mapping of animals nested inside each created movement — save those IDs to confirm/reject in later syncs.',
     })
     @ApiOkResponse({ type: SyncMovimientosResponseDto })
-    async syncMovimientos(@Body() dto: SyncMovimientosDto): Promise<SyncMovimientosResponseDto> {
-        return await this.syncService.syncMovimientos(dto);
+    async syncMovimientos(@Body() dto: SyncMovimientosDto, @CurrentUser('id') idUser: number): Promise<SyncMovimientosResponseDto> {
+        await this.syncDownloadService.assertRanchAccess(idUser, dto.idRanch);
+        return await this.syncService.syncMovimientos(dto, idUser);
     }
 }

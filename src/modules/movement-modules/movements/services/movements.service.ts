@@ -81,6 +81,65 @@ export class MovementsService {
         await repo.update({ id }, { status, updatedAt: new Date() });
     }
 
+    /** Used by app/dashboard to alert about sales awaiting confirmation. */
+    async countPendingSales(idRanch: number, manager?: EntityManager): Promise<number> {
+        const repo = manager?.getRepository(Movement) ?? this.rawRepo;
+        return await repo.count({
+            where: { idRanch, movementType: MovementTypeEnum.SALE, status: MovementStatusEnum.PENDING },
+        });
+    }
+
+    /** Used by app/dashboard for the "Movimientos del mes" section. */
+    async getMonthlyStats(
+        idRanch: number,
+        monthStart: Date,
+        monthEnd: Date,
+        manager?: EntityManager,
+    ): Promise<{ salesCount: number; salesAmount: number; purchasesCount: number; purchasesAmount: number }> {
+        const repo = manager?.getRepository(Movement) ?? this.rawRepo;
+        const rows = await repo
+            .createQueryBuilder('m')
+            .select('m.movementType', 'movementType')
+            .addSelect('COUNT(*)', 'count')
+            .addSelect('COALESCE(SUM(m.totalPrice), 0)', 'amount')
+            .where('m.idRanch = :idRanch', { idRanch })
+            .andWhere('m.movementDate BETWEEN :monthStart AND :monthEnd', { monthStart, monthEnd })
+            .andWhere('m.movementType IN (:...types)', { types: [MovementTypeEnum.SALE, MovementTypeEnum.PURCHASE] })
+            .groupBy('m.movementType')
+            .getRawMany<{ movementType: string; count: string; amount: string }>();
+
+        const sales = rows.find((r) => r.movementType === MovementTypeEnum.SALE);
+        const purchases = rows.find((r) => r.movementType === MovementTypeEnum.PURCHASE);
+        return {
+            salesCount: sales ? Number(sales.count) : 0,
+            salesAmount: sales ? Number(sales.amount) : 0,
+            purchasesCount: purchases ? Number(purchases.count) : 0,
+            purchasesAmount: purchases ? Number(purchases.amount) : 0,
+        };
+    }
+
+    /** Used by app/dashboard for the movements trend chart. Postgres omits empty months — caller backfills zeros. */
+    async getMonthlyTrend(
+        idRanch: number,
+        since: Date,
+        manager?: EntityManager,
+    ): Promise<{ month: string; movementType: MovementTypeEnum; count: number; amount: number }[]> {
+        const repo = manager?.getRepository(Movement) ?? this.rawRepo;
+        const rows = await repo
+            .createQueryBuilder('m')
+            .select("to_char(date_trunc('month', m.movementDate), 'YYYY-MM')", 'month')
+            .addSelect('m.movementType', 'movementType')
+            .addSelect('COUNT(*)', 'count')
+            .addSelect('COALESCE(SUM(m.totalPrice), 0)', 'amount')
+            .where('m.idRanch = :idRanch', { idRanch })
+            .andWhere('m.movementDate >= :since', { since })
+            .andWhere('m.movementType IN (:...types)', { types: [MovementTypeEnum.SALE, MovementTypeEnum.PURCHASE] })
+            .groupBy("date_trunc('month', m.movementDate)")
+            .addGroupBy('m.movementType')
+            .getRawMany<{ month: string; movementType: MovementTypeEnum; count: string; amount: string }>();
+        return rows.map((r) => ({ month: r.month, movementType: r.movementType, count: Number(r.count), amount: Number(r.amount) }));
+    }
+
     async findAllByRanch(
         idRanch: number,
         pagination: PaginationParamsDto,

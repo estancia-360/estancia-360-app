@@ -8,6 +8,7 @@ import { FatteningEntriesModule } from 'src/modules/fattening-modules/fattening-
 import { FeedRecordsModule } from 'src/modules/fattening-modules/feed-records/feed-records.module';
 import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deletions.module';
 import { RanchesModule } from 'src/modules/ranch-management/ranches/ranches.module';
+import { RanchUsersModule } from 'src/modules/ranch-management/ranch-users/ranch-users.module';
 
 import { RegisterFatteningEntryUseCase } from './use-cases/register-fattening-entry.use-case';
 import { UpdateFatteningEntryUseCase } from './use-cases/update-fattening-entry.use-case';
@@ -25,6 +26,7 @@ import { DeleteFeedRecordUseCase } from './use-cases/delete-feed-record.use-case
         FeedRecordsModule,
         SyncDeletionsModule,
         RanchesModule,
+        RanchUsersModule,
     ],
     controllers: [FatteningController],
     providers: [

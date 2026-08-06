@@ -6,6 +6,7 @@ import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/
 import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
 import { WeaningDto } from 'src/modules/breeding-modules/weanings/dto/weaning.dto';
 import { SyncDeletionsService } from 'src/modules/core/sync-deletions/services/sync-deletions.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 
 @Injectable()
@@ -15,15 +16,17 @@ export class DeleteWeaningUseCase {
         private readonly weaningsService: WeaningsService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly syncDeletionsService: SyncDeletionsService,
     ) {}
 
-    async execute(id: number): Promise<void> {
+    async execute(id: number, idUser: number): Promise<void> {
         const weaning = await this.weaningsService.findOneById(WeaningDto, id, { throwException: true });
         const { idEvent, idCria } = weaning;
 
         const animal = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, idCria);
         const idRanch = animal.idRanch;
+        await this.ranchUsersService.assertMember(idUser, idRanch);
 
         await this.dataSource.transaction(async (manager) => {
             await this.weaningsService.deleteById(id, manager);

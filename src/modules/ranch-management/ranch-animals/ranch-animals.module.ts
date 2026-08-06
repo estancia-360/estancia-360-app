@@ -8,6 +8,7 @@ import { AnimalStatusesModule } from 'src/modules/ranch-management/animal-status
 import { AnimalBreedsModule } from 'src/modules/ranch-management/animal-breeds/animal-breeds.module';
 import { AnimalClassesModule } from 'src/modules/core/animal-classes/animal-classes.module';
 import { RanchSubscriptionsModule } from 'src/modules/payment-modules/ranch-subscriptions/ranch-subscriptions.module';
+import { RanchUsersModule } from 'src/modules/ranch-management/ranch-users/ranch-users.module';
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { RanchSubscriptionsModule } from 'src/modules/payment-modules/ranch-subs
         AnimalBreedsModule,
         AnimalClassesModule,
         RanchSubscriptionsModule,
+        RanchUsersModule,
     ],
     controllers: [RanchAnimalsController],
     providers: [RanchAnimalsService],

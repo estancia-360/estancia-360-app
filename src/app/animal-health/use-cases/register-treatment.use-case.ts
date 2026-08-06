@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { RegisterTreatmentDto } from '../dto/inputs/register-treatment.dto';
 import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/services/animal-events.service';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { TreatmentsService } from 'src/modules/health-modules/treatments/services/treatments.service';
 import { TreatmentDto } from 'src/modules/health-modules/treatments/dto/treatment.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
@@ -14,12 +15,14 @@ export class RegisterTreatmentUseCase {
     constructor(
         private readonly dataSource: DataSource,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly treatmentsService: TreatmentsService,
     ) {}
 
-    async execute(dto: RegisterTreatmentDto, idUser?: number): Promise<TreatmentDto> {
+    async execute(dto: RegisterTreatmentDto, idUser: number): Promise<TreatmentDto> {
         const animal = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
+        await this.ranchUsersService.assertMember(idUser, animal.idRanch);
 
         if (animal.idProductiveStatus === PRODUCTIVE_STATUS_IDS.BAJA) {
             throw new BadRequestException({
@@ -60,6 +63,7 @@ export class RegisterTreatmentUseCase {
                     withdrawalEndDate,
                     responsible: dto.responsible,
                     notes: dto.notes,
+                    localId: dto.localId,
                 },
                 manager,
             );

@@ -8,6 +8,7 @@ import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities
 import { RearingDestinationEnum } from 'src/modules/rearing-modules/rearing-selections/entities/rearing-selection.entity';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
 import { SyncDeletionsService } from 'src/modules/core/sync-deletions/services/sync-deletions.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 import { PRODUCTIVE_STATUS_IDS } from 'src/shared/constants';
 
@@ -19,6 +20,7 @@ export class DeleteRearingSelectionUseCase {
         private readonly animalEventsService: AnimalEventsService,
         private readonly fatteningEntriesService: FatteningEntriesService,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly syncDeletionsService: SyncDeletionsService,
     ) {}
 
@@ -28,12 +30,13 @@ export class DeleteRearingSelectionUseCase {
      * - The animal goes back to ps=2 (Recría).
      * - If it was a sale (ps=4), it is NOT reverted (discharge is irreversible — RN-07).
      */
-    async execute(id: number): Promise<void> {
+    async execute(id: number, idUser: number): Promise<void> {
         const selection = await this.rearingSelectionsService.findOneById(RearingSelectionDto, id, { throwException: true });
         const idRanchAnimal = selection.event.idRanchAnimal;
 
         const animal = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, idRanchAnimal);
         const idRanch = animal.idRanch;
+        await this.ranchUsersService.assertMember(idUser, idRanch);
 
         await this.dataSource.transaction(async (manager) => {
             if (selection.destination === RearingDestinationEnum.FATTENING) {

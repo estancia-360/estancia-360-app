@@ -1,4 +1,4 @@
-import { Check, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Check, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseCreatedUpdated } from 'src/database/entities/base.entity';
 import { Ranch } from 'src/modules/ranch-management/ranches/entities/ranch.entity';
 import { AnimalBreed } from 'src/modules/ranch-management/animal-breeds/entities/animal-breed.entity';
@@ -8,6 +8,7 @@ import { RanchLot } from 'src/modules/ranch-management/ranch-lots/entities/ranch
 
 @Entity('ranch_animals')
 @Check(`sex IN ('F','M')`)
+@Index(['idRanch', 'code'], { unique: true })
 export class RanchAnimal extends BaseCreatedUpdated {
     @PrimaryGeneratedColumn({ name: 'id_ranch_animal', type: 'bigint' })
     id: number;
@@ -36,7 +37,7 @@ export class RanchAnimal extends BaseCreatedUpdated {
     @Column({ name: 'id_lot', type: 'bigint', nullable: true })
     idLot?: number;
 
-    @Column({ name: 'code', type: 'varchar', length: 50, unique: true })
+    @Column({ name: 'code', type: 'varchar', length: 50 })
     code: string;
 
     @Column({ name: 'local_id', type: 'varchar', length: 100, nullable: true, unique: true })

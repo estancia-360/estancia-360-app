@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
 import { Repository, SelectQueryBuilder } from 'typeorm';
@@ -125,10 +125,7 @@ export class SyncDownloadService {
     }
 
     async assertRanchAccess(idUser: number, idRanch: number): Promise<void> {
-        const ranchUser = await this.ranchUsersService.findOne(idUser, idRanch);
-        if (!ranchUser) {
-            throw new ForbiddenException({ message: 'User does not have access to this ranch.', error: 'RANCH_ACCESS_DENIED' });
-        }
+        await this.ranchUsersService.assertMember(idUser, idRanch);
     }
 
     async getCatalogs(): Promise<SyncCatalogsResponseDto> {

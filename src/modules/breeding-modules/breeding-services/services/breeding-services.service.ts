@@ -89,6 +89,22 @@ export class BreedingServicesService {
         });
     }
 
+    /** Used by app/dashboard for the services trend chart. Postgres omits empty months — caller backfills zeros. */
+    async countByMonthByRanch(idRanch: number, since: Date, manager?: EntityManager): Promise<{ month: string; count: number }[]> {
+        const repo = manager?.getRepository(BreedingService) ?? this.rawRepo;
+        const rows = await repo
+            .createQueryBuilder('bs')
+            .innerJoin('bs.event', 'ae')
+            .innerJoin('ae.animal', 'ra')
+            .select("to_char(date_trunc('month', ae.eventDate), 'YYYY-MM')", 'month')
+            .addSelect('COUNT(*)', 'count')
+            .where('ra.idRanch = :idRanch', { idRanch })
+            .andWhere('ae.eventDate >= :since', { since })
+            .groupBy("date_trunc('month', ae.eventDate)")
+            .getRawMany<{ month: string; count: string }>();
+        return rows.map((r) => ({ month: r.month, count: Number(r.count) }));
+    }
+
     async findAllByRanch(idRanch: number, pagination: PaginationParamsDto): Promise<PaginationResponseDto<BreedingServiceDto>> {
         return await this.repo.findPaginated({
             dto: BreedingServiceDto,

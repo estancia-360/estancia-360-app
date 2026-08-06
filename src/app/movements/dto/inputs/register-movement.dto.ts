@@ -109,11 +109,6 @@ export class RegisterMovementDto {
     @IsPositive()
     idRanch: number;
 
-    @ApiProperty({ description: 'ID of the registering user. Must be Owner (ranch_role=1) for sale/purchase/ranch_exit.', example: 1 })
-    @IsInt()
-    @IsPositive()
-    idUser: number;
-
     @ApiProperty({ enum: MovementTypeEnum, example: MovementTypeEnum.PASTURE_TRANSFER })
     @IsEnum(MovementTypeEnum)
     movementType: MovementTypeEnum;

@@ -38,8 +38,8 @@ export class MovementsAppController {
         description:
             'Branches on movementType: pasture_transfer and purchase go straight to confirmed; sale stays pending until each animal is confirmed/rejected; ranch_exit is confirmed but irreversible (ps=Baja). sale/purchase/ranch_exit require the registering user to be ranch Owner. Idempotent via localId.',
     })
-    async registerMovement(@Body() dto: RegisterMovementDto): Promise<{ movement: MovementDto }> {
-        return { movement: await this.registerMovementUseCase.execute(dto) };
+    async registerMovement(@Body() dto: RegisterMovementDto, @CurrentUser('id') idUser: number): Promise<{ movement: MovementDto }> {
+        return { movement: await this.registerMovementUseCase.execute(dto, idUser) };
     }
 
     @Patch('animal/:idMovementAnimal/confirm')

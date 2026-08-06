@@ -6,6 +6,7 @@ import { ParturitionsService } from 'src/modules/breeding-modules/parturitions/s
 import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/services/animal-events.service';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
 import { SyncDeletionsService } from 'src/modules/core/sync-deletions/services/sync-deletions.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { BreedingServiceDto } from 'src/modules/breeding-modules/breeding-services/dto/breeding-service.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 
@@ -18,6 +19,7 @@ export class DeleteBreedingServiceUseCase {
         private readonly parturitionsService: ParturitionsService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly syncDeletionsService: SyncDeletionsService,
     ) {}
 
@@ -26,12 +28,13 @@ export class DeleteBreedingServiceUseCase {
      *   BreedingService → GestationDiagnosis → Parturition
      * Deletion order is the reverse of creation order to respect FKs.
      */
-    async execute(id: number): Promise<void> {
+    async execute(id: number, idUser: number): Promise<void> {
         const service = await this.breedingServicesService.findOneById(BreedingServiceDto, id, { throwException: true });
         const serviceEventId = service.idEvent;
 
         const animal = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, service.event.idRanchAnimal);
         const idRanch = animal.idRanch;
+        await this.ranchUsersService.assertMember(idUser, idRanch);
 
         const diagnosis = await this.gestationDiagnosesService.findOneByServiceId(id);
         let diagnosisId: number | undefined;

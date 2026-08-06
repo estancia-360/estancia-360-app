@@ -4,6 +4,7 @@ import { RegisterWeaningDto } from '../dto/inputs/register-weaning.dto';
 import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/services/animal-events.service';
 import { WeaningsService } from 'src/modules/breeding-modules/weanings/services/weanings.service';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { RanchLotsService } from 'src/modules/ranch-management/ranch-lots/services/ranch-lots.service';
 import { WeaningDto } from 'src/modules/breeding-modules/weanings/dto/weaning.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
@@ -17,13 +18,15 @@ export class RegisterWeaningUseCase {
     constructor(
         private readonly dataSource: DataSource,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly ranchLotsService: RanchLotsService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly weaningsService: WeaningsService,
     ) {}
 
-    async execute(dto: RegisterWeaningDto, idUser?: number): Promise<WeaningDto> {
-        await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
+    async execute(dto: RegisterWeaningDto, idUser: number): Promise<WeaningDto> {
+        const cria = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
+        await this.ranchUsersService.assertMember(idUser, cria.idRanch);
 
         const lot = await this.ranchLotsService.findOneById(RanchLotDto, dto.idLotDest);
         if (lot.lotType !== LotTypesEnum.REARING) {

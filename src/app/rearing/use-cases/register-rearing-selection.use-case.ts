@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { RegisterRearingSelectionDto } from '../dto/inputs/register-rearing-selection.dto';
 import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/services/animal-events.service';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { RearingSelectionsService } from 'src/modules/rearing-modules/rearing-selections/services/rearing-selections.service';
 import { FatteningEntriesService } from 'src/modules/fattening-modules/fattening-entries/services/fattening-entries.service';
 import { RearingSelectionDto } from 'src/modules/rearing-modules/rearing-selections/dto/rearing-selection.dto';
@@ -21,6 +22,7 @@ export class RegisterRearingSelectionUseCase {
         private readonly rearingSelectionsService: RearingSelectionsService,
         private readonly fatteningEntriesService: FatteningEntriesService,
         private readonly ranchesService: RanchesService,
+        private readonly ranchUsersService: RanchUsersService,
     ) {}
 
     /**
@@ -28,8 +30,9 @@ export class RegisterRearingSelectionUseCase {
      * - fattening: moves to Engorde (ps=3), creates a fattening_entry in the same tx
      * - sale: moves to Baja (ps=4, status=3) — does not create a movement record yet
      */
-    async execute(dto: RegisterRearingSelectionDto, idUser?: number): Promise<RearingSelectionDto> {
+    async execute(dto: RegisterRearingSelectionDto, idUser: number): Promise<RearingSelectionDto> {
         const animal = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
+        await this.ranchUsersService.assertMember(idUser, animal.idRanch);
 
         if (animal.idProductiveStatus !== PRODUCTIVE_STATUS_IDS.RECRIA) {
             throw new BadRequestException({
@@ -71,6 +74,7 @@ export class RegisterRearingSelectionUseCase {
                     weightAtSelection: dto.weightAtSelection,
                     bodyCondition: dto.bodyCondition,
                     geneticScore: dto.geneticScore,
+                    ageDays: dto.ageDays,
                 },
                 manager,
             );

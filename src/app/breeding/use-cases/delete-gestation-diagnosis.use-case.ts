@@ -5,6 +5,7 @@ import { ParturitionsService } from 'src/modules/breeding-modules/parturitions/s
 import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/services/animal-events.service';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
 import { SyncDeletionsService } from 'src/modules/core/sync-deletions/services/sync-deletions.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { GestationDiagnosisDto } from 'src/modules/breeding-modules/gestation-diagnoses/dto/gestation-diagnosis.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 
@@ -16,15 +17,17 @@ export class DeleteGestationDiagnosisUseCase {
         private readonly parturitionsService: ParturitionsService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly syncDeletionsService: SyncDeletionsService,
     ) {}
 
-    async execute(id: number): Promise<void> {
+    async execute(id: number, idUser: number): Promise<void> {
         const diagnosis = await this.gestationDiagnosesService.findOneById(GestationDiagnosisDto, id, { throwException: true });
         const diagnosisEventId = diagnosis.idEvent;
 
         const animal = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, diagnosis.event.idRanchAnimal);
         const idRanch = animal.idRanch;
+        await this.ranchUsersService.assertMember(idUser, idRanch);
 
         const parturition = await this.parturitionsService.findOneByDiagnosisId(id);
         let parturitionId: number | undefined;

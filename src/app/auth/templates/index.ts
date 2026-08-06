@@ -1,1 +1,1 @@
-export * from './two-factor-code.template';
+export * from './verification-code.template';

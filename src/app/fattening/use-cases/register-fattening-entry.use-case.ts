@@ -8,6 +8,7 @@ import { FatteningEntryDto } from 'src/modules/fattening-modules/fattening-entri
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
 import { RanchesService } from 'src/modules/ranch-management/ranches/services/ranches.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { EVENT_TYPE_IDS, PRODUCTIVE_STATUS_IDS, PRODUCTION_TYPE_IDS } from 'src/shared/constants';
 
 @Injectable()
@@ -18,10 +19,12 @@ export class RegisterFatteningEntryUseCase {
         private readonly animalEventsService: AnimalEventsService,
         private readonly fatteningEntriesService: FatteningEntriesService,
         private readonly ranchesService: RanchesService,
+        private readonly ranchUsersService: RanchUsersService,
     ) {}
 
-    async execute(dto: RegisterFatteningEntryDto, idUser?: number): Promise<FatteningEntryDto> {
+    async execute(dto: RegisterFatteningEntryDto, idUser: number): Promise<FatteningEntryDto> {
         const animal = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
+        await this.ranchUsersService.assertMember(idUser, animal.idRanch);
 
         if (animal.idProductiveStatus !== PRODUCTIVE_STATUS_IDS.RECRIA) {
             throw new BadRequestException({
@@ -53,7 +56,7 @@ export class RegisterFatteningEntryUseCase {
             );
 
             const entry = await this.fatteningEntriesService.create(
-                { idEvent: event.id, systemType: dto.systemType, initialWeight: dto.initialWeight },
+                { idEvent: event.id, systemType: dto.systemType, initialWeight: dto.initialWeight, localId: dto.localId },
                 manager,
             );
 

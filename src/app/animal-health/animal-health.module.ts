@@ -7,6 +7,7 @@ import { VaccinationsModule } from 'src/modules/health-modules/vaccinations/vacc
 import { TreatmentsModule } from 'src/modules/health-modules/treatments/treatments.module';
 import { HealthIncidentsModule } from 'src/modules/health-modules/health-incidents/health-incidents.module';
 import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deletions.module';
+import { RanchUsersModule } from 'src/modules/ranch-management/ranch-users/ranch-users.module';
 
 import { RegisterVaccinationUseCase } from './use-cases/register-vaccination.use-case';
 import { UpdateVaccinationUseCase } from './use-cases/update-vaccination.use-case';
@@ -19,7 +20,7 @@ import { UpdateHealthIncidentUseCase } from './use-cases/update-health-incident.
 import { DeleteHealthIncidentUseCase } from './use-cases/delete-health-incident.use-case';
 
 @Module({
-    imports: [RanchAnimalsModule, AnimalEventsModule, VaccinationsModule, TreatmentsModule, HealthIncidentsModule, SyncDeletionsModule],
+    imports: [RanchAnimalsModule, AnimalEventsModule, VaccinationsModule, TreatmentsModule, HealthIncidentsModule, SyncDeletionsModule, RanchUsersModule],
     controllers: [AnimalHealthController],
     providers: [
         RegisterVaccinationUseCase,

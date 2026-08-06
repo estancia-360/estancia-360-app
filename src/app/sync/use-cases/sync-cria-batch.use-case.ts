@@ -91,17 +91,17 @@ export class SyncCriaBatchUseCase {
         private readonly deleteAnimalDeclaredHistoryUseCase: DeleteAnimalDeclaredHistoryUseCase,
     ) {}
 
-    async execute(dto: SyncCriaDto): Promise<SyncCriaResponseDto> {
+    async execute(dto: SyncCriaDto, idUser: number): Promise<SyncCriaResponseDto> {
         const localIdToServerId = new Map<string, number>();
 
         const ranchPastures = await this.processRanchPastures(dto.ranchPastures ?? [], dto.idRanch, localIdToServerId);
         const ranchLots = await this.processRanchLots(dto.ranchLots ?? [], dto.idRanch, localIdToServerId);
         const ranchAnimals = await this.processRanchAnimals(dto.ranchAnimals ?? [], localIdToServerId);
-        const breedingServices = await this.processBreedingServices(dto.breedingServices ?? [], localIdToServerId);
-        const gestationDiagnoses = await this.processGestationDiagnoses(dto.gestationDiagnoses ?? [], localIdToServerId);
-        const parturitions = await this.processParturitions(dto.parturitions ?? [], localIdToServerId);
-        const weanings = await this.processWeanings(dto.weanings ?? [], localIdToServerId);
-        const animalDeclaredHistories = await this.processAnimalDeclaredHistories(dto.animalDeclaredHistories ?? [], localIdToServerId);
+        const breedingServices = await this.processBreedingServices(dto.breedingServices ?? [], localIdToServerId, idUser);
+        const gestationDiagnoses = await this.processGestationDiagnoses(dto.gestationDiagnoses ?? [], localIdToServerId, idUser);
+        const parturitions = await this.processParturitions(dto.parturitions ?? [], localIdToServerId, idUser);
+        const weanings = await this.processWeanings(dto.weanings ?? [], localIdToServerId, idUser);
+        const animalDeclaredHistories = await this.processAnimalDeclaredHistories(dto.animalDeclaredHistories ?? [], localIdToServerId, idUser);
 
         const sections = [ranchPastures, ranchLots, ranchAnimals, breedingServices, gestationDiagnoses, parturitions, weanings, animalDeclaredHistories];
 
@@ -287,7 +287,6 @@ export class SyncCriaBatchUseCase {
                         await this.ranchAnimalsService.update(
                             op.serverId,
                             {
-                                idRanch: data.idRanch,
                                 idBreed: data.idBreed,
                                 idStatus: data.idStatus,
                                 idAnimalClass: data.idAnimalClass,
@@ -298,6 +297,8 @@ export class SyncCriaBatchUseCase {
                                 codeMother: data.codeMother,
                                 codeFather: data.codeFather,
                                 createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
+                                idLot: data.idLot,
+                                idProductiveStatus: data.idProductiveStatus,
                             },
                             RanchAnimalDto,
                         );
@@ -326,6 +327,7 @@ export class SyncCriaBatchUseCase {
     private async processBreedingServices(
         operations: SyncBreedingServiceOperationDto[],
         localIdToServerId: Map<string, number>,
+        idUser: number,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
 
@@ -339,19 +341,20 @@ export class SyncCriaBatchUseCase {
                     case 'create': {
                         const result = await this.registerBreedingServiceUseCase.execute(
                             { ...data, ...baseFields, localId: op.localId } as RegisterBreedingServiceDto,
+                            idUser,
                         );
                         serverId = result.id;
                         break;
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
-                        await this.updateBreedingServiceUseCase.execute(op.serverId, data as UpdateBreedingServiceDto);
+                        await this.updateBreedingServiceUseCase.execute(op.serverId, data as UpdateBreedingServiceDto, idUser);
                         serverId = op.serverId;
                         break;
                     }
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for delete');
-                        await this.deleteBreedingServiceUseCase.execute(op.serverId);
+                        await this.deleteBreedingServiceUseCase.execute(op.serverId, idUser);
                         serverId = op.serverId;
                         break;
                     }
@@ -371,6 +374,7 @@ export class SyncCriaBatchUseCase {
     private async processGestationDiagnoses(
         operations: SyncGestationDiagnosisOperationDto[],
         localIdToServerId: Map<string, number>,
+        idUser: number,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
 
@@ -384,19 +388,20 @@ export class SyncCriaBatchUseCase {
                     case 'create': {
                         const result = await this.registerGestationDiagnosisUseCase.execute(
                             { ...data, ...baseFields, localId: op.localId } as RegisterGestationDiagnosisDto,
+                            idUser,
                         );
                         serverId = result.id;
                         break;
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
-                        await this.updateGestationDiagnosisUseCase.execute(op.serverId, data as UpdateGestationDiagnosisDto);
+                        await this.updateGestationDiagnosisUseCase.execute(op.serverId, data as UpdateGestationDiagnosisDto, idUser);
                         serverId = op.serverId;
                         break;
                     }
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for delete');
-                        await this.deleteGestationDiagnosisUseCase.execute(op.serverId);
+                        await this.deleteGestationDiagnosisUseCase.execute(op.serverId, idUser);
                         serverId = op.serverId;
                         break;
                     }
@@ -416,6 +421,7 @@ export class SyncCriaBatchUseCase {
     private async processParturitions(
         operations: SyncParturitionOperationDto[],
         localIdToServerId: Map<string, number>,
+        idUser: number,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
 
@@ -429,19 +435,20 @@ export class SyncCriaBatchUseCase {
                     case 'create': {
                         const result = await this.registerParturitionUseCase.execute(
                             { ...data, ...baseFields, localId: op.localId } as RegisterParturitionDto,
+                            idUser,
                         );
                         serverId = result.id;
                         break;
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
-                        await this.updateParturitionUseCase.execute(op.serverId, data as UpdateParturitionDto);
+                        await this.updateParturitionUseCase.execute(op.serverId, data as UpdateParturitionDto, idUser);
                         serverId = op.serverId;
                         break;
                     }
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for delete');
-                        await this.deleteParturitionUseCase.execute(op.serverId);
+                        await this.deleteParturitionUseCase.execute(op.serverId, idUser);
                         serverId = op.serverId;
                         break;
                     }
@@ -461,6 +468,7 @@ export class SyncCriaBatchUseCase {
     private async processWeanings(
         operations: SyncWeaningOperationDto[],
         localIdToServerId: Map<string, number>,
+        idUser: number,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
 
@@ -474,19 +482,20 @@ export class SyncCriaBatchUseCase {
                     case 'create': {
                         const result = await this.registerWeaningUseCase.execute(
                             { ...data, ...baseFields, localId: op.localId } as RegisterWeaningDto,
+                            idUser,
                         );
                         serverId = result.id;
                         break;
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
-                        await this.updateWeaningUseCase.execute(op.serverId, data as UpdateWeaningDto);
+                        await this.updateWeaningUseCase.execute(op.serverId, data as UpdateWeaningDto, idUser);
                         serverId = op.serverId;
                         break;
                     }
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for delete');
-                        await this.deleteWeaningUseCase.execute(op.serverId);
+                        await this.deleteWeaningUseCase.execute(op.serverId, idUser);
                         serverId = op.serverId;
                         break;
                     }
@@ -506,6 +515,7 @@ export class SyncCriaBatchUseCase {
     private async processAnimalDeclaredHistories(
         operations: SyncAnimalDeclaredHistoryOperationDto[],
         localIdToServerId: Map<string, number>,
+        idUser: number,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
 
@@ -518,19 +528,20 @@ export class SyncCriaBatchUseCase {
                     case 'create': {
                         const result = await this.registerAnimalDeclaredHistoryUseCase.execute(
                             { ...data, localId: op.localId } as RegisterAnimalDeclaredHistoryDto,
+                            idUser,
                         );
                         serverId = result.id;
                         break;
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
-                        await this.updateAnimalDeclaredHistoryUseCase.execute(op.serverId, data as UpdateAnimalDeclaredHistoryDto);
+                        await this.updateAnimalDeclaredHistoryUseCase.execute(op.serverId, data as UpdateAnimalDeclaredHistoryDto, idUser);
                         serverId = op.serverId;
                         break;
                     }
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for delete');
-                        await this.deleteAnimalDeclaredHistoryUseCase.execute(op.serverId);
+                        await this.deleteAnimalDeclaredHistoryUseCase.execute(op.serverId, idUser);
                         serverId = op.serverId;
                         break;
                     }

@@ -6,6 +6,7 @@ import { HealthIncidentDto } from 'src/modules/health-modules/health-incidents/d
 import { IncidentTypeEnum } from 'src/modules/health-modules/health-incidents/entities/health-incident.entity';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
 import { SyncDeletionsService } from 'src/modules/core/sync-deletions/services/sync-deletions.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
 import { ANIMAL_STATUS_IDS } from 'src/shared/constants';
@@ -17,15 +18,17 @@ export class DeleteHealthIncidentUseCase {
         private readonly healthIncidentsService: HealthIncidentsService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly syncDeletionsService: SyncDeletionsService,
     ) {}
 
-    async execute(id: number): Promise<void> {
+    async execute(id: number, idUser: number): Promise<void> {
         const incident = await this.healthIncidentsService.findOneById(HealthIncidentDto, id, { throwException: true });
         const idRanchAnimal = incident.event.idRanchAnimal;
 
         const animal = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, idRanchAnimal);
         const idRanch = animal.idRanch;
+        await this.ranchUsersService.assertMember(idUser, idRanch);
 
         await this.dataSource.transaction(async (manager) => {
             await this.healthIncidentsService.deleteById(id, manager);

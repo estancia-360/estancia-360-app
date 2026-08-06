@@ -16,6 +16,14 @@ export class UserForAuthDto {
     @DtoField()
     password!: string;
 
+    @ApiHideProperty()
+    @DtoField()
+    resetCodeHash!: string | null;
+
+    @ApiHideProperty()
+    @DtoField()
+    resetCodeExpiresAt!: Date | null;
+
     @DtoRelation(() => RoleDto)
     role!: RoleDto;
 }

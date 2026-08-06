@@ -1,14 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
-// DEUDA TÉCNICA (a propósito, ver AuthService.changePassword): sin verificar contraseña
-// actual, y el endpoint no exige JWT — igual que en el proyecto viejo, a coordinar con mobile.
 export class ChangePasswordDto {
-    @ApiProperty({ description: 'Correo del usuario que solicita el cambio', example: 'usuario@email.com' })
-    @IsEmail({}, { message: 'El correo proporcionado no es válido.' })
-    @IsNotEmpty({ message: 'El correo no puede estar vacío.' })
-    @MaxLength(150)
-    email: string;
+    @ApiProperty({ description: 'Contraseña actual del usuario autenticado', example: 'MiPassActual123' })
+    @IsString({ message: 'La contraseña actual debe ser un texto válido.' })
+    @IsNotEmpty({ message: 'La contraseña actual no puede estar vacía.' })
+    currentPassword: string;
 
     @ApiProperty({ description: 'Nueva contraseña', example: 'MiNuevaPass123' })
     @IsString({ message: 'La contraseña debe ser un texto válido.' })

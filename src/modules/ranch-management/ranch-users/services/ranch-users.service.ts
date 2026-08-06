@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { RanchUser } from '../entities/ranch-user.entity';
@@ -53,5 +53,26 @@ export class RanchUsersService {
     async isOwner(idUser: number, idRanch: number): Promise<boolean> {
         const membership = await this.findOne(idUser, idRanch);
         return membership?.idRole === RanchRolesEnum.OWNER;
+    }
+
+    /**
+     * Punto único de chequeo "¿este usuario autenticado pertenece a esta estancia?".
+     * Usar SIEMPRE que un endpoint reciba un idRanch (o algo que resuelva a un idRanch)
+     * del lado del cliente — sin esto, cualquier usuario autenticado puede leer/mutar
+     * datos de una estancia ajena con solo adivinar/incrementar un ID (IDOR).
+     */
+    async assertMember(idUser: number, idRanch: number): Promise<RanchUser> {
+        const membership = await this.findOne(idUser, idRanch);
+        if (!membership) {
+            throw new ForbiddenException({ message: `User ID=${idUser} does not belong to ranch ID=${idRanch}.`, error: 'RANCH_ACCESS_DENIED' });
+        }
+        return membership;
+    }
+
+    async assertOwner(idUser: number, idRanch: number): Promise<void> {
+        const membership = await this.assertMember(idUser, idRanch);
+        if (membership.idRole !== RanchRolesEnum.OWNER) {
+            throw new ForbiddenException({ message: 'Only the ranch Owner can perform this action (RN-01/RN-16).', error: 'ONLY_OWNER_ALLOWED' });
+        }
     }
 }

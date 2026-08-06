@@ -25,23 +25,23 @@ export class SyncService {
         private readonly syncMovimientosBatchUseCase: SyncMovimientosBatchUseCase,
     ) {}
 
-    async syncCria(dto: SyncCriaDto): Promise<SyncCriaResponseDto> {
-        return this.syncCriaBatchUseCase.execute(dto);
+    async syncCria(dto: SyncCriaDto, idUser: number): Promise<SyncCriaResponseDto> {
+        return this.syncCriaBatchUseCase.execute(dto, idUser);
     }
 
-    async syncRecria(dto: SyncRecriaDto): Promise<SyncRecriaResponseDto> {
-        return this.syncRecriaBatchUseCase.execute(dto);
+    async syncRecria(dto: SyncRecriaDto, idUser: number): Promise<SyncRecriaResponseDto> {
+        return this.syncRecriaBatchUseCase.execute(dto, idUser);
     }
 
-    async syncEngorde(dto: SyncEngordeDto): Promise<SyncEngordeResponseDto> {
-        return this.syncEngordeBatchUseCase.execute(dto);
+    async syncEngorde(dto: SyncEngordeDto, idUser: number): Promise<SyncEngordeResponseDto> {
+        return this.syncEngordeBatchUseCase.execute(dto, idUser);
     }
 
-    async syncSanidad(dto: SyncSanidadDto): Promise<SyncSanidadResponseDto> {
-        return this.syncSanidadBatchUseCase.execute(dto);
+    async syncSanidad(dto: SyncSanidadDto, idUser: number): Promise<SyncSanidadResponseDto> {
+        return this.syncSanidadBatchUseCase.execute(dto, idUser);
     }
 
-    async syncMovimientos(dto: SyncMovimientosDto): Promise<SyncMovimientosResponseDto> {
-        return this.syncMovimientosBatchUseCase.execute(dto);
+    async syncMovimientos(dto: SyncMovimientosDto, idUser: number): Promise<SyncMovimientosResponseDto> {
+        return this.syncMovimientosBatchUseCase.execute(dto, idUser);
     }
 }

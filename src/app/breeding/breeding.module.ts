@@ -11,6 +11,7 @@ import { WeaningsModule } from 'src/modules/breeding-modules/weanings/weanings.m
 import { AnimalDeclaredHistoryModule } from 'src/modules/breeding-modules/animal-declared-history/animal-declared-history.module';
 import { RanchSubscriptionsModule } from 'src/modules/payment-modules/ranch-subscriptions/ranch-subscriptions.module';
 import { SyncDeletionsModule } from 'src/modules/core/sync-deletions/sync-deletions.module';
+import { RanchUsersModule } from 'src/modules/ranch-management/ranch-users/ranch-users.module';
 
 import { RegisterBreedingServiceUseCase } from './use-cases/register-breeding-service.use-case';
 import { RegisterGestationDiagnosisUseCase } from './use-cases/register-gestation-diagnosis.use-case';
@@ -42,6 +43,7 @@ import { DeleteAnimalDeclaredHistoryUseCase } from './use-cases/delete-animal-de
         AnimalDeclaredHistoryModule,
         RanchSubscriptionsModule,
         SyncDeletionsModule,
+        RanchUsersModule,
     ],
     controllers: [BreedingController],
     providers: [

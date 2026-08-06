@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
-import { FatteningEntry } from '../entities/fattening-entry.entity';
+import { FatteningEntry, SystemTypeEnum } from '../entities/fattening-entry.entity';
 import { FatteningEntryDto } from '../dto/fattening-entry.dto';
 import { FatteningEntryNotFoundException } from '../exceptions';
 import { DtoRepository } from 'src/shared/orm';
@@ -19,14 +19,19 @@ export class FatteningEntriesService {
     }
 
     async create(
-        data: { idEvent: number; systemType: string; initialWeight?: number },
+        data: { idEvent: number; systemType: string; initialWeight?: number; localId?: string },
         manager?: EntityManager,
     ): Promise<FatteningEntry> {
         const repo = manager?.getRepository(FatteningEntry) ?? this.rawRepo;
+        if (data.localId) {
+            const existing = await repo.findOne({ where: { localId: data.localId } });
+            if (existing) return existing;
+        }
         const entry = repo.create();
         entry.idEvent = data.idEvent;
         entry.systemType = data.systemType as any;
         if (data.initialWeight !== undefined) entry.initialWeight = data.initialWeight;
+        if (data.localId !== undefined) entry.localId = data.localId;
         return await repo.save(entry);
     }
 
@@ -75,6 +80,25 @@ export class FatteningEntriesService {
                 .orderBy('ev.eventDate', 'DESC')
                 .getOne()) ?? null
         );
+    }
+
+    /** Used by app/dashboard for the system-type breakdown chart. Historical, not windowed. */
+    async countBySystemTypeByRanch(idRanch: number, manager?: EntityManager): Promise<{ field: number; feedlot: number }> {
+        const repo = manager?.getRepository(FatteningEntry) ?? this.rawRepo;
+        const rows = await repo
+            .createQueryBuilder('fe')
+            .innerJoin('fe.event', 'ae')
+            .innerJoin('ae.animal', 'ra')
+            .select('fe.systemType', 'systemType')
+            .addSelect('COUNT(*)', 'count')
+            .where('ra.idRanch = :idRanch', { idRanch })
+            .groupBy('fe.systemType')
+            .getRawMany<{ systemType: SystemTypeEnum; count: string }>();
+        const find = (t: SystemTypeEnum) => rows.find((r) => r.systemType === t);
+        return {
+            field: Number(find(SystemTypeEnum.FIELD)?.count ?? 0),
+            feedlot: Number(find(SystemTypeEnum.FEEDLOT)?.count ?? 0),
+        };
     }
 
     async findAllByAnimal(idRanchAnimal: number, pagination: PaginationParamsDto): Promise<PaginationResponseDto<FatteningEntryDto>> {

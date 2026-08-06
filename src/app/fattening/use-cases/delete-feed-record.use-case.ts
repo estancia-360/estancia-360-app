@@ -5,6 +5,7 @@ import { FeedRecordDto } from 'src/modules/fattening-modules/feed-records/dto/fe
 import { RanchLotsService } from 'src/modules/ranch-management/ranch-lots/services/ranch-lots.service';
 import { RanchLotDto } from 'src/modules/ranch-management/ranch-lots/dto/ranch-lot.dto';
 import { SyncDeletionsService } from 'src/modules/core/sync-deletions/services/sync-deletions.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 
 @Injectable()
 export class DeleteFeedRecordUseCase {
@@ -12,13 +13,15 @@ export class DeleteFeedRecordUseCase {
         private readonly dataSource: DataSource,
         private readonly feedRecordsService: FeedRecordsService,
         private readonly ranchLotsService: RanchLotsService,
+        private readonly ranchUsersService: RanchUsersService,
         private readonly syncDeletionsService: SyncDeletionsService,
     ) {}
 
-    async execute(id: number): Promise<void> {
+    async execute(id: number, idUser: number): Promise<void> {
         const record = await this.feedRecordsService.findOneById(FeedRecordDto, id, { throwException: true });
         const lot = await this.ranchLotsService.findOneById(RanchLotDto, record.idLot);
         const idRanch = lot.idRanch;
+        await this.ranchUsersService.assertMember(idUser, idRanch);
 
         await this.dataSource.transaction(async (manager) => {
             await this.feedRecordsService.deleteById(id, manager);

@@ -33,6 +33,10 @@ export class RearingSelectionDto {
     geneticScore?: number;
 
     @DtoField()
+    @ApiProperty({ example: 210, nullable: true, required: false })
+    ageDays?: number;
+
+    @DtoField()
     @ApiProperty({ example: '2026-06-01T10:00:00.000Z' })
     createdAt!: Date;
 

@@ -29,10 +29,15 @@ export class TreatmentsService {
             withdrawalEndDate?: Date;
             responsible?: string;
             notes?: string;
+            localId?: string;
         },
         manager?: EntityManager,
     ): Promise<Treatment> {
         const repo = manager?.getRepository(Treatment) ?? this.rawRepo;
+        if (data.localId) {
+            const existing = await repo.findOne({ where: { localId: data.localId } });
+            if (existing) return existing;
+        }
         const treatment = repo.create();
         treatment.idEvent = data.idEvent;
         if (data.illness !== undefined) treatment.illness = data.illness;
@@ -43,6 +48,7 @@ export class TreatmentsService {
         if (data.withdrawalEndDate !== undefined) treatment.withdrawalEndDate = data.withdrawalEndDate;
         if (data.responsible !== undefined) treatment.responsible = data.responsible;
         if (data.notes !== undefined) treatment.notes = data.notes;
+        if (data.localId !== undefined) treatment.localId = data.localId;
         return await repo.save(treatment);
     }
 
@@ -104,6 +110,18 @@ export class TreatmentsService {
                 .andWhere('t.withdrawalEndDate >= CURRENT_DATE')
                 .getOne()) ?? null
         );
+    }
+
+    /** Used by app/dashboard — same rule as findActiveWithdrawal, ranch-scoped. */
+    async countActiveWithdrawalsByRanch(idRanch: number, manager?: EntityManager): Promise<number> {
+        const repo = manager?.getRepository(Treatment) ?? this.rawRepo;
+        return await repo
+            .createQueryBuilder('t')
+            .innerJoin('t.event', 'ae')
+            .innerJoin('ae.animal', 'ra')
+            .where('ra.idRanch = :idRanch', { idRanch })
+            .andWhere('t.withdrawalEndDate >= CURRENT_DATE')
+            .getCount();
     }
 
     async findAllByAnimal(idRanchAnimal: number, pagination: PaginationParamsDto): Promise<PaginationResponseDto<TreatmentDto>> {

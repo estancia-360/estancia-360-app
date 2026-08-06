@@ -30,14 +30,19 @@ export class RegisterMovementUseCase {
         private readonly ranchSubscriptionsService: RanchSubscriptionsService,
     ) {}
 
-    async execute(dto: RegisterMovementDto): Promise<MovementDto> {
+    async execute(dto: RegisterMovementDto, idUser: number): Promise<MovementDto> {
         if (dto.localId) {
             const existing = await this.movementsService.findOneByLocalId(dto.localId);
             if (existing) return (await this.movementsService.findOneById(MovementDto, existing.id, { throwException: true }))!;
         }
 
         if (OWNER_ONLY_TYPES.includes(dto.movementType)) {
-            await this.assertOwner(dto.idUser, dto.idRanch);
+            await this.assertOwner(idUser, dto.idRanch);
+        } else {
+            // pasture_transfer no requiere ser Owner, pero SÍ pertenecer a la estancia —
+            // sin esto, cualquier usuario autenticado podía mover animales de una
+            // estancia ajena con solo adivinar idRanch/idLotDest (IDOR).
+            await this.ranchUsersService.assertMember(idUser, dto.idRanch);
         }
 
         this.validateShape(dto);
@@ -57,7 +62,7 @@ export class RegisterMovementUseCase {
             const movement = await this.movementsService.create(
                 {
                     idRanch: dto.idRanch,
-                    idUser: dto.idUser,
+                    idUser,
                     movementType: dto.movementType,
                     movementDate: dto.movementDate,
                     status: dto.movementType === MovementTypeEnum.SALE ? MovementStatusEnum.PENDING : MovementStatusEnum.CONFIRMED,
@@ -75,16 +80,16 @@ export class RegisterMovementUseCase {
             for (const animalDto of dto.animals) {
                 switch (dto.movementType) {
                     case MovementTypeEnum.PASTURE_TRANSFER:
-                        await this.processTransferAnimal(movement, animalDto, loadedAnimals, dto, manager);
+                        await this.processTransferAnimal(movement, animalDto, loadedAnimals, dto, idUser, manager);
                         break;
                     case MovementTypeEnum.SALE:
                         await this.processSaleAnimal(movement, animalDto, loadedAnimals, dto, manager);
                         break;
                     case MovementTypeEnum.RANCH_EXIT:
-                        await this.processRanchExitAnimal(movement, animalDto, loadedAnimals, dto, manager);
+                        await this.processRanchExitAnimal(movement, animalDto, loadedAnimals, dto, idUser, manager);
                         break;
                     case MovementTypeEnum.PURCHASE:
-                        await this.processPurchaseAnimal(movement, animalDto, dto, manager);
+                        await this.processPurchaseAnimal(movement, animalDto, dto, idUser, manager);
                         break;
                 }
             }
@@ -94,10 +99,7 @@ export class RegisterMovementUseCase {
     }
 
     private async assertOwner(idUser: number, idRanch: number): Promise<void> {
-        const ranchUser = await this.ranchUsersService.findOne(idUser, idRanch);
-        if (!ranchUser) {
-            throw new ForbiddenException({ message: `User ID=${idUser} does not belong to ranch ID=${idRanch}.`, error: 'RANCH_ACCESS_DENIED' });
-        }
+        const ranchUser = await this.ranchUsersService.assertMember(idUser, idRanch);
         if (ranchUser.idRole !== RanchRolesEnum.OWNER) {
             throw new ForbiddenException({
                 message: 'Only the ranch Owner can register sales, purchases and ranch exits (RN-01/RN-16).',
@@ -184,6 +186,7 @@ export class RegisterMovementUseCase {
         animalDto: RegisterMovementAnimalDto,
         loadedAnimals: Map<number, RanchAnimal>,
         dto: RegisterMovementDto,
+        idUser: number,
         manager: EntityManager,
     ): Promise<void> {
         const animal = loadedAnimals.get(animalDto.idRanchAnimal!)!;
@@ -192,7 +195,7 @@ export class RegisterMovementUseCase {
             {
                 idRanchAnimal: animal.id,
                 idEventType: EVENT_TYPE_IDS.TRANSFER,
-                idUser: dto.idUser,
+                idUser,
                 notes: animalDto.notes,
                 isSynced: dto.isSynced ?? false,
                 eventDate: new Date(dto.movementDate),
@@ -250,6 +253,7 @@ export class RegisterMovementUseCase {
         animalDto: RegisterMovementAnimalDto,
         loadedAnimals: Map<number, RanchAnimal>,
         dto: RegisterMovementDto,
+        idUser: number,
         manager: EntityManager,
     ): Promise<void> {
         const animal = loadedAnimals.get(animalDto.idRanchAnimal!)!;
@@ -258,7 +262,7 @@ export class RegisterMovementUseCase {
             {
                 idRanchAnimal: animal.id,
                 idEventType: EVENT_TYPE_IDS.EXIT,
-                idUser: dto.idUser,
+                idUser,
                 notes: animalDto.notes,
                 isSynced: dto.isSynced ?? false,
                 eventDate: new Date(dto.movementDate),
@@ -290,12 +294,13 @@ export class RegisterMovementUseCase {
         movement: Movement,
         animalDto: RegisterMovementAnimalDto,
         dto: RegisterMovementDto,
+        idUser: number,
         manager: EntityManager,
     ): Promise<void> {
         const data = animalDto.newAnimal!;
         const repo = manager.getRepository(RanchAnimal);
 
-        const duplicated = await repo.findOne({ where: { code: data.code } });
+        const duplicated = await repo.findOne({ where: { idRanch: dto.idRanch, code: data.code } });
         if (duplicated) {
             throw new ConflictException({ message: `An animal with code ${data.code} already exists (RN-03).`, error: 'DUPLICATED_ANIMAL_CODE' });
         }
@@ -318,7 +323,7 @@ export class RegisterMovementUseCase {
             {
                 idRanchAnimal: savedAnimal.id,
                 idEventType: EVENT_TYPE_IDS.PURCHASE,
-                idUser: dto.idUser,
+                idUser,
                 notes: animalDto.notes,
                 isSynced: dto.isSynced ?? false,
                 eventDate: new Date(dto.movementDate),

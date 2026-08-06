@@ -36,6 +36,14 @@ export class User extends BaseCreatedUpdated {
     @Column({ name: 'celphone', type: 'varchar', length: 20, nullable: true })
     celphone: string | null;
 
+    // Código de "recuperar contraseña" vigente — hasheado (bcrypt, igual que password),
+    // nunca en texto plano. NULL cuando no hay ninguno pendiente.
+    @Column({ name: 'reset_code_hash', type: 'varchar', length: 255, nullable: true })
+    resetCodeHash: string | null;
+
+    @Column({ name: 'reset_code_expires_at', type: 'timestamp', nullable: true })
+    resetCodeExpiresAt: Date | null;
+
     @Column({ name: 'is_deleted', type: 'boolean', default: false })
     isDeleted: boolean;
 

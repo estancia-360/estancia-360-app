@@ -46,6 +46,7 @@ import { FatteningModule } from './app/fattening/fattening.module';
 import { AnimalHealthModule } from './app/animal-health/animal-health.module';
 import { MovementsAppModule } from './app/movements/movements-app.module';
 import { SubscriptionsModule } from './app/subscriptions/subscriptions.module';
+import { DashboardModule } from './app/dashboard/dashboard.module';
 import { SyncModule } from './app/sync/sync.module';
 import { RanchMembersModule } from './app/ranch-members/ranch-members.module';
 import { MailerModule } from './plugins/mailer/mailer.module';
@@ -107,6 +108,7 @@ import { MailerModule } from './plugins/mailer/mailer.module';
         AnimalHealthModule,
         MovementsAppModule,
         SubscriptionsModule,
+        DashboardModule,
         SyncModule,
         RanchMembersModule,
         MailerModule.register(),

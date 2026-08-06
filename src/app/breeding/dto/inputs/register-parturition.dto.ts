@@ -83,11 +83,24 @@ export class RegisterParturitionDto {
     @IsEnum(MotherConditionEnum)
     motherCondition?: MotherConditionEnum;
 
-    @ApiProperty({ description: 'Calf data. REQUIRED if criaStatus = "alive".', type: CriaRegistrationDto, required: false })
-    @ValidateIf((o) => o.criaStatus === CriaStatusEnum.ALIVE)
+    @ApiProperty({ description: 'Calf data. REQUIRED if criaStatus = "alive" and idCria is not provided.', type: CriaRegistrationDto, required: false })
+    @ValidateIf((o) => o.criaStatus === CriaStatusEnum.ALIVE && !o.idCria)
     @ValidateNested()
     @Type(() => CriaRegistrationDto)
     criaData?: CriaRegistrationDto;
+
+    @ApiProperty({
+        description:
+            'ID of an animal that ALREADY exists and represents the calf (offline sync case: the mobile app ' +
+            'creates the calf as its own ranch_animals row before this event syncs). When provided, criaData ' +
+            'is ignored and no new animal is created — this just links the existing one to the birth record.',
+        required: false,
+        example: 42,
+    })
+    @IsOptional()
+    @IsInt()
+    @IsPositive()
+    idCria?: number;
 
     @ApiProperty({ required: false })
     @IsOptional()
