@@ -9,11 +9,12 @@ import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/serv
 import { ParturitionDto } from 'src/modules/breeding-modules/parturitions/dto/parturition.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 import { GestationDiagnosisDto } from 'src/modules/breeding-modules/gestation-diagnoses/dto/gestation-diagnosis.dto';
-import { EVENT_TYPE_IDS } from 'src/shared/constants';
+import { EVENT_TYPE_IDS, PRODUCTION_TYPE_IDS } from 'src/shared/constants';
 import { CriaStatusEnum } from 'src/modules/breeding-modules/parturitions/entities/parturition.entity';
 import { GestationResultEnum } from 'src/modules/breeding-modules/gestation-diagnoses/entities/gestation-diagnosis.entity';
 import { RanchSubscriptionsService } from 'src/modules/payment-modules/ranch-subscriptions/services/ranch-subscriptions.service';
 import { RanchAnimalNotFoundException } from 'src/modules/ranch-management/ranch-animals/exceptions';
+import { RanchesService } from 'src/modules/ranch-management/ranches/services/ranches.service';
 
 @Injectable()
 export class RegisterParturitionUseCase {
@@ -21,6 +22,7 @@ export class RegisterParturitionUseCase {
         private readonly dataSource: DataSource,
         private readonly ranchAnimalsService: RanchAnimalsService,
         private readonly ranchUsersService: RanchUsersService,
+        private readonly ranchesService: RanchesService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly gestationDiagnosesService: GestationDiagnosesService,
         private readonly parturitionsService: ParturitionsService,
@@ -31,6 +33,14 @@ export class RegisterParturitionUseCase {
         const mother = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
         if (mother.sex !== 'F') throw new RanchAnimalNotFoundException(dto.idRanchAnimal);
         await this.ranchUsersService.assertMember(idUser, mother.idRanch);
+
+        const hasCria = await this.ranchesService.hasProductionTypeEnabled(mother.idRanch, PRODUCTION_TYPE_IDS.CRIA);
+        if (!hasCria) {
+            throw new BadRequestException({
+                message: `Ranch ID=${mother.idRanch} does not have Cría enabled as a rubro.`,
+                error: 'RANCH_PRODUCTION_TYPE_NOT_ENABLED',
+            });
+        }
 
         const diagnosis = await this.gestationDiagnosesService.findOneById(GestationDiagnosisDto, dto.idDiagnosis);
         if (diagnosis.event.idRanchAnimal !== dto.idRanchAnimal) {

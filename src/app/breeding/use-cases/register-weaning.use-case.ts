@@ -10,8 +10,9 @@ import { WeaningDto } from 'src/modules/breeding-modules/weanings/dto/weaning.dt
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
 import { RanchAnimal } from 'src/modules/ranch-management/ranch-animals/entities/ranch-animal.entity';
 import { RanchLotDto } from 'src/modules/ranch-management/ranch-lots/dto/ranch-lot.dto';
-import { EVENT_TYPE_IDS } from 'src/shared/constants';
+import { EVENT_TYPE_IDS, PRODUCTION_TYPE_IDS } from 'src/shared/constants';
 import { LotTypesEnum } from 'src/shared/enums';
+import { RanchesService } from 'src/modules/ranch-management/ranches/services/ranches.service';
 
 @Injectable()
 export class RegisterWeaningUseCase {
@@ -19,6 +20,7 @@ export class RegisterWeaningUseCase {
         private readonly dataSource: DataSource,
         private readonly ranchAnimalsService: RanchAnimalsService,
         private readonly ranchUsersService: RanchUsersService,
+        private readonly ranchesService: RanchesService,
         private readonly ranchLotsService: RanchLotsService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly weaningsService: WeaningsService,
@@ -27,6 +29,14 @@ export class RegisterWeaningUseCase {
     async execute(dto: RegisterWeaningDto, idUser: number): Promise<WeaningDto> {
         const cria = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
         await this.ranchUsersService.assertMember(idUser, cria.idRanch);
+
+        const hasCria = await this.ranchesService.hasProductionTypeEnabled(cria.idRanch, PRODUCTION_TYPE_IDS.CRIA);
+        if (!hasCria) {
+            throw new BadRequestException({
+                message: `Ranch ID=${cria.idRanch} does not have Cría enabled as a rubro.`,
+                error: 'RANCH_PRODUCTION_TYPE_NOT_ENABLED',
+            });
+        }
 
         const lot = await this.ranchLotsService.findOneById(RanchLotDto, dto.idLotDest);
         if (lot.lotType !== LotTypesEnum.REARING) {

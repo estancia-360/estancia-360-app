@@ -8,8 +8,9 @@ import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/
 import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { BreedingServiceDto } from 'src/modules/breeding-modules/breeding-services/dto/breeding-service.dto';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
-import { EVENT_TYPE_IDS } from 'src/shared/constants';
+import { EVENT_TYPE_IDS, PRODUCTION_TYPE_IDS } from 'src/shared/constants';
 import { RanchAnimalNotFoundException } from 'src/modules/ranch-management/ranch-animals/exceptions';
+import { RanchesService } from 'src/modules/ranch-management/ranches/services/ranches.service';
 
 @Injectable()
 export class RegisterBreedingServiceUseCase {
@@ -17,6 +18,7 @@ export class RegisterBreedingServiceUseCase {
         private readonly dataSource: DataSource,
         private readonly ranchAnimalsService: RanchAnimalsService,
         private readonly ranchUsersService: RanchUsersService,
+        private readonly ranchesService: RanchesService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly breedingServicesService: BreedingServicesService,
         private readonly gestationDiagnosesService: GestationDiagnosesService,
@@ -26,6 +28,14 @@ export class RegisterBreedingServiceUseCase {
         const female = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
         if (female.sex !== 'F') throw new RanchAnimalNotFoundException(dto.idRanchAnimal);
         await this.ranchUsersService.assertMember(idUser, female.idRanch);
+
+        const hasCria = await this.ranchesService.hasProductionTypeEnabled(female.idRanch, PRODUCTION_TYPE_IDS.CRIA);
+        if (!hasCria) {
+            throw new BadRequestException({
+                message: `Ranch ID=${female.idRanch} does not have Cría enabled as a rubro.`,
+                error: 'RANCH_PRODUCTION_TYPE_NOT_ENABLED',
+            });
+        }
 
         if (dto.idAnimalMale !== undefined && dto.idAnimalMale !== null) {
             const male = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idAnimalMale);

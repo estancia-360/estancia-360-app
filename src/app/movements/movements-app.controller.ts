@@ -63,8 +63,11 @@ export class MovementsAppController {
         summary: 'Cancel a pending movement (sale)',
         description: 'Animals still pending revert to prevIdStatus. Already-accepted animals are NOT reverted (RN-07, irreversible sale). Cancelling an already-cancelled movement is idempotent. Cancelling a confirmed movement → 409 MOVEMENT_ALREADY_CONFIRMED.',
     })
-    async cancelMovement(@Param('idMovement', ParseIntPipe) idMovement: number): Promise<{ movement: MovementDto }> {
-        return { movement: await this.cancelMovementUseCase.execute(idMovement) };
+    async cancelMovement(
+        @Param('idMovement', ParseIntPipe) idMovement: number,
+        @CurrentUser('id') idUser: number,
+    ): Promise<{ movement: MovementDto }> {
+        return { movement: await this.cancelMovementUseCase.execute(idMovement, idUser) };
     }
 
     @Post('animal-exit')
@@ -86,7 +89,8 @@ export class MovementsAppController {
     async updateAnimalExit(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateAnimalExitDto,
+        @CurrentUser('id') idUser: number,
     ): Promise<{ animalExit: AnimalExitDto }> {
-        return { animalExit: await this.updateAnimalExitUseCase.execute(id, dto) };
+        return { animalExit: await this.updateAnimalExitUseCase.execute(id, dto, idUser) };
     }
 }

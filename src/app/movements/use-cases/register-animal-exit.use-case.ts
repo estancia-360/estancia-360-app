@@ -4,6 +4,7 @@ import { RegisterAnimalExitDto } from '../dto/inputs/register-animal-exit.dto';
 import { AnimalExitsService } from 'src/modules/movement-modules/animal-exits/services/animal-exits.service';
 import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/services/animal-events.service';
 import { RanchAnimalsService } from 'src/modules/ranch-management/ranch-animals/services/ranch-animals.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { AnimalExitDto } from 'src/modules/movement-modules/animal-exits/dto/animal-exit.dto';
 import { ExitReasonEnum } from 'src/modules/movement-modules/animal-exits/entities/animal-exit.entity';
 import { RanchAnimalPlainDto } from 'src/modules/ranch-management/ranch-animals/dto/ranch-animal-plain.dto';
@@ -17,9 +18,10 @@ export class RegisterAnimalExitUseCase {
         private readonly animalExitsService: AnimalExitsService,
         private readonly animalEventsService: AnimalEventsService,
         private readonly ranchAnimalsService: RanchAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
     ) {}
 
-    async execute(dto: RegisterAnimalExitDto, idUser?: number): Promise<AnimalExitDto> {
+    async execute(dto: RegisterAnimalExitDto, idUser: number): Promise<AnimalExitDto> {
         if (dto.localId) {
             const existing = await this.animalExitsService.findOneByLocalId(dto.localId);
             if (existing) return (await this.animalExitsService.findOneById(AnimalExitDto, existing.id, { throwException: true }))!;
@@ -30,6 +32,7 @@ export class RegisterAnimalExitUseCase {
         }
 
         const animal = await this.ranchAnimalsService.findOneById(RanchAnimalPlainDto, dto.idRanchAnimal);
+        await this.ranchUsersService.assertMember(idUser, animal.idRanch);
 
         if (animal.idProductiveStatus === PRODUCTIVE_STATUS_IDS.BAJA) {
             throw new BadRequestException({

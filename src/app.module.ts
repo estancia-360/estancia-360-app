@@ -48,6 +48,7 @@ import { MovementsAppModule } from './app/movements/movements-app.module';
 import { SubscriptionsModule } from './app/subscriptions/subscriptions.module';
 import { DashboardModule } from './app/dashboard/dashboard.module';
 import { SyncModule } from './app/sync/sync.module';
+import { BulkImportModule } from './app/bulk-import/bulk-import.module';
 import { RanchMembersModule } from './app/ranch-members/ranch-members.module';
 import { MailerModule } from './plugins/mailer/mailer.module';
 
@@ -110,6 +111,7 @@ import { MailerModule } from './plugins/mailer/mailer.module';
         SubscriptionsModule,
         DashboardModule,
         SyncModule,
+        BulkImportModule,
         RanchMembersModule,
         MailerModule.register(),
     ],

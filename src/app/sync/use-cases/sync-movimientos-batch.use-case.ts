@@ -71,7 +71,7 @@ export class SyncMovimientosBatchUseCase {
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
-                        await this.updateAnimalExitUseCase.execute(op.serverId, data as UpdateAnimalExitDto);
+                        await this.updateAnimalExitUseCase.execute(op.serverId, data as UpdateAnimalExitDto, idUser);
                         serverId = op.serverId;
                         break;
                     }
@@ -133,7 +133,7 @@ export class SyncMovimientosBatchUseCase {
                         if (data.status !== 'cancelled') {
                             throw new BadRequestException('Updating a movement only accepts { status: "cancelled" } — confirmations go through movementAnimals');
                         }
-                        await this.cancelMovementUseCase.execute(op.serverId);
+                        await this.cancelMovementUseCase.execute(op.serverId, idUser);
                         serverId = op.serverId;
                         break;
                     }

@@ -2,6 +2,7 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { MovementsService } from 'src/modules/movement-modules/movements/services/movements.service';
 import { MovementAnimalsService } from 'src/modules/movement-modules/movement-animals/services/movement-animals.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { MovementDto } from 'src/modules/movement-modules/movements/dto/movement.dto';
 import { MovementNotFoundException } from 'src/modules/movement-modules/movements/exceptions';
 import { MovementStatusEnum } from 'src/modules/movement-modules/movements/entities/movement.entity';
@@ -14,12 +15,14 @@ export class CancelMovementUseCase {
         private readonly dataSource: DataSource,
         private readonly movementsService: MovementsService,
         private readonly movementAnimalsService: MovementAnimalsService,
+        private readonly ranchUsersService: RanchUsersService,
     ) {}
 
-    async execute(idMovement: number): Promise<MovementDto> {
+    async execute(idMovement: number, idUser: number): Promise<MovementDto> {
         return await this.dataSource.transaction(async (manager) => {
             const movement = await this.movementsService.findEntityById(idMovement, manager);
             if (!movement) throw new MovementNotFoundException(idMovement);
+            await this.ranchUsersService.assertMember(idUser, movement.idRanch);
 
             if (movement.status === MovementStatusEnum.CANCELLED) {
                 return (await this.movementsService.findOneById(MovementDto, idMovement, { throwException: true }, manager))!;

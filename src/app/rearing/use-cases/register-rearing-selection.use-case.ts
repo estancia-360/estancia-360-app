@@ -41,6 +41,14 @@ export class RegisterRearingSelectionUseCase {
             });
         }
 
+        const hasRecria = await this.ranchesService.hasProductionTypeEnabled(animal.idRanch, PRODUCTION_TYPE_IDS.RECRIA);
+        if (!hasRecria) {
+            throw new BadRequestException({
+                message: `Ranch ID=${animal.idRanch} does not have Recría enabled as a rubro.`,
+                error: 'RANCH_PRODUCTION_TYPE_NOT_ENABLED',
+            });
+        }
+
         // RN-09: Engorde solo desde Recría Y estancia con Engorde habilitado.
         if (dto.destination === RearingDestinationEnum.FATTENING) {
             const hasEngorde = await this.ranchesService.hasProductionTypeEnabled(animal.idRanch, PRODUCTION_TYPE_IDS.ENGORDE);

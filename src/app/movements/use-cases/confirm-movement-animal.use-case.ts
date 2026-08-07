@@ -4,6 +4,7 @@ import { ConfirmMovementAnimalDto } from '../dto/inputs/confirm-movement-animal.
 import { MovementsService } from 'src/modules/movement-modules/movements/services/movements.service';
 import { MovementAnimalsService } from 'src/modules/movement-modules/movement-animals/services/movement-animals.service';
 import { AnimalEventsService } from 'src/modules/ranch-management/animal-events/services/animal-events.service';
+import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/services/ranch-users.service';
 import { MovementDto } from 'src/modules/movement-modules/movements/dto/movement.dto';
 import { MovementNotFoundException } from 'src/modules/movement-modules/movements/exceptions';
 import { MovementStatusEnum, MovementTypeEnum } from 'src/modules/movement-modules/movements/entities/movement.entity';
@@ -18,13 +19,15 @@ export class ConfirmMovementAnimalUseCase {
         private readonly movementsService: MovementsService,
         private readonly movementAnimalsService: MovementAnimalsService,
         private readonly animalEventsService: AnimalEventsService,
+        private readonly ranchUsersService: RanchUsersService,
     ) {}
 
-    async execute(idMovementAnimal: number, dto: ConfirmMovementAnimalDto, idUser?: number): Promise<MovementDto> {
+    async execute(idMovementAnimal: number, dto: ConfirmMovementAnimalDto, idUser: number): Promise<MovementDto> {
         return await this.dataSource.transaction(async (manager) => {
             const ma = await this.movementAnimalsService.findEntityByIdOrFail(idMovementAnimal, manager);
             const movement = await this.movementsService.findEntityById(ma.idMovement, manager);
             if (!movement) throw new MovementNotFoundException(ma.idMovement);
+            await this.ranchUsersService.assertMember(idUser, movement.idRanch);
 
             if (movement.movementType !== MovementTypeEnum.SALE) {
                 throw new BadRequestException({
