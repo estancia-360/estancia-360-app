@@ -27,6 +27,9 @@ export class LoginWebResponseDto {
     @ApiProperty({ example: 3 })
     idRole: number;
 
+    @ApiProperty({ description: 'Nombre completo del usuario, para mostrar en el panel', example: 'Juan Carlos Pérez' })
+    fullname: string;
+
     @ApiProperty({
         description: 'Estancias donde el usuario es Owner. Array vacío si no es dueño de ninguna — puede ser dueño de varias.',
         type: [OwnedRanchDto],

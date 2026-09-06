@@ -61,6 +61,9 @@ export class AuthService {
             accessToken,
             idUser: user.id,
             idRole: user.role.id,
+            // 12f (auditoria QA E2E, 2026-09-03): el panel mostraba "Usuario #N" porque el login
+            // web nunca devolvia el nombre — no era un bug de UI, faltaba el dato en la respuesta.
+            fullname: user.fullname,
             ranches,
         };
     }

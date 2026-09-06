@@ -10,6 +10,7 @@ export class UserForAuthDto {
     @DtoField() id!: number;
     @DtoField() roleId!: number;
     @DtoField() email!: string;
+    @DtoField() fullname!: string;
     @DtoField() isDeleted!: boolean;
 
     @ApiHideProperty()
