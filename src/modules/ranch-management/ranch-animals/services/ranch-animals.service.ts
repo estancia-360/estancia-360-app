@@ -22,9 +22,12 @@ import { AnimalBreedDto } from 'src/modules/ranch-management/animal-breeds/dto/a
 import { AnimalClassesService } from 'src/modules/core/animal-classes/services/animal-classes.service';
 import { AnimalClassDto } from 'src/modules/core/animal-classes/dto/animal-class.dto';
 import { RanchSubscriptionsService } from 'src/modules/payment-modules/ranch-subscriptions/services/ranch-subscriptions.service';
-import { PRODUCTIVE_STATUS_IDS } from 'src/shared/constants';
+import { RanchLotsService } from 'src/modules/ranch-management/ranch-lots/services/ranch-lots.service';
+import { RanchLotDto } from 'src/modules/ranch-management/ranch-lots/dto/ranch-lot.dto';
+import { PRODUCTIVE_STATUS_IDS, ANIMAL_STATUS_IDS } from 'src/shared/constants';
 import { FindAllRanchAnimalsParamsDto } from '../dto/find-all-ranch-animals-params.dto';
 import { PaginationResponseDto } from 'src/shared/dto';
+import { BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class RanchAnimalsService {
@@ -38,8 +41,22 @@ export class RanchAnimalsService {
         private readonly animalBreedsService: AnimalBreedsService,
         private readonly animalClassesService: AnimalClassesService,
         private readonly ranchSubscriptionsService: RanchSubscriptionsService,
+        private readonly ranchLotsService: RanchLotsService,
     ) {
         this.repo = new DtoRepository(rawRepo);
+    }
+
+    // SEC-003 (auditoria QA, 2026-08-25 / BUG-10 DBI-20, 2026-09-03): antes no se
+    // validaba que el lote perteneciera a la misma estancia que el animal — un lote
+    // de la estancia B se podia asignar tranquilamente a un animal de la estancia A.
+    private async assertLotBelongsToRanch(idLot: number, idRanch: number): Promise<void> {
+        const lot = await this.ranchLotsService.findOneById(RanchLotDto, idLot);
+        if (lot.idRanch !== idRanch) {
+            throw new BadRequestException({
+                message: `Lot ID=${idLot} does not belong to ranch ID=${idRanch}.`,
+                error: 'LOT_NOT_IN_RANCH',
+            });
+        }
     }
 
     async create<T>(dto: CreateRanchAnimalDto, returnDto: new () => T): Promise<T> {
@@ -50,6 +67,7 @@ export class RanchAnimalsService {
         await this.animalStatusesService.findOneById(AnimalStatusDto, dto.idStatus);
         await this.animalBreedsService.findOneById(AnimalBreedDto, dto.idBreed);
         await this.animalClassesService.findOneById(AnimalClassDto, dto.idAnimalClass);
+        if (dto.idLot) await this.assertLotBelongsToRanch(dto.idLot, dto.idRanch);
 
         if (dto.codeFather && dto.codeMother && dto.codeFather === dto.codeMother) {
             throw new SameParentCodeException();
@@ -77,8 +95,16 @@ export class RanchAnimalsService {
         if (dto.idLot) animal.idLot = dto.idLot;
         if (dto.idProductiveStatus) animal.idProductiveStatus = dto.idProductiveStatus;
 
-        const saved = await this.rawRepo.save(animal);
-        return (await this.findOneById(returnDto, saved.id))!;
+        // BUG-11 (auditoria QA E2E, 2026-09-03): un choque de unicidad que se escapa del
+        // chequeo de arriba (condicion de carrera, o un esquema desactualizado que todavia
+        // tenga el UNIQUE(code) global viejo) no debe devolver un 500 crudo de Postgres.
+        try {
+            const saved = await this.rawRepo.save(animal);
+            return (await this.findOneById(returnDto, saved.id))!;
+        } catch (error: any) {
+            if (error?.code === '23505') throw new AnimalCodeAlreadyExistsException();
+            throw error;
+        }
     }
 
     async update<T>(id: number, dto: UpdateRanchAnimalDto, returnDto: new () => T): Promise<T> {
@@ -88,6 +114,15 @@ export class RanchAnimalsService {
 
         const animal = await this.rawRepo.findOne({ where: { id } });
         if (!animal) throw new RanchAnimalNotFoundException(id);
+
+        // BUS-002 (auditoria QA, 2026-08-25): Baja (ps=4) es irreversible por RN-02/RN-07 —
+        // un animal en Baja no puede recibir ningun cambio via este update generico.
+        if (animal.idProductiveStatus === PRODUCTIVE_STATUS_IDS.BAJA) {
+            throw new BadRequestException({
+                message: `Animal ID=${id} is discharged (ps=4) and is irreversible — it cannot be updated.`,
+                error: 'ANIMAL_IS_BAJA',
+            });
+        }
 
         const targetRanch = animal.idRanch;
         if (dto.codeMother) {
@@ -115,8 +150,10 @@ export class RanchAnimalsService {
         if (dto.weight) animal.weight = dto.weight;
         if (dto.sex) animal.sex = dto.sex;
         if (dto.createdAt) animal.createdAt = dto.createdAt;
-        if (dto.idLot) animal.idLot = dto.idLot;
-        if (dto.idProductiveStatus) animal.idProductiveStatus = dto.idProductiveStatus;
+        if (dto.idLot) {
+            await this.assertLotBelongsToRanch(dto.idLot, targetRanch);
+            animal.idLot = dto.idLot;
+        }
 
         const saved = await this.rawRepo.save(animal);
         return (await this.findOneById(returnDto, saved.id))!;
@@ -169,6 +206,11 @@ export class RanchAnimalsService {
         return await repo.save(cria);
     }
 
+    // BUG-06 (auditoria QA E2E, 2026-09-03): antes solo excluia por idProductiveStatus=Baja.
+    // Un animal podia quedar con idStatus=Inactivo/Vendido (por ejemplo, tras un animal_exit o
+    // una venta) sin que su idProductiveStatus todavia reflejara Baja en el mismo instante, e
+    // igual seguia contando como cabeza activa para el dashboard y el chequeo de capacidad del
+    // plan. Ahora tambien excluye por idStatus.
     async countActiveByRanch(idRanch: number, manager?: EntityManager): Promise<number> {
         const repo = manager?.getRepository(RanchAnimal) ?? this.rawRepo;
         return await repo
@@ -176,6 +218,9 @@ export class RanchAnimalsService {
             .where('animal.idRanch = :idRanch', { idRanch })
             .andWhere('(animal.idProductiveStatus IS NULL OR animal.idProductiveStatus != :baja)', {
                 baja: PRODUCTIVE_STATUS_IDS.BAJA,
+            })
+            .andWhere('animal.idStatus NOT IN (:...inactiveStatuses)', {
+                inactiveStatuses: [ANIMAL_STATUS_IDS.INACTIVE, ANIMAL_STATUS_IDS.SOLD],
             })
             .getCount();
     }

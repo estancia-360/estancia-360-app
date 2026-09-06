@@ -6,9 +6,14 @@ import { AnimalStatus } from 'src/modules/ranch-management/animal-statuses/entit
 import { AnimalClass } from 'src/modules/core/animal-classes/entities/animal-class.entity';
 import { RanchLot } from 'src/modules/ranch-management/ranch-lots/entities/ranch-lot.entity';
 
+// BUG-04 (auditoria QA E2E, 2026-09-03): local_id era UNIQUE global — un local_id repetido
+// entre dos estancias distintas (colision de UUID, o el mismo valor reenviado por error) hacía
+// que la segunda estancia "encontrara" el registro de la primera y el sync respondiera éxito
+// sin haber guardado nada propio, de forma silenciosa. Pasa a ser único por estancia.
 @Entity('ranch_animals')
 @Check(`sex IN ('F','M')`)
 @Index(['idRanch', 'code'], { unique: true })
+@Index(['idRanch', 'localId'], { unique: true })
 export class RanchAnimal extends BaseCreatedUpdated {
     @PrimaryGeneratedColumn({ name: 'id_ranch_animal', type: 'bigint' })
     id: number;

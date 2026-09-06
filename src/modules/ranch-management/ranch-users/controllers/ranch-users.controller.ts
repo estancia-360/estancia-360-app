@@ -8,12 +8,12 @@ import { CurrentUser } from 'src/shared/decorators';
 import { RanchRolesEnum } from 'src/shared/enums';
 
 /**
- * DEUDA TÉCNICA (igual que el proyecto viejo, coordinar con mobile antes de
- * tocar): no valida que quien llama sea el Owner de la estancia — solo exige
- * estar autenticado (mínimo razonable agregado acá). Cualquier usuario
- * logueado puede agregar a cualquier otro como trabajador de cualquier
- * estancia. RN-03 (solo el Owner agrega/quita Administradores) tampoco se
- * aplica todavía porque este endpoint solo agrega Workers.
+ * BUG-02 (auditoria QA E2E, 2026-09-03): este endpoint viejo no validaba que quien
+ * llamara fuera el Owner de la estancia — cualquier usuario logueado podia agregarse
+ * (o agregar a cualquier otro) como trabajador de cualquier estancia, saltando por
+ * completo el aislamiento multi-tenant. Se agrego assertOwner en vez de retirar el
+ * endpoint, para no romper al movil si todavia lo usa (existe un endpoint mas nuevo,
+ * POST /ranch-users/ranch/:id/members en app/ranch-members/, que ya validaba bien).
  */
 @ApiTags('Ranch Users')
 @ApiBearerAuth('access-token')
@@ -24,9 +24,10 @@ export class RanchUsersController {
     @Post()
     @UserUp()
     @HttpCode(HttpStatus.CREATED)
-    @ApiOperation({ summary: 'Add a worker to a ranch' })
+    @ApiOperation({ summary: 'Add a worker to a ranch [OWNER ONLY]' })
     @ApiCreatedResponse({ schema: { example: { message: 'El usuario fue agregado como trabajador' } } })
-    async create(@Body() dto: CreateRanchUserWorkerDto): Promise<{ message: string }> {
+    async create(@Body() dto: CreateRanchUserWorkerDto, @CurrentUser('id') idUser: number): Promise<{ message: string }> {
+        await this.ranchUsersService.assertOwner(idUser, dto.idRanch);
         await this.ranchUsersService.create({
             idUser: dto.idUser,
             idRanch: dto.idRanch,

@@ -96,7 +96,7 @@ export class SyncCriaBatchUseCase {
 
         const ranchPastures = await this.processRanchPastures(dto.ranchPastures ?? [], dto.idRanch, localIdToServerId);
         const ranchLots = await this.processRanchLots(dto.ranchLots ?? [], dto.idRanch, localIdToServerId);
-        const ranchAnimals = await this.processRanchAnimals(dto.ranchAnimals ?? [], localIdToServerId);
+        const ranchAnimals = await this.processRanchAnimals(dto.ranchAnimals ?? [], dto.idRanch, localIdToServerId);
         const breedingServices = await this.processBreedingServices(dto.breedingServices ?? [], localIdToServerId, idUser);
         const gestationDiagnoses = await this.processGestationDiagnoses(dto.gestationDiagnoses ?? [], localIdToServerId, idUser);
         const parturitions = await this.processParturitions(dto.parturitions ?? [], localIdToServerId, idUser);
@@ -238,8 +238,17 @@ export class SyncCriaBatchUseCase {
         return this.buildSectionResult(results);
     }
 
+    // BUG-03 / BUG-04 (auditoria QA E2E, 2026-09-03): a diferencia de processRanchPastures/
+    // processRanchLots (arriba), este bloque tomaba el idRanch de cada fila del cliente
+    // (`data.idRanch`) en vez del idRanch del batch ya validado contra el usuario autenticado
+    // — permitia crear/editar/borrar animales de OTRA estancia con solo mandar un idRanch o
+    // serverId ajeno en el payload. La busqueda de idempotencia por localId tampoco filtraba
+    // por estancia, así que un localId repetido entre dos estancias distintas (colision, no
+    // necesariamente maliciosa) hacia que la segunda estancia "heredara" en silencio el
+    // serverId del animal de la primera, sin escribir nada propio ni avisar del choque.
     private async processRanchAnimals(
         operations: SyncRanchAnimalOperationDto[],
+        idRanch: number,
         localIdToServerId: Map<string, number>,
     ): Promise<SyncSectionDto> {
         const results: SyncOperationResultDto[] = [];
@@ -251,13 +260,13 @@ export class SyncCriaBatchUseCase {
 
                 switch (op.operation) {
                     case 'create': {
-                        const existing = await this.ranchAnimalRepository.findOne({ where: { localId: op.localId } });
+                        const existing = await this.ranchAnimalRepository.findOne({ where: { localId: op.localId, idRanch } });
                         if (existing) {
                             serverId = Number(existing.id);
                         } else {
                             const animal: any = await this.ranchAnimalsService.create(
                                 {
-                                    idRanch: data.idRanch,
+                                    idRanch,
                                     idBreed: data.idBreed,
                                     idStatus: data.idStatus,
                                     idAnimalClass: data.idAnimalClass,
@@ -284,6 +293,10 @@ export class SyncCriaBatchUseCase {
                     }
                     case 'update': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for update');
+                        const target = await this.ranchAnimalRepository.findOne({ where: { id: op.serverId } });
+                        if (!target || target.idRanch !== idRanch) {
+                            throw new BadRequestException(`Animal ID=${op.serverId} does not belong to ranch ID=${idRanch}.`);
+                        }
                         await this.ranchAnimalsService.update(
                             op.serverId,
                             {
@@ -298,7 +311,6 @@ export class SyncCriaBatchUseCase {
                                 codeFather: data.codeFather,
                                 createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
                                 idLot: data.idLot,
-                                idProductiveStatus: data.idProductiveStatus,
                             },
                             RanchAnimalDto,
                         );
@@ -307,6 +319,10 @@ export class SyncCriaBatchUseCase {
                     }
                     case 'delete': {
                         if (!op.serverId) throw new BadRequestException('serverId is required for delete');
+                        const target = await this.ranchAnimalRepository.findOne({ where: { id: op.serverId } });
+                        if (!target || target.idRanch !== idRanch) {
+                            throw new BadRequestException(`Animal ID=${op.serverId} does not belong to ranch ID=${idRanch}.`);
+                        }
                         await this.ranchAnimalRepository.update({ id: op.serverId }, { idStatus: 3 });
                         serverId = op.serverId;
                         break;

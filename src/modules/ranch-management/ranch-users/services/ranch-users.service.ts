@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { RanchUser } from '../entities/ranch-user.entity';
 import { DtoRepository } from 'src/shared/orm';
 import { RanchRolesEnum } from 'src/shared/enums';
@@ -42,8 +42,11 @@ export class RanchUsersService {
         return await this.rawRepo.find({ where: { idUser }, relations: { ranch: true, role: true } });
     }
 
+    // SEC-002 (auditoria QA, 2026-08-25): antes no filtraba is_deleted — una membresia
+    // eliminada logicamente seguia autorizando todo, porque assertMember/isOwner llaman
+    // a esta funcion como unico punto de verdad.
     async findOne(idUser: number, idRanch: number): Promise<RanchUser | null> {
-        return this.rawRepo.findOne({ where: { idUser, idRanch } });
+        return this.rawRepo.findOne({ where: { idUser, idRanch, isDeleted: false } });
     }
 
     async findAllByRanch<T>(dto: new () => T, idRanch: number): Promise<T[]> {
@@ -73,6 +76,24 @@ export class RanchUsersService {
         const membership = await this.assertMember(idUser, idRanch);
         if (membership.idRole !== RanchRolesEnum.OWNER) {
             throw new ForbiddenException({ message: 'Only the ranch Owner can perform this action (RN-01/RN-16).', error: 'ONLY_OWNER_ALLOWED' });
+        }
+    }
+
+    /**
+     * BUG-09 (auditoria QA E2E, 2026-09-03): usado por GET /users/:idUser y
+     * GET /users/ranches/:idUser, que antes dejaban leer los datos de CUALQUIER usuario
+     * (incluida su lista de estancias y rol en cada una) con solo autenticarse y adivinar
+     * un idUser — enumeracion libre de usuarios. Todavia no existe un modelo de permisos
+     * mas fino (ej. admin global viendo cualquier usuario), asi que el minimo razonable es
+     * restringir a "uno mismo" o "alguien que comparte al menos una estancia conmigo".
+     */
+    async assertSharesRanchOrSelf(idUser: number, idTargetUser: number): Promise<void> {
+        if (idUser === idTargetUser) return;
+        const myRanches = await this.rawRepo.find({ where: { idUser, isDeleted: false }, select: { idRanch: true } });
+        const idRanches = myRanches.map((r) => r.idRanch);
+        const shared = idRanches.length > 0 ? await this.rawRepo.findOne({ where: { idUser: idTargetUser, idRanch: In(idRanches), isDeleted: false } }) : null;
+        if (!shared) {
+            throw new ForbiddenException({ message: `User ID=${idUser} has no relation to user ID=${idTargetUser}.`, error: 'USER_ACCESS_DENIED' });
         }
     }
 }

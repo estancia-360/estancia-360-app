@@ -87,7 +87,16 @@ export class UsersService {
         user.password = await hashPassword(dto.password);
         user.celphone = dto.celphone?.trim() ?? null;
 
-        const saved = await repo.save(user);
+        // BUG-10 (auditoria QA E2E, 2026-09-03): los chequeos de arriba no cierran la condicion
+        // de carrera (dos registros simultaneos con el mismo email/ci); el indice unico parcial
+        // en la entidad es la proteccion real, esto solo evita que su violacion escape como 500.
+        let saved: User;
+        try {
+            saved = await repo.save(user);
+        } catch (error: any) {
+            if (error?.code === '23505') throw new UserAlreadyExistsException();
+            throw error;
+        }
 
         const result = await new DtoRepository(repo).findOne({ dto: returnDto, where: { id: saved.id } });
         return result!;

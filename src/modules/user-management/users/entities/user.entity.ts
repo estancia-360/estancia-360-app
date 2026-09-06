@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseCreatedUpdated } from 'src/database/entities/base.entity';
 import { Role } from 'src/modules/core/roles/entities/role.entity';
 import { RanchUser } from 'src/modules/ranch-management/ranch-users/entities/ranch-user.entity';
@@ -7,7 +7,15 @@ import { RanchUser } from 'src/modules/ranch-management/ranch-users/entities/ran
 // BaseCreatedUpdated (createdAt+updatedAt) en vez de BaseEntitySoftDelete, y el
 // borrado lógico se maneja a mano en el service filtrando por isDeleted=false.
 // Sin refresh_token — este proyecto usa un único access token, sin rotación.
+//
+// BUG-10 (auditoria QA E2E, 2026-09-03): ci/email solo se validaban como unicos a nivel
+// aplicacion (existsBy({..., isDeleted:false}) en users.service.create) — una condicion de
+// carrera (dos registros simultaneos) podia colar dos usuarios activos con el mismo ci/email.
+// Los indices unicos son PARCIALES (solo sobre isDeleted=false) a proposito, para no romper el
+// flujo ya existente de reusar el email/ci de una cuenta previamente borrada logicamente.
 @Entity('users')
+@Index('UQ_users_email_active', ['email'], { unique: true, where: '"is_deleted" = false' })
+@Index('UQ_users_ci_active', ['ci'], { unique: true, where: '"is_deleted" = false' })
 export class User extends BaseCreatedUpdated {
     @PrimaryGeneratedColumn({ name: 'id_user' })
     id: number;
