@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { PASSWORD_COMPLEXITY_REGEX, PASSWORD_COMPLEXITY_MESSAGE } from 'src/shared/constants';
 
 /**
  * No extiende CreateUserDto: el auto-registro nunca debe poder elegir roleId
@@ -41,6 +42,7 @@ export class RegisterDto {
     @IsString({ message: 'La contraseña debe ser texto' })
     @IsNotEmpty({ message: 'La contraseña es obligatoria' })
     @Length(8, 255, { message: 'La contraseña debe tener al menos 8 caracteres' })
+    @Matches(PASSWORD_COMPLEXITY_REGEX, { message: PASSWORD_COMPLEXITY_MESSAGE })
     password: string;
 
     @ApiProperty({ description: 'Número de celular', example: '78945612', required: false })

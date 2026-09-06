@@ -9,7 +9,6 @@ import {
     IsPositive,
     IsString,
     MaxLength,
-    Min,
 } from 'class-validator';
 
 export class CreateRanchAnimalDto {
@@ -72,7 +71,7 @@ export class CreateRanchAnimalDto {
     @ApiProperty({ example: 350.75, required: false })
     @IsOptional()
     @IsNumber({ maxDecimalPlaces: 2 })
-    @Min(0)
+    @IsPositive()
     weight?: number;
 
     @ApiProperty({ enum: ['F', 'M'], example: 'F' })

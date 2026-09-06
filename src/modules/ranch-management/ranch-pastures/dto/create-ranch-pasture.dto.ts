@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
 
 export class CreateRanchPastureDto {
     @ApiProperty({ example: 1 })
@@ -14,7 +14,7 @@ export class CreateRanchPastureDto {
 
     @ApiProperty({ example: 25.5 })
     @IsNumber()
-    @Min(0)
+    @IsPositive()
     @IsNotEmpty()
     areaHectares: number;
 

@@ -74,8 +74,8 @@ export class UsersService {
     async create<T>(returnDto: new () => T, dto: CreateUserDto, options?: MutationOptions): Promise<T> {
         const repo = options?.manager?.getRepository(User) ?? this.rawRepo;
 
-        if (await repo.existsBy({ email: dto.email.trim(), isDeleted: false })) throw new UserAlreadyExistsException();
-        if (await repo.existsBy({ ci: dto.ci.trim(), isDeleted: false })) throw new UserAlreadyExistsException();
+        if (await repo.existsBy({ email: dto.email.trim(), isDeleted: false })) throw new UserAlreadyExistsException('email');
+        if (await repo.existsBy({ ci: dto.ci.trim(), isDeleted: false })) throw new UserAlreadyExistsException('ci');
 
         const user = repo.create();
         user.roleId = dto.roleId;
@@ -94,7 +94,7 @@ export class UsersService {
         try {
             saved = await repo.save(user);
         } catch (error: any) {
-            if (error?.code === '23505') throw new UserAlreadyExistsException();
+            if (error?.code === '23505') throw new UserAlreadyExistsException(error?.constraint === 'uq_users_ci_active' ? 'ci' : 'email');
             throw error;
         }
 

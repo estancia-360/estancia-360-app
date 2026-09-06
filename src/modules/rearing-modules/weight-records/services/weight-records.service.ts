@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { WeightRecord, WeightTypeEnum } from '../entities/weight-record.entity';
@@ -45,7 +45,19 @@ export class WeightRecordsService {
         if (data.bodyCondition !== undefined) record.bodyCondition = data.bodyCondition;
         if (data.ageDays !== undefined) record.ageDays = data.ageDays;
         if (data.notes !== undefined) record.notes = data.notes;
-        return await repo.save(record);
+        return await this.saveOrThrowFriendly(repo, record);
+    }
+
+    // BUG-11 (mismo patron aplicado a esta tabla — migracion 012 le agrego un CHECK de rango a
+    // weight; sin esto, cualquier violacion que se cuele mas alla del DTO escaparia como 500
+    // crudo de Postgres en vez de un 400 entendible).
+    private async saveOrThrowFriendly(repo: Repository<WeightRecord>, record: WeightRecord): Promise<WeightRecord> {
+        try {
+            return await repo.save(record);
+        } catch (error: any) {
+            if (error?.code === '23514') throw new BadRequestException({ message: 'One or more field values are out of the allowed range.', error: 'INVALID_FIELD_RANGE' });
+            throw error;
+        }
     }
 
     findOneById<T>(dto: new () => T, id: number, options: { throwException: false }, manager?: EntityManager): Promise<T | null>;
@@ -75,7 +87,7 @@ export class WeightRecordsService {
         if (data.bodyCondition !== undefined) record.bodyCondition = data.bodyCondition;
         if (data.ageDays !== undefined) record.ageDays = data.ageDays;
         if (data.notes !== undefined) record.notes = data.notes;
-        return await repo.save(record);
+        return await this.saveOrThrowFriendly(repo, record);
     }
 
     async deleteById(id: number, manager?: EntityManager): Promise<void> {

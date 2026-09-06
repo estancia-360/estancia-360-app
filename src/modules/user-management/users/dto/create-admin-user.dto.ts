@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { PASSWORD_COMPLEXITY_REGEX, PASSWORD_COMPLEXITY_MESSAGE } from 'src/shared/constants';
 
 // Same fields as CreateUserDto minus roleId — the caller can never choose the
 // role, it's always ADMIN (see AdminUsersController). Mirrors the pattern
@@ -38,6 +39,7 @@ export class CreateAdminUserDto {
     @IsString({ message: 'La contraseña debe ser texto' })
     @IsNotEmpty({ message: 'La contraseña es obligatoria' })
     @Length(8, 255, { message: 'La contraseña debe tener al menos 8 caracteres' })
+    @Matches(PASSWORD_COMPLEXITY_REGEX, { message: PASSWORD_COMPLEXITY_MESSAGE })
     password: string;
 
     @ApiProperty({ description: 'Número de celular', example: '78945612', required: false })

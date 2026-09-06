@@ -96,7 +96,12 @@ export class RegisterParturitionUseCase {
                         code: dto.criaData.code,
                         sex: dto.criaData.sex,
                         birthdate: new Date(dto.eventDate),
-                        weight: dto.criaData.weight,
+                        // 12d (auditoria QA E2E, 2026-09-03): criaWeight (peso al nacer, va a
+                        // parturitions.cria_weight) y criaData.weight son campos independientes en
+                        // el DTO — si el cliente solo manda el primero, la ficha del animal quedaba
+                        // sin peso. criaData.weight gana si ambos vienen (puede ser una segunda
+                        // pesada mas precisa), pero criaWeight sirve de respaldo.
+                        weight: dto.criaData.weight ?? dto.criaWeight,
                         idMother: dto.idRanchAnimal,
                     },
                     manager,

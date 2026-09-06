@@ -88,6 +88,7 @@ export class RanchAnimalsService {
         animal.idBreed = dto.idBreed;
         animal.idAnimalClass = dto.idAnimalClass;
         animal.code = dto.code;
+        this.assertBirthdateNotFuture(dto.birthdate);
         animal.birthdate = dto.birthdate;
         if (dto.weight) animal.weight = dto.weight;
         animal.sex = dto.sex;
@@ -103,6 +104,9 @@ export class RanchAnimalsService {
             return (await this.findOneById(returnDto, saved.id))!;
         } catch (error: any) {
             if (error?.code === '23505') throw new AnimalCodeAlreadyExistsException();
+            // BUG-11 (misma logica, extendida a CHECK constraints de la migracion 012 —
+            // pesos/fechas fuera de rango que se cuelen por algun camino no cubierto arriba).
+            if (error?.code === '23514') throw new BadRequestException({ message: 'One or more field values are out of the allowed range.', error: 'INVALID_FIELD_RANGE' });
             throw error;
         }
     }
@@ -146,7 +150,10 @@ export class RanchAnimalsService {
             await this.animalClassesService.findOneById(AnimalClassDto, dto.idAnimalClass);
             animal.idAnimalClass = dto.idAnimalClass;
         }
-        if (dto.birthdate) animal.birthdate = dto.birthdate;
+        if (dto.birthdate) {
+            this.assertBirthdateNotFuture(dto.birthdate);
+            animal.birthdate = dto.birthdate;
+        }
         if (dto.weight) animal.weight = dto.weight;
         if (dto.sex) animal.sex = dto.sex;
         if (dto.createdAt) animal.createdAt = dto.createdAt;
@@ -155,8 +162,14 @@ export class RanchAnimalsService {
             animal.idLot = dto.idLot;
         }
 
-        const saved = await this.rawRepo.save(animal);
-        return (await this.findOneById(returnDto, saved.id))!;
+        try {
+            const saved = await this.rawRepo.save(animal);
+            return (await this.findOneById(returnDto, saved.id))!;
+        } catch (error: any) {
+            if (error?.code === '23505') throw new AnimalCodeAlreadyExistsException();
+            if (error?.code === '23514') throw new BadRequestException({ message: 'One or more field values are out of the allowed range.', error: 'INVALID_FIELD_RANGE' });
+            throw error;
+        }
     }
 
     findOneById<T>(dto: new () => T, id: number, options: { throwException: false }): Promise<T | null>;
@@ -165,6 +178,15 @@ export class RanchAnimalsService {
         const result = await this.repo.findOne({ dto, where: { id } });
         if (!result && throwException) throw new RanchAnimalNotFoundException(id);
         return result;
+    }
+
+    // DBI-12 (auditoria QA E2E, 2026-09-03): antes no habia ningun chequeo de "fecha de
+    // nacimiento futura" — un CHECK a nivel DB (migracion 012) lo bloquea, pero sin este
+    // chequeo de aplicacion esa violacion escapaba como 500 crudo en vez de un 400 entendible.
+    private assertBirthdateNotFuture(birthdate: Date): void {
+        if (new Date(birthdate) > new Date()) {
+            throw new BadRequestException({ message: 'birthdate cannot be in the future.', error: 'BIRTHDATE_IN_FUTURE' });
+        }
     }
 
     findOneByCode<T>(dto: new () => T, idRanch: number, code: string, options: { throwException: false }): Promise<T | null>;
@@ -199,6 +221,7 @@ export class RanchAnimalsService {
         cria.idProductiveStatus = PRODUCTIVE_STATUS_IDS.CRIA;
         cria.code = data.code;
         cria.sex = data.sex;
+        this.assertBirthdateNotFuture(data.birthdate);
         cria.birthdate = data.birthdate;
         cria.origin = 'born';
         if (data.weight) cria.weight = data.weight;

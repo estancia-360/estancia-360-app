@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RanchPasture } from '../entities/ranch-pasture.entity';
@@ -38,8 +38,20 @@ export class RanchPasturesService {
         // @CreateDateColumn/@UpdateDateColumn no los completa solo, hay que setearlos.
         pasture.createdAt = new Date();
         pasture.updatedAt = new Date();
-        const saved = await this.rawRepo.save(pasture);
+        const saved = await this.saveOrThrowFriendly(pasture);
         return (await this.findOneById(RanchPastureDto, saved.id))!;
+    }
+
+    // BUG-11 (mismo patron aplicado a esta tabla — migracion 012 le agrego un CHECK de rango a
+    // area_hectares; sin esto, cualquier violacion que se cuele mas alla del DTO escaparia como
+    // 500 crudo de Postgres en vez de un 400 entendible).
+    private async saveOrThrowFriendly(pasture: RanchPasture): Promise<RanchPasture> {
+        try {
+            return await this.rawRepo.save(pasture);
+        } catch (error: any) {
+            if (error?.code === '23514') throw new BadRequestException({ message: 'One or more field values are out of the allowed range.', error: 'INVALID_FIELD_RANGE' });
+            throw error;
+        }
     }
 
     async findAllByRanch(idRanch: number): Promise<RanchPastureDto[]> {
@@ -64,7 +76,7 @@ export class RanchPasturesService {
         if (dto.isActive !== undefined) pasture.isActive = dto.isActive;
         pasture.updatedAt = new Date();
 
-        const saved = await this.rawRepo.save(pasture);
+        const saved = await this.saveOrThrowFriendly(pasture);
         return (await this.findOneById(RanchPastureDetailedDto, saved.id))!;
     }
 

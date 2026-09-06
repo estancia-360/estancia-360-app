@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RanchLot } from '../entities/ranch-lot.entity';
@@ -30,7 +30,16 @@ export class RanchLotsService {
 
     async create(dto: CreateRanchLotDto): Promise<RanchLotDto> {
         await this.ranchesService.findOneById(RanchDto, dto.idRanch);
-        await this.ranchPasturesService.findOneById(RanchPastureDto, dto.idRanchPasture);
+        const pasture = await this.ranchPasturesService.findOneById(RanchPastureDto, dto.idRanchPasture);
+        // DBI-21 (auditoria QA E2E, 2026-09-03): antes solo se validaba que el potrero existiera,
+        // no que fuera de la misma estancia — se podia crear un lote de la estancia A apoyado en
+        // un potrero de la estancia B.
+        if (pasture.idRanch !== dto.idRanch) {
+            throw new BadRequestException({
+                message: `Pasture ID=${dto.idRanchPasture} does not belong to ranch ID=${dto.idRanch}.`,
+                error: 'PASTURE_NOT_IN_RANCH',
+            });
+        }
 
         const lot = this.rawRepo.create();
         lot.idRanch = dto.idRanch;
@@ -43,8 +52,20 @@ export class RanchLotsService {
         // @CreateDateColumn/@UpdateDateColumn no los completa solo, hay que setearlos.
         lot.createdAt = new Date();
         lot.updatedAt = new Date();
-        const saved = await this.rawRepo.save(lot);
+        const saved = await this.saveOrThrowFriendly(lot);
         return (await this.findOneById(RanchLotDto, saved.id))!;
+    }
+
+    // BUG-11 (mismo patron aplicado a esta tabla — migracion 012 le agrego un CHECK de rango a
+    // capacity; sin esto, cualquier violacion que se cuele mas alla del DTO escaparia como 500
+    // crudo de Postgres en vez de un 400 entendible).
+    private async saveOrThrowFriendly(lot: RanchLot): Promise<RanchLot> {
+        try {
+            return await this.rawRepo.save(lot);
+        } catch (error: any) {
+            if (error?.code === '23514') throw new BadRequestException({ message: 'One or more field values are out of the allowed range.', error: 'INVALID_FIELD_RANGE' });
+            throw error;
+        }
     }
 
     async findAllByRanch(idRanch: number): Promise<RanchLotDto[]> {
@@ -82,7 +103,7 @@ export class RanchLotsService {
         if (dto.capacity !== undefined) lot.capacity = dto.capacity;
         lot.updatedAt = new Date();
 
-        const saved = await this.rawRepo.save(lot);
+        const saved = await this.saveOrThrowFriendly(lot);
         return (await this.findOneById(RanchLotDetailedDto, saved.id))!;
     }
 
