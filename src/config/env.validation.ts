@@ -24,6 +24,14 @@ export const envValidation = Joi.object({
     JWT_SECRET:      Joi.string().required(),
     JWT_TIME_EXPIRE: Joi.string().default('15m'),
 
+    // -- Rate limiting ----------------------------------------------------------
+    // THROTTLE_LIMIT es el límite general (por IP, en THROTTLE_TTL segundos) para toda la
+    // API. THROTTLE_AUTH_LIMIT es más estricto y se aplica solo a login/register/forgot-
+    // password/reset-password (ver AuthController) — son los blancos típicos de fuerza bruta.
+    THROTTLE_TTL:        Joi.number().default(60),
+    THROTTLE_LIMIT:      Joi.number().default(100),
+    THROTTLE_AUTH_LIMIT: Joi.number().default(5),
+
     // -- Plugin: mailer -------------------------------------------------------
     MAILER_TRANSPORT: Joi.string().valid('smtp', 'api').default('smtp'),
     SMTP_HOST:        Joi.string().optional(),

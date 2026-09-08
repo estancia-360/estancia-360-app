@@ -1,4 +1,5 @@
 import { Body, Controller, Post, Put, HttpCode, HttpStatus } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
     ApiTags, ApiOperation, ApiBearerAuth,
     ApiCreatedResponse, ApiOkResponse,
@@ -15,6 +16,7 @@ import { RegisterResponseDto } from '../dto/register-response.dto';
 import { Public, UserUp } from '../decorators';
 import { CurrentUser } from 'src/shared/decorators';
 import { ApiValidationError, ApiUnauthorized, ApiConflict } from 'src/shared/utils/swagger';
+import { AUTH_THROTTLE_TTL_MS, AUTH_THROTTLE_LIMIT } from '../config/throttler.config';
 
 /**
  * Error dictionary for this module:
@@ -22,15 +24,19 @@ import { ApiValidationError, ApiUnauthorized, ApiConflict } from 'src/shared/uti
  *   INVALID_TOKEN        401 — Access JWT is missing, malformed, expired, or the user no longer exists.
  *   USER_ALREADY_EXISTS 409 — A user with the given email or CI already exists.
  *   INVALID_RESET_CODE  400 — Recovery code is missing, wrong, or expired.
+ *   429 THROTTLER_LIMIT_DETECTED — too many requests from this IP for login/register/
+ *     forgot-password/reset-password (ver AUTH_THROTTLE_LIMIT en config/throttler.config.ts).
  *
  * Sin refresh token — un único access token (JWT_TIME_EXPIRE, default 15m).
  */
+const AUTH_THROTTLE = { default: { limit: AUTH_THROTTLE_LIMIT, ttl: AUTH_THROTTLE_TTL_MS } };
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
     @Public()
+    @Throttle(AUTH_THROTTLE)
     @Post('login')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Login' })
@@ -41,11 +47,12 @@ export class AuthController {
     }
 
     @Public()
+    @Throttle(AUTH_THROTTLE)
     @Post('login/web')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
         summary: 'Login (panel web)',
-        description: 'Igual que /auth/login, pero devuelve todas las estancias donde el usuario es Owner en vez de una sola.',
+        description: 'Igual que /auth/login, pero devuelve todas las estancias donde el usuario tiene una membresía activa (Owner o Administrator), no solo una.',
     })
     @ApiOkResponse({ type: LoginWebResponseDto })
     @ApiValidationError()
@@ -54,6 +61,7 @@ export class AuthController {
     }
 
     @Public()
+    @Throttle(AUTH_THROTTLE)
     @Post('register')
     @HttpCode(HttpStatus.CREATED)
     @ApiOperation({ summary: 'Register' })
@@ -76,6 +84,7 @@ export class AuthController {
     }
 
     @Public()
+    @Throttle(AUTH_THROTTLE)
     @Post('forgot-password')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({
@@ -89,6 +98,7 @@ export class AuthController {
     }
 
     @Public()
+    @Throttle(AUTH_THROTTLE)
     @Post('reset-password')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({

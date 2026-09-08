@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import {
     HealthCheck, HealthCheckService,
     TypeOrmHealthIndicator, MemoryHealthIndicator, DiskHealthIndicator,
@@ -7,6 +8,8 @@ import {
 import { Public } from 'src/app/auth/decorators';
 
 // @Public() — Docker, Kubernetes, and monitoring tools have no JWT token.
+// @SkipThrottle() — uptime monitors pueden pollear esto cada pocos segundos; no es una
+// ruta sensible a fuerza bruta como login/register.
 @ApiTags('Health')
 @Controller('health')
 export class HealthController {
@@ -19,6 +22,7 @@ export class HealthController {
 
     @Get()
     @Public()
+    @SkipThrottle()
     @HealthCheck()
     @ApiOperation({
         summary:     'Application health',
