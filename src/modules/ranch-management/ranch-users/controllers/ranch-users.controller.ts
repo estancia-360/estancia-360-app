@@ -1,4 +1,4 @@
-import { Controller, ForbiddenException, Get, Param, ParseIntPipe, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { RanchUsersService } from '../services/ranch-users.service';
 import { CreateRanchUserWorkerDto } from '../dto/create-ranch-user-worker.dto';
@@ -36,17 +36,17 @@ export class RanchUsersController {
         return { message: 'El usuario fue agregado como trabajador' };
     }
 
+    // Ver el equipo no es exclusivo del Owner — un Administrador tiene el mismo acceso que el
+    // Owner salvo lo reservado explícitamente (agregar/eliminar miembros, compras, ventas).
     @Get('ranch/:idRanch')
     @UserUp()
-    @ApiOperation({ summary: 'List the members of a ranch (Owner, Workers, Administrators) [OWNER ONLY]' })
+    @ApiOperation({ summary: 'List the members of a ranch (Owner, Workers, Administrators) [any active member]' })
     @ApiOkResponse({ type: [RanchUserWithUserDto] })
     async findAllByRanch(
         @Param('idRanch', ParseIntPipe) idRanch: number,
         @CurrentUser('id') idUser: number,
     ): Promise<{ members: RanchUserWithUserDto[] }> {
-        if (!(await this.ranchUsersService.isOwner(idUser, idRanch))) {
-            throw new ForbiddenException({ message: 'Solo el dueño de la estancia puede ver su equipo.', error: 'RANCH_OWNER_ONLY' });
-        }
+        await this.ranchUsersService.assertMember(idUser, idRanch);
         return { members: await this.ranchUsersService.findAllByRanch(RanchUserWithUserDto, idRanch) };
     }
 }

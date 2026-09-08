@@ -1,12 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
-
-export const RANCH_MEMBER_ROLES = ['worker', 'administrator'] as const;
-export type RanchMemberRole = (typeof RANCH_MEMBER_ROLES)[number];
+import { IsEmail, IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 
 // El dueño de la estancia da de alta a alguien que todavía no tiene cuenta —
-// se crea el usuario (rol global Usuario) y se lo vincula a la estancia con
-// el rol elegido, nunca Owner (eso solo se asigna al crear la estancia).
+// se crea el usuario (rol global Usuario) y se lo vincula a la estancia como
+// Administrador. Ya no existe un rol "Trabajador" asignable: dentro de una
+// estancia solo hay Dueño y Administrador (subordinado al Dueño).
 export class RegisterRanchMemberDto {
     @ApiProperty({ description: 'Carnet de identidad del usuario', example: '12345678' })
     @IsString({ message: 'El CI debe ser texto' })
@@ -48,8 +46,4 @@ export class RegisterRanchMemberDto {
     @IsString()
     @Length(6, 20)
     celphone?: string;
-
-    @ApiProperty({ enum: RANCH_MEMBER_ROLES, example: 'worker' })
-    @IsIn(RANCH_MEMBER_ROLES, { message: 'ranchRole debe ser worker o administrator' })
-    ranchRole: RanchMemberRole;
 }

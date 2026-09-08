@@ -6,11 +6,6 @@ import { RanchUsersService } from 'src/modules/ranch-management/ranch-users/serv
 import { UserDto } from 'src/modules/user-management/users/dto/user.dto';
 import { RoleEnum, RanchRolesEnum } from 'src/shared/enums';
 
-const RANCH_ROLE_MAP: Record<RegisterRanchMemberDto['ranchRole'], RanchRolesEnum> = {
-    worker: RanchRolesEnum.WORKER,
-    administrator: RanchRolesEnum.ADMINISTRATOR,
-};
-
 @Injectable()
 export class RegisterRanchMemberUseCase {
     constructor(
@@ -41,7 +36,7 @@ export class RegisterRanchMemberUseCase {
             );
 
             await this.ranchUsersService.create(
-                { idUser: user.id, idRanch, idRanchRole: RANCH_ROLE_MAP[dto.ranchRole] },
+                { idUser: user.id, idRanch, idRanchRole: RanchRolesEnum.ADMINISTRATOR },
                 manager,
             );
 

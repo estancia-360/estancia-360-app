@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, In, Repository } from 'typeorm';
 import { RanchUser } from '../entities/ranch-user.entity';
@@ -29,6 +29,11 @@ export class RanchUsersService {
         ranchUser.idUser = data.idUser;
         ranchUser.idRanch = data.idRanch;
         ranchUser.idRole = data.idRanchRole;
+        // (id_user, id_ranch) es la PK compuesta de esta tabla — si ya existia una fila
+        // eliminada logicamente para el mismo par (a alguien se lo eliminó y se lo vuelve a
+        // agregar), TypeORM hace UPDATE en vez de INSERT. Sin esto, is_deleted se quedaba en
+        // true: la respuesta decia "agregado" pero la persona seguia sin acceso, en silencio.
+        ranchUser.isDeleted = false;
 
         return await repo.save(ranchUser);
     }
@@ -50,12 +55,31 @@ export class RanchUsersService {
     }
 
     async findAllByRanch<T>(dto: new () => T, idRanch: number): Promise<T[]> {
-        return this.repo.find({ dto, where: { idRanch }, order: { createdAt: 'ASC' } });
+        return this.repo.find({ dto, where: { idRanch, isDeleted: false }, order: { createdAt: 'ASC' } });
     }
 
     async isOwner(idUser: number, idRanch: number): Promise<boolean> {
         const membership = await this.findOne(idUser, idRanch);
         return membership?.idRole === RanchRolesEnum.OWNER;
+    }
+
+    /**
+     * Ya no existe un rol "Trabajador" asignable — dentro de una estancia solo hay Dueño y
+     * Administrador (subordinado al Dueño). Este método (soft-delete vía is_deleted, igual
+     * patrón que el resto del proyecto) es el reverso de create(): saca a un Administrador de
+     * la estancia. El Dueño nunca puede eliminarse por esta vía — si hace falta transferir la
+     * propiedad, es un flujo distinto que no existe todavía.
+     */
+    async remove(idUser: number, idRanch: number): Promise<void> {
+        const membership = await this.findOne(idUser, idRanch);
+        if (!membership) {
+            throw new NotFoundException({ message: `User ID=${idUser} is not a member of ranch ID=${idRanch}.`, error: 'RANCH_MEMBER_NOT_FOUND' });
+        }
+        if (membership.idRole === RanchRolesEnum.OWNER) {
+            throw new ForbiddenException({ message: 'The ranch Owner cannot be removed.', error: 'CANNOT_REMOVE_OWNER' });
+        }
+        membership.isDeleted = true;
+        await this.rawRepo.save(membership);
     }
 
     /**

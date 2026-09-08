@@ -49,12 +49,12 @@ export class AuthService {
         };
     }
 
-    // Login del panel web: un usuario puede ser Owner de varias estancias, cada
-    // una con un plan de suscripción distinto — el panel deja elegir con cuál
-    // entrar antes de aplicar esa restricción, así que necesita la lista completa.
+    // Login del panel web: un usuario puede pertenecer a varias estancias (como Owner o
+    // Administrator), cada una con un plan de suscripción distinto — el panel deja elegir
+    // con cuál entrar antes de aplicar esa restricción, así que necesita la lista completa.
     async loginWeb(dto: LoginDto): Promise<LoginWebResponseDto> {
         const { user, accessToken } = await this.authenticate(dto);
-        const ranches = await this.usersService.findRanchesWhereUserIsOwner(user.id);
+        const ranches = await this.usersService.findRanchesWhereUserIsMember(user.id);
 
         return {
             message: 'Ingreso exitoso',

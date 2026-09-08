@@ -69,6 +69,24 @@ export class UsersService {
         return result.map((row: { id: string; name: string }) => ({ id: Number(row.id), name: row.name }));
     }
 
+    /**
+     * Estancias donde el usuario tiene CUALQUIER membresía activa (Owner, Administrator, o un
+     * Worker heredado de antes de que ese rol dejara de ser asignable) — usado por el login del
+     * panel web, que da acceso completo salvo lo reservado al Owner (assertOwner/isOwner en cada
+     * endpoint que lo requiere). Distinto de findRanchesWhereUserIsOwner, que sigue siendo
+     * Owner-only y es el que usa mobile — no tocar ese para no romper su contrato.
+     */
+    async findRanchesWhereUserIsMember(idUser: number): Promise<{ id: number; name: string }[]> {
+        const result = await this.dataSource.query(
+            `SELECT r.id_ranch AS id, r.name FROM ranch_users ru
+             INNER JOIN ranches r ON r.id_ranch = ru.id_ranch
+             WHERE ru.id_user = $1 AND ru.is_deleted = false
+             ORDER BY r.name ASC`,
+            [idUser],
+        );
+        return result.map((row: { id: string; name: string }) => ({ id: Number(row.id), name: row.name }));
+    }
+
     // ── Mutations ─────────────────────────────────────────────────────────────
 
     async create<T>(returnDto: new () => T, dto: CreateUserDto, options?: MutationOptions): Promise<T> {
